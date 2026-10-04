@@ -17,7 +17,6 @@ import com.simibubi.create.content.contraptions.minecart.CouplingHandlerClient;
 import com.simibubi.create.content.contraptions.minecart.CouplingPhysics;
 import com.simibubi.create.content.contraptions.minecart.CouplingRenderer;
 import com.simibubi.create.content.contraptions.minecart.capability.CapabilityMinecartController;
-import com.simibubi.create.content.contraptions.render.ContraptionRenderInfoManager;
 import com.simibubi.create.content.contraptions.wrench.RadialWrenchHandler;
 import com.simibubi.create.content.decoration.girder.GirderWrenchBehavior;
 import com.simibubi.create.content.equipment.armor.BacktankArmorLayer;
@@ -75,6 +74,7 @@ import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.utility.CameraAngleAnimationService;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
 import com.simibubi.create.foundation.utility.TickBasedCache;
+import com.simibubi.create.infrastructure.command.AllCommands;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.fabric.RenderItemDecorationsCallback;
 import com.simibubi.create.infrastructure.gui.OpenCreateMenuButton;
@@ -148,7 +148,7 @@ import io.github.fabricators_of_create.porting_lib.event.common.AttackAirCallbac
 public class ClientEvents {
 	@SubscribeEvent
 	public static void onTickPre(ClientTickEvent.Pre event) {
-		onTick( true);
+		onTick(true);
 	}
 
 	public static void onTickStart(Minecraft client) {
@@ -201,7 +201,6 @@ public class ClientEvents {
 		// fabric: fix #608, see above
 //		ArmInteractionPointHandler.tick();
 		EjectorTargetHandler.tick();
-		ContraptionRenderInfoManager.tickFor(world);
 		BlueprintOverlayRenderer.tick();
 		ToolboxHandlerClient.clientTick();
 		RadialWrenchHandler.clientTick();
@@ -307,7 +306,7 @@ public class ClientEvents {
 	public static void onRenderTick() {
 		if (!isGameActive())
 			return;
-		TurntableHandler.gameRenderFrame();
+		TurntableHandler.gameRenderFrame(event.getPartialTick());
 	}
 
 	public static boolean onMount(Entity vehicle, Entity passenger) {
@@ -319,6 +318,11 @@ public class ClientEvents {
 	public static boolean onDismount(Entity vehicle, Entity passenger) {
 		CameraDistanceModifier.reset();
 		return true;
+	}
+
+	@SubscribeEvent
+	public static void onLogOut(ClientPlayerNetworkEvent.LoggingOut event) {
+		CameraDistanceModifier.reset();
 	}
 
 	protected static boolean isGameActive() {

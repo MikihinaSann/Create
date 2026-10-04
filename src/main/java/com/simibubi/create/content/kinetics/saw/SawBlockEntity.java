@@ -56,6 +56,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -92,7 +93,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements SidedStorageBlockEntity {
+public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements SidedStorageBlockEntity, Clearable {
 
 	private static final Object cuttingRecipesKey = new Object();
 	public static final Supplier<RecipeType<?>> woodcuttingRecipeType =
@@ -291,6 +292,12 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 	}
 
 	@Override
+	public void clearContent() {
+		inventory.clear();
+		filtering.setFilter(ItemStack.EMPTY);
+	}
+
+	@Override
 	public void destroy() {
 		super.destroy();
 		ItemHelper.dropContents(level, worldPosition, inventory);
@@ -384,7 +391,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 		for (int roll = 0; roll < rolls; roll++) {
 			List<ItemStack> results = new LinkedList<>();
 			if (recipe instanceof CuttingRecipe)
-				results = ((CuttingRecipe) recipe).rollResults();
+				results = ((CuttingRecipe) recipe).rollResults(level.random);
 			else if (recipe instanceof StonecutterRecipe || recipe.getType() == woodcuttingRecipeType.get())
 				results.add(recipe.getResultItem(level.registryAccess())
 					.copy());
@@ -392,6 +399,8 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 			for (ItemStack stack : results) {
 				ItemHelper.addToList(stack, list);
 			}
+			if (input.hasCraftingRemainingItem())
+				ItemHelper.addToList(input.getCraftingRemainingItem(), list);
 		}
 
 		for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlotCount(); slot++)
@@ -550,5 +559,4 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 			return true;
 		return false;
 	}
-
 }

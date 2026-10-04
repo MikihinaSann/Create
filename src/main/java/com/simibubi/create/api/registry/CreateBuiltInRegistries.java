@@ -20,12 +20,16 @@ import com.simibubi.create.api.equipment.potatoCannon.PotatoProjectileBlockHitAc
 import com.simibubi.create.api.equipment.potatoCannon.PotatoProjectileEntityHitAction;
 import com.simibubi.create.api.equipment.potatoCannon.PotatoProjectileRenderMode;
 import com.simibubi.create.content.kinetics.fan.processing.FanProcessingType;
+import com.simibubi.create.content.kinetics.fan.processing.FanProcessingTypeRegistry;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointType;
 import com.simibubi.create.content.logistics.item.filter.attribute.ItemAttributeType;
 import com.simibubi.create.content.logistics.packagePort.PackagePortTargetType;
 
 import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
+
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.resources.ResourceKey;
 
 /**
@@ -34,8 +38,8 @@ import net.minecraft.resources.ResourceKey;
  * @see CreateRegistries
  */
 public class CreateBuiltInRegistries {
-	public static final Registry<ArmInteractionPointType> ARM_INTERACTION_POINT_TYPE = simple(CreateRegistries.ARM_INTERACTION_POINT_TYPE);
-	public static final Registry<FanProcessingType> FAN_PROCESSING_TYPE = simple(CreateRegistries.FAN_PROCESSING_TYPE);
+	public static final Registry<ArmInteractionPointType> ARM_INTERACTION_POINT_TYPE = simpleWithFreezeCallback(CreateRegistries.ARM_INTERACTION_POINT_TYPE, ArmInteractionPointType::init);
+	public static final Registry<FanProcessingType> FAN_PROCESSING_TYPE = simpleWithFreezeCallback(CreateRegistries.FAN_PROCESSING_TYPE, FanProcessingTypeRegistry::init);
 	public static final Registry<ItemAttributeType> ITEM_ATTRIBUTE_TYPE = simple(CreateRegistries.ITEM_ATTRIBUTE_TYPE);
 	public static final Registry<DisplaySource> DISPLAY_SOURCE = simple(CreateRegistries.DISPLAY_SOURCE);
 	public static final Registry<DisplayTarget> DISPLAY_TARGET = simple(CreateRegistries.DISPLAY_TARGET);
@@ -48,22 +52,44 @@ public class CreateBuiltInRegistries {
 	public static final Registry<MapCodec<? extends PotatoProjectileBlockHitAction>> POTATO_PROJECTILE_BLOCK_HIT_ACTION = simple(CreateRegistries.POTATO_PROJECTILE_BLOCK_HIT_ACTION);
 
 	private static <T> Registry<T> simple(ResourceKey<Registry<T>> key) {
-		return register(key, false);
+		return register(key, false, () -> {});
+	}
+
+	private static <T> Registry<T> simpleWithFreezeCallback(ResourceKey<Registry<T>> key, Runnable onBakeCallback) {
+		return register(key, false, onBakeCallback);
 	}
 
 	private static <T> Registry<T> withIntrusiveHolders(ResourceKey<Registry<T>> key) {
-		return register(key, true);
+		return register(key, true, () -> {});
 	}
 
-	private static <T> Registry<T> register(ResourceKey<Registry<T>> key, boolean hasIntrusiveHolders) {
-		return FabricRegistryBuilder.from(new MappedRegistry<>(key, Lifecycle.stable(), hasIntrusiveHolders))
+	private static final List<Runnable> BAKE_CALLBACKS = new ArrayList<>();
+
+	private static <T> Registry<T> register(ResourceKey<Registry<T>> key, boolean hasIntrusiveHolders, Runnable onBakeCallback) {
+		Registry<T> registry = FabricRegistryBuilder.from(new MappedRegistry<>(key, Lifecycle.stable(), hasIntrusiveHolders))
 			.attribute(RegistryAttribute.SYNCED)
 			.buildAndRegister();
+		// fabric: no registry bake event - callbacks run after registration in Create.onRegister
+		BAKE_CALLBACKS.add(onBakeCallback);
+		return registry;
+	}
+
+	/**
+	 * Runs all queued registry bake callbacks. Called by Create.onRegister after
+	 * all entries have been registered, mirroring NeoForge's registry bake event.
+	 */
+	@Internal
+	public static void runBakeCallbacks() {
+		BAKE_CALLBACKS.forEach(Runnable::run);
 	}
 
 	@Internal
 	public static void init() {
 		// make sure the class is loaded.
 		// this method is called at the tail of BuiltInRegistries, injected by BuiltInRegistriesMixin.
+	}
+
+	private CreateBuiltInRegistries() {
+		throw new AssertionError("This class should not be instantiated");
 	}
 }

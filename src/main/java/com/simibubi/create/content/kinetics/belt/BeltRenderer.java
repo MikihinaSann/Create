@@ -28,6 +28,9 @@ import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SpriteShiftEntry;
 import net.createmod.catnip.render.SuperByteBuffer;
+
+import net.createmod.ponder.api.level.PonderLevel;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -40,7 +43,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
@@ -294,9 +296,11 @@ public class BeltRenderer extends SafeBlockEntityRenderer<BeltBlockEntity> {
 			if (sandwich)
 				blockItem = false;
 			int count = 0;
-			if (mc.player.getEyePosition(1.0F).distanceTo(itemPos) < 16)
+			if (be.getLevel() instanceof PonderLevel || mc.player.getEyePosition(1.0F).distanceTo(itemPos) < 16)
 				count = (int) (Mth.log2((int) (transported.stack.getCount()))) / 2;
+
 			Random r = new Random(transported.angle);
+
 
 		boolean slopeShadowOnly = renderUpright && onSlope;
 		float slopeOffset = 1 / 8f;
@@ -316,14 +320,11 @@ public class BeltRenderer extends SafeBlockEntityRenderer<BeltBlockEntity> {
 		}
 
 		if (renderUpright) {
-			Entity renderViewEntity = mc.cameraEntity;
-			if (renderViewEntity != null) {
-				Vec3 positionVec = renderViewEntity.position();
-				Vec3 vectorForOffset = BeltHelper.getVectorForOffset(be, offset);
-				Vec3 diff = vectorForOffset.subtract(positionVec);
-				float yRot = (float) (Mth.atan2(diff.x, diff.z) + Math.PI);
-				ms.mulPose(Axis.YP.rotation(yRot));
-			}
+			Vec3 cameraPosition = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+			Vec3 vectorForOffset = BeltHelper.getVectorForOffset(be, offset);
+			Vec3 diff = vectorForOffset.subtract(cameraPosition);
+			float yRot = (float) (Mth.atan2(diff.x, diff.z) + Math.PI);
+			ms.mulPose(Axis.YP.rotation(yRot));
 			ms.translate(0, 3 / 32d, 1 / 16f);
 		}
 

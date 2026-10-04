@@ -30,7 +30,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.FlowingFluid;
@@ -82,7 +84,7 @@ public class OpenEndedPipe extends FlowSource {
 	}
 
 	@Override
-	public void manageSource(Level world) {
+	public void manageSource(Level world, BlockEntity networkBE) {
 		this.world = world;
 	}
 
@@ -162,7 +164,7 @@ public class OpenEndedPipe extends FlowSource {
 				}
 			}
 
-			world.setBlock(outputPos, newState, 3);
+			world.setBlock(outputPos, newState, Block.UPDATE_ALL);
 		}
 
 		return stack;
@@ -201,6 +203,9 @@ public class OpenEndedPipe extends FlowSource {
 		if (waterlog && fluid.getFluid() != Fluids.WATER)
 			return false;
 
+		if (!AllConfigs.server().fluids.pipesPlaceFluidSourceBlocks.get())
+			return true;
+
 		if (world.dimensionType()
 			.ultraWarm() && FluidHelper.isTag(fluid, FluidTags.WATER)) {
 			int i = outputPos.getX();
@@ -218,12 +223,9 @@ public class OpenEndedPipe extends FlowSource {
 			return true;
 		}
 
-		if (!AllConfigs.server().fluids.pipesPlaceFluidSourceBlocks.get())
-			return true;
-
 		world.setBlock(outputPos, fluid.getFluid()
 			.defaultFluidState()
-			.createLegacyBlock(), 3);
+			.createLegacyBlock(), Block.UPDATE_ALL);
 		return true;
 	}
 

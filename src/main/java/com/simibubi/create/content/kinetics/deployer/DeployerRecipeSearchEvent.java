@@ -3,7 +3,7 @@ package com.simibubi.create.content.kinetics.deployer;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerContainer;
 

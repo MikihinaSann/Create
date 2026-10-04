@@ -13,14 +13,14 @@ import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.data.CreateDatamapProvider;
 import com.simibubi.create.foundation.data.DamageTypeTagGen;
 import com.simibubi.create.foundation.data.TagLangGen;
-import com.simibubi.create.foundation.data.recipe.MechanicalCraftingRecipeGen;
-import com.simibubi.create.foundation.data.recipe.ProcessingRecipeGen;
-import com.simibubi.create.foundation.data.recipe.SequencedAssemblyRecipeGen;
-import com.simibubi.create.foundation.data.recipe.StandardRecipeGen;
+import com.simibubi.create.foundation.data.recipe.CreateMechanicalCraftingRecipeGen;
+import com.simibubi.create.foundation.data.recipe.CreateRecipeProvider;
+import com.simibubi.create.foundation.data.recipe.CreateSequencedAssemblyRecipeGen;
+import com.simibubi.create.foundation.data.recipe.CreateStandardRecipeGen;
+
 import com.simibubi.create.foundation.ponder.CreatePonderPlugin;
 import com.simibubi.create.foundation.utility.FilesHelper;
 import com.tterrag.registrate.providers.ProviderType;
-import com.tterrag.registrate.providers.RegistrateDataProvider;
 
 import net.createmod.ponder.foundation.PonderIndex;
 import net.minecraft.core.RegistrySetBuilder;
@@ -54,19 +54,18 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 		generator.addProvider(event.includeServer(), new CreateMountedItemStorageTypeTagsProvider(output, lookupProvider, existingFileHelper));
 		generator.addProvider(event.includeServer(), new DamageTypeTagGen(output, lookupProvider, existingFileHelper));
 		generator.addProvider(event.includeServer(), new AllAdvancements(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new StandardRecipeGen(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new MechanicalCraftingRecipeGen(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new SequencedAssemblyRecipeGen(output, lookupProvider));
+		generator.addProvider(event.includeServer(), new CreateStandardRecipeGen(output, lookupProvider));
+		generator.addProvider(event.includeServer(), new CreateMechanicalCraftingRecipeGen(output, lookupProvider));
+		generator.addProvider(event.includeServer(), new CreateSequencedAssemblyRecipeGen(output, lookupProvider));
 		generator.addProvider(event.includeServer(), new CreateDatamapProvider(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new VanillaHatOffsetGenerator(output));
+		generator.addProvider(event.includeServer(), new VanillaHatOffsetGenerator(output, lookupProvider));
 		generator.addProvider(event.includeServer(), new CuriosDataGenerator(output, lookupProvider, existingFileHelper));
 		generator.addProvider(event.includeServer(), new CreateEnchantmentTagsProvider(output, lookupProvider, existingFileHelper));
+		generator.addProvider(event.includeClient(), new CreateWikiBlockInfoProvider(output));
 
 		if (event.includeServer()) {
-			ProcessingRecipeGen.registerAll(generator, output, lookupProvider);
+			CreateRecipeProvider.registerAllProcessing(generator, output, lookupProvider);
 		}
-
-		event.getGenerator().addProvider(true, Create.registrate().setDataProvider(new RegistrateDataProvider(Create.registrate(), Create.ID, event)));
 	}
 
 	@Override
@@ -86,6 +85,7 @@ public class CreateDatagen implements DataGeneratorEntrypoint {
 			AllSoundEvents.provideLang(langConsumer);
 			AllKeys.provideLang(langConsumer);
 			providePonderLang(langConsumer);
+			new TagLangGenerator(langConsumer).generate();
 		});
 	}
 

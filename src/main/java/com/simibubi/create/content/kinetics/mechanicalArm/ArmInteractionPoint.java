@@ -1,6 +1,6 @@
 package com.simibubi.create.content.kinetics.mechanicalArm;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.api.registry.CreateBuiltInRegistries;
 import com.simibubi.create.content.contraptions.StructureTransform;
@@ -97,30 +97,47 @@ public class ArmInteractionPoint {
 	}
 
 	@Nullable
-	protected Storage<ItemVariant> getHandler() {
-		if (handlerProvider == null) {
-			handlerProvider = StorageProvider.createForItems(level, pos);
+	protected IItemHandler getHandler(ArmBlockEntity armBlockEntity) {
+		if (cachedHandler == null && level instanceof ServerLevel serverLevel) {
+			BlockEntity be = level.getBlockEntity(pos);
+			if (be == null)
+				return null;
+			cachedHandler = BlockCapabilityCache.create(
+				Capabilities.ItemHandler.BLOCK,
+				serverLevel,
+				pos,
+				Direction.UP,
+				() -> !armBlockEntity.isRemoved(),
+				() -> cachedHandler = null
+			);
 		}
 		return handlerProvider.get(Direction.UP);
 	}
 
-	public ItemStack insert(ItemStack stack, TransactionContext ctx) {
-		Storage<ItemVariant> handler = getHandler();
+	public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
+		IItemHandler handler = getHandler(armBlockEntity);
 		if (handler == null)
 			return stack;
 		long inserted = handler.insert(ItemVariant.of(stack), stack.getCount(), ctx);
 		return ItemHandlerHelper.copyStackWithSize(stack, ItemHelper.truncateLong(stack.getCount() - inserted));
 	}
 
-	public ItemStack extract(int amount, TransactionContext ctx) {
-		Storage<ItemVariant> handler = getHandler();
+	public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
+		IItemHandler handler = getHandler(armBlockEntity);
 		if (handler == null)
 			return ItemStack.EMPTY;
 		return TransferUtil.extractAnyItem(handler, amount);
 	}
 
-	public ItemStack extract(TransactionContext ctx) {
-		return extract(64, ctx);
+	public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, boolean simulate) {
+		return extract(armBlockEntity, slot, 64, simulate);
+	}
+
+	public int getSlotCount(ArmBlockEntity armBlockEntity) {
+		IItemHandler handler = getHandler(armBlockEntity);
+		if (handler == null)
+			return 0;
+		return handler.getSlots();
 	}
 
 	protected void serialize(CompoundTag nbt, BlockPos anchor) {

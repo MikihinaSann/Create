@@ -5,10 +5,12 @@ import java.util.List;
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.api.behaviour.display.DisplaySource;
 import com.simibubi.create.api.behaviour.display.DisplayTarget;
+import com.simibubi.create.api.contraption.transformable.TransformableBlockEntity;
 import com.simibubi.create.api.registry.CreateBuiltInRegistries;
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.computercraft.AbstractComputerBehaviour;
 import com.simibubi.create.compat.computercraft.ComputerCraftProxy;
+import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelPosition;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelSupportBehaviour;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
@@ -23,11 +25,14 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-public class DisplayLinkBlockEntity extends LinkWithBulbBlockEntity {
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+
+public class DisplayLinkBlockEntity extends LinkWithBulbBlockEntity  implements TransformableBlockEntity {
 
 	protected BlockPos targetOffset;
 
@@ -221,6 +226,12 @@ private static final Vec3 bulbOffsetVertical = VecHelper.voxelSpace(5, 7, 11);
 		if (state.getOptionalValue(DisplayLinkBlock.FACING).orElse(Direction.UP).getAxis().isVertical())
 			return bulbOffsetVertical;
 		return bulbOffset;
+	}
+
+	@Override
+	public void transform(BlockEntity be, StructureTransform transform) {
+		targetOffset = transform.applyWithoutOffset(targetOffset);
+		notifyUpdate();
 	}
 
 }

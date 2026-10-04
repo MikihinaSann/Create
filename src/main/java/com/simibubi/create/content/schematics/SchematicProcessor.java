@@ -2,9 +2,8 @@ package com.simibubi.create.content.schematics;
 
 import java.util.Optional;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllStructureProcessorTypes;
 
@@ -28,6 +27,12 @@ public class SchematicProcessor extends StructureProcessor implements StructureP
 	public static final SchematicProcessor INSTANCE = new SchematicProcessor();
 	public static final MapCodec<SchematicProcessor> CODEC = MapCodec.unit(() -> INSTANCE);
 
+public class SchematicProcessor extends StructureProcessor {
+	public static final SchematicProcessor INSTANCE = new SchematicProcessor();
+	public static final MapCodec<SchematicProcessor> CODEC = MapCodec.unit(() -> INSTANCE);
+
+	private SchematicProcessor() {
+	}
 
 	@Nullable
 	@Override
@@ -63,5 +68,4 @@ public class SchematicProcessor extends StructureProcessor implements StructureP
 	protected StructureProcessorType<?> getType() {
 		return AllStructureProcessorTypes.SCHEMATIC.get();
 	}
-
 }

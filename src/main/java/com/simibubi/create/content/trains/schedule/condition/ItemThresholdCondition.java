@@ -21,7 +21,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -66,7 +65,7 @@ public class ItemThresholdCondition extends CargoThresholdCondition {
 					continue;
 
 				if (stacks)
-					foundItems += stackInSlot.getCount() == stackInSlot.getOrDefault(DataComponents.MAX_STACK_SIZE, 64) ? 1 : 0;
+					foundItems += stackInSlot.getCount() == stackInSlot.getMaxStackSize() ? 1 : 0;
 				else
 					foundItems += view.getAmount();
 			}

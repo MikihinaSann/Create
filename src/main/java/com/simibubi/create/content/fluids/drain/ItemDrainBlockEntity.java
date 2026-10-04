@@ -33,6 +33,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -46,7 +47,8 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
-public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
+public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity, Clearable {
+
 
 	public static final int FILLING_TIME = 20;
 
@@ -317,6 +319,11 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 	public void setHeldItem(TransportedItemStack heldItem, Direction insertedFrom) {
 		this.heldItem = heldItem;
 		this.heldItem.insertedFrom = insertedFrom;
+	}
+
+	@Override
+	public void clearContent() {
+		this.heldItem = null;
 	}
 
 	@Override

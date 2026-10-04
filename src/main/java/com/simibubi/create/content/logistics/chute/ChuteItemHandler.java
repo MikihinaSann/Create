@@ -41,4 +41,15 @@ public class ChuteItemHandler extends SingleVariantStorage<ItemVariant> {
 	protected ItemVariant getBlankVariant() {
 		return ItemVariant.blank();
 	}
+
+	@Override
+	public int getSlotLimit(int slot) {
+		return getStackInSlot(slot).getOrDefault(DataComponents.MAX_STACK_SIZE, 64);
+	}
+
+	@Override
+	public boolean isItemValid(int slot, ItemStack stack) {
+		return true;
+	}
+
 }

@@ -5,11 +5,11 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.ftb.FTBIntegration;
+import com.simibubi.create.compat.pojav.PojavChecker;
 import com.simibubi.create.compat.sodium.SodiumCompat;
 import com.simibubi.create.compat.trinkets.Trinkets;
 import com.simibubi.create.content.contraptions.glue.SuperGlueSelectionHandler;
-import com.simibubi.create.content.contraptions.render.ContraptionRenderInfo;
-import com.simibubi.create.content.contraptions.render.ContraptionRenderInfoManager;
+import com.simibubi.create.content.contraptions.render.ContraptionEntityRenderer;
 import com.simibubi.create.content.decoration.encasing.CasingConnectivity;
 import com.simibubi.create.content.equipment.armor.RemainingAirOverlay;
 import com.simibubi.create.content.equipment.bell.SoulPulseEffectHandler;
@@ -78,6 +78,7 @@ public class CreateClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+
 		AllInstanceTypes.init();
 
 		MODEL_SWAPPER.registerListeners();
@@ -87,8 +88,10 @@ public class CreateClient implements ClientModInitializer {
 
 		Mods.FTBLIBRARY.executeIfInstalled(() -> () -> FTBIntegration.init());
 		Mods.SODIUM.executeIfInstalled(() -> () -> SodiumCompat.init());
+		PojavChecker.init();
 
 		// clientInit start
+
 
 		//BUFFER_CACHE.registerCompartment(CachedBufferer.GENERIC_BLOCK);
 		//BUFFER_CACHE.registerCompartment(CachedPartialBuffers.partial);
@@ -102,7 +105,7 @@ public class CreateClient implements ClientModInitializer {
 		SuperByteBufferCache.getInstance().registerCompartment(CachedBuffers.DIRECTIONAL_PARTIAL);
 		SuperByteBufferCache.getInstance().registerCompartment(KineticBlockEntityRenderer.KINETIC_BLOCK);
 		SuperByteBufferCache.getInstance().registerCompartment(WaterWheelRenderer.WATER_WHEEL);
-		SuperByteBufferCache.getInstance().registerCompartment(ContraptionRenderInfo.CONTRAPTION, 20);
+		SuperByteBufferCache.getInstance().registerCompartment(ContraptionEntityRenderer.CONTRAPTION, 20);
 
 		AllKeys.register();
 		AllPartialModels.init();
@@ -170,7 +173,6 @@ public class CreateClient implements ClientModInitializer {
 
 	public static void invalidateRenderers() {
 		SCHEMATIC_HANDLER.updateRenderers();
-		ContraptionRenderInfoManager.resetAll();
 	}
 
 	public static void checkGraphicsFanciness() {

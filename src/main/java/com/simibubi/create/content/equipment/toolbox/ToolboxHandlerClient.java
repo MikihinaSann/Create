@@ -35,7 +35,6 @@ import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -130,7 +129,7 @@ public class ToolboxHandlerClient {
 		if (mc.gameMode == null || mc.gameMode.getPlayerMode() == GameType.SPECTATOR)
 			return;
 
-		if (key != AllKeys.TOOLBELT.getBoundCode() || !pressed)
+		if (!AllKeys.TOOLBELT.doesModifierAndCodeMatch(key))
 			return;
 		if (COOLDOWN > 0)
 			return;

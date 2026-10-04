@@ -59,6 +59,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -79,6 +80,9 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
+
+public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, Clearable {
+
 
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
 
@@ -131,6 +135,8 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 	record Data(List<ItemStack> spoutputBuffer, List<com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack> spoutputFluidBuffer) {
 	}
+
+	private @Nullable HeatLevel cachedHeatLevel;
 
 	public BasinBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -245,6 +251,15 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		visualizedOutputItems.clear();
 		visualizedOutputFluids.clear();
 	}
+
+	@Override
+	public void clearContent() {
+		spoutputBuffer.clear();
+		inputInventory.clearContent();
+		outputInventory.clearContent();
+		filtering.setFilter(ItemStack.EMPTY);
+	}
+
 
 	@Override
 	public void destroy() {
@@ -374,6 +389,8 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 	@Override
 	public void tick() {
+		cachedHeatLevel = null;
+
 		super.tick();
 		if (needsUpdate) {
 			needsUpdate = false;
@@ -839,6 +856,17 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	@Override
 	public Storage<ItemVariant> getItemStorage(@Nullable Direction face) {
 		return itemCapability;
+	}
+
+	@NotNull HeatLevel getHeatLevel() {
+		if (cachedHeatLevel == null) {
+			if (level == null)
+				return HeatLevel.NONE;
+
+			cachedHeatLevel = getHeatLevelOf(level.getBlockState(getBlockPos().below(1)));
+		}
+		return cachedHeatLevel;
+
 	}
 
 	static class BasinValueBox extends ValueBoxTransform.Sided {

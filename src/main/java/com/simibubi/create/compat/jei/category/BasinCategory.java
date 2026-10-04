@@ -13,7 +13,6 @@ import com.simibubi.create.content.processing.basin.BasinRecipe;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock.HeatLevel;
 import com.simibubi.create.content.processing.recipe.HeatCondition;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
-import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
@@ -62,7 +61,7 @@ public class BasinCategory extends CreateRecipeCategory<BasinRecipe> {
 					.addItemStacks(stacks);
 			i++;
 		}
-		for (FluidIngredient fluidIngredient : recipe.getFluidIngredients()) {
+		for (SizedFluidIngredient fluidIngredient : recipe.getFluidIngredients()) {
 			int x = 17 + xOffset + (i % 3) * 19;
 			int y = 51 - (i / 3) * 19;
 			addFluidSlot(builder, x, y, fluidIngredient);

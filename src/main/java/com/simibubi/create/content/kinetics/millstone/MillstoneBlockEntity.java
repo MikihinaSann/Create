@@ -11,6 +11,7 @@ import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehavi
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
+import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 
@@ -35,6 +36,7 @@ import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -56,13 +58,15 @@ import io.github.fabricators_of_create.porting_lib.transfer.ViewOnlyWrappedStora
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerContainer;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerSlot;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class MillstoneBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
+public class MillstoneBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity, Clearable {
 
 	public ItemStackHandlerContainer inputInv;
+
 	public ItemStackHandler outputInv;
 	public MillstoneInventoryHandler capability;
 	public int timer;
@@ -148,6 +152,12 @@ public class MillstoneBlockEntity extends KineticBlockEntity implements SidedSto
 	}
 
 	@Override
+	public void clearContent() {
+		((ItemStackHandlerAccessor) inputInv).create$getStacks().clear();
+		((ItemStackHandlerAccessor) outputInv).create$getStacks().clear();
+	}
+
+	@Override
 	public void destroy() {
 		super.destroy();
 		ItemHelper.dropContents(level, worldPosition, inputInv);
@@ -159,16 +169,19 @@ public class MillstoneBlockEntity extends KineticBlockEntity implements SidedSto
 
 		if (lastRecipe == null || !lastRecipe.matches(inventoryIn, level)) {
 			Optional<RecipeHolder<MillingRecipe>> recipe = AllRecipeTypes.MILLING.find(inventoryIn, level);
-			if (!recipe.isPresent())
+			if (recipe.isEmpty())
 				return;
 			lastRecipe = recipe.get().value();
 		}
 
-		try (Transaction t = Transaction.openOuter()) {
-			ItemStackHandlerSlot slot = inputInv.getSlot(0);
-			slot.extract(slot.getResource(), 1, t);
-			lastRecipe.rollResults().forEach(stack -> outputInv.insert(ItemVariant.of(stack), stack.getCount(), t));
-			t.commit();
+		ItemStack stackInSlot = inputInv.getStackInSlot(0);
+		ItemStack craftingRemainingItem = stackInSlot.getCraftingRemainingItem();
+		stackInSlot.shrink(1);
+		inputInv.setStackInSlot(0, stackInSlot);
+		lastRecipe.rollResults(level.random)
+			.forEach(stack -> ItemHandlerHelper.insertItemStacked(outputInv, stack, false));
+		if (!craftingRemainingItem.isEmpty()) {
+			ItemHandlerHelper.insertItemStacked(outputInv, craftingRemainingItem, false);
 		}
 		award(AllAdvancements.MILLSTONE);
 
@@ -276,5 +289,4 @@ public class MillstoneBlockEntity extends KineticBlockEntity implements SidedSto
 			}
 		}
 	}
-
 }

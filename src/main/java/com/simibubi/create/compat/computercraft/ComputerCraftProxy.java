@@ -22,6 +22,8 @@ public class ComputerCraftProxy {
 		computerFactory = ComputerBehaviour::new;
 
 		PeripheralLookup.get().registerFallback((level, blockPos, blockState, blockEntity, direction) -> peripheralProvider(level, blockPos));
+		ComputerBehaviour.registerItemDetailProviders();
+
 	}
 
 	private static Function<SmartBlockEntity, ? extends AbstractComputerBehaviour> fallbackFactory;

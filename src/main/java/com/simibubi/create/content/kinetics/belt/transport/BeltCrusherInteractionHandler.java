@@ -43,9 +43,6 @@ public class BeltCrusherInteractionHandler {
 			crusherEntry += .399f * (beltMovementPositive ? -1 : 1);
 			float postCrusherEntry = crusherEntry + .799f * (!beltMovementPositive ? -1 : 1);
 
-			float extraOffset = BeltHelper.getSegmentBE(world, beltInventory.belt.getBlockPos().relative(movementFacing.getOpposite())) != null ? .275f : 0;
-			nextOffset -= extraOffset;
-
 			boolean hasCrossed = nextOffset > crusherEntry && nextOffset < postCrusherEntry && beltMovementPositive
 				|| nextOffset < crusherEntry && nextOffset > postCrusherEntry && !beltMovementPositive;
 			if (!hasCrossed)
@@ -73,8 +70,17 @@ public class BeltCrusherInteractionHandler {
 				currentItem.stack = remainder;
 				beltInventory.belt.sendData();
 				return true;
-			}
-        }
+
+			int notFilled = currentItem.stack.getCount() - toInsert.getCount();
+			if (!remainder.isEmpty()) {
+				remainder.grow(notFilled);
+			} else if (notFilled > 0)
+				remainder = currentItem.stack.copyWithCount(notFilled);
+
+			currentItem.stack = remainder;
+			beltInventory.belt.notifyUpdate();
+			return true;
+		}
 
 		return false;
 	}

@@ -3,7 +3,7 @@ package com.simibubi.create.content.decoration.copycat;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllBlocks;
 
@@ -51,7 +51,7 @@ public abstract class CopycatModel extends ForwardingBakedModel implements Custo
 		wrapped = originalModel;
 	}
 
-	private void gatherOcclusionData(BlockAndTintGetter world, BlockPos pos, BlockState state, BlockState material,
+	private void gatherOcclusionData(BlockAndTintGetter level, BlockPos pos, BlockState state, BlockState material,
 		OcclusionData occlusionData, CopycatBlock copycatBlock) {
 		MutableBlockPos mutablePos = new MutableBlockPos();
 		for (Direction face : Iterate.directions) {
@@ -148,7 +148,7 @@ public abstract class CopycatModel extends ForwardingBakedModel implements Custo
 		}
 
 		public boolean isOccluded(Direction face) {
-			return face == null ? false : occluded[face.get3DDataValue()];
+			return face != null && occluded[face.get3DDataValue()];
 		}
 	}
 

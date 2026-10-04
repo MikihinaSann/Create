@@ -6,7 +6,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -19,6 +18,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllBlocks;
@@ -70,7 +70,8 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 
-public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
+public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity, Clearable {
+
 
 	SidedFilteringBehaviour filtering;
 
@@ -247,7 +248,6 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 		});
 	}
 
-	private static Random rand = new Random();
 	private static Map<Pair<BrassTunnelBlockEntity, Direction>, ItemStack> distributed = new IdentityHashMap<>();
 	private static Set<Pair<BrassTunnelBlockEntity, Direction>> full = new HashSet<>();
 
@@ -266,7 +266,7 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 		boolean robin = mode == SelectionMode.FORCED_ROUND_ROBIN || mode == SelectionMode.ROUND_ROBIN;
 
 		if (mode == SelectionMode.RANDOMIZE)
-			indexStart = rand.nextInt(amountTargets);
+			indexStart = level.random.nextInt(amountTargets);
 		if (mode == SelectionMode.PREFER_NEAREST || mode == SelectionMode.SYNCHRONIZE)
 			indexStart = 0;
 
@@ -770,6 +770,11 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 	}
 
 	@Override
+	public void clearContent() {
+		((BrassTunnelItemHandler) tunnelCapability).clearContent();
+	}
+
+	@Override
 	public void destroy() {
 		super.destroy();
 		Block.popResource(level, worldPosition, stackToDistribute);
@@ -801,7 +806,7 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 
 		SelectionMode(AllIcons icon) {
 			this.icon = icon;
-			this.translationKey = "tunnel.selection_mode." + Lang.asId(name());
+			this.translationKey = "create.tunnel.selection_mode." + Lang.asId(name());
 		}
 
 		@Override

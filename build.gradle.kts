@@ -82,7 +82,8 @@ repositories {
         content { includeGroup("com.jamieswhiteshirt") }
     }
     maven("https://maven.ladysnake.org/releases") // CCA, for Trinkets
-    maven("https://maven.saps.dev/releases") // FTB
+    maven("https://maven.ftb.dev/releases") // FTB
+    maven("https://chocolateminecraft.com/maven") // Xaero
     maven("https://maven.architectury.dev") // Architectury API
     maven("https://jm.gserv.me/repository/maven-public/") // Journey map
 }
@@ -141,6 +142,9 @@ dependencies {
 
     modCompileOnly("maven.modrinth:journeymap:$jmVersion")
     modCompileOnly("info.journeymap:journeymap-api:$jmApiVersion")
+
+    compileOnly("xaero.lib:xaerolib-fabric-1.21:1.0.42")
+    modCompileOnly("curse.maven:xaeros-world-map-317780:7401095")
 
     // EMI
     modCompileOnly("dev.emi:emi-fabric:$emiVersion:api") { isTransitive = false }

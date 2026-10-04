@@ -63,5 +63,4 @@ public class CrushingWheelBlockEntity extends KineticBlockEntity {
 		}
 		return false;
 	}
-
 }

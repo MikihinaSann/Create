@@ -26,6 +26,8 @@ public class TrainMapEvents {
 			FTBChunksTrainMap.tick();
 		if (Mods.JOURNEYMAP.isLoaded())
 			JourneyTrainMap.tick();
+		if (Mods.XAEROWORLDMAP.isLoaded())
+			XaeroTrainMap.tick();
 	}
 
 	public static boolean mouseClick(Screen screen, double mouseX, double mouseY, int button) {
@@ -34,7 +36,11 @@ public class TrainMapEvents {
 		if (Mods.JOURNEYMAP.isLoaded() && JourneyTrainMap.mouseClick(screen, (int) mouseX, (int) mouseY))
 			return false;
 
+		if (Mods.XAEROWORLDMAP.isLoaded() && XaeroTrainMap.mouseClick(screen, mouseX, mouseY))
+			return false;
+
 		return true;
+
 	}
 
 	public static boolean cancelTooltips(ItemStack stack, PoseStack matrices, int x, int y, int width, int height, Font font, List<ClientTooltipComponent> tooltip) {

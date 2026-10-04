@@ -36,6 +36,14 @@ import io.github.fabricators_of_create.porting_lib.tags.Tags;
 public class CreateRegistrateTags {
 	private static final CreateRegistrate REGISTRATE = Create.registrate();
 
+	private static final Block[] SHULKER_BOXES = {
+		Blocks.SHULKER_BOX,
+		Blocks.WHITE_SHULKER_BOX, Blocks.ORANGE_SHULKER_BOX, Blocks.MAGENTA_SHULKER_BOX, Blocks.LIGHT_BLUE_SHULKER_BOX,
+		Blocks.YELLOW_SHULKER_BOX, Blocks.LIME_SHULKER_BOX, Blocks.PINK_SHULKER_BOX, Blocks.GRAY_SHULKER_BOX,
+		Blocks.LIGHT_GRAY_SHULKER_BOX, Blocks.CYAN_SHULKER_BOX, Blocks.PURPLE_SHULKER_BOX, Blocks.BLUE_SHULKER_BOX,
+		Blocks.BROWN_SHULKER_BOX, Blocks.GREEN_SHULKER_BOX, Blocks.RED_SHULKER_BOX, Blocks.BLACK_SHULKER_BOX
+	};
+
 	public static void addGenerators() {
 		REGISTRATE.addDataGenerator(ProviderType.BLOCK_TAGS, CreateRegistrateTags::genBlockTags);
 		REGISTRATE.addDataGenerator(ProviderType.ITEM_TAGS, CreateRegistrateTags::genItemTags);
@@ -94,9 +102,6 @@ public class CreateRegistrateTags {
 			.addTag(BlockTags.FENCE_GATES)
 			.addTag(BlockTags.BANNERS);
 
-		prov.tag(AllBlockTags.ORE_OVERRIDE_STONE.tag)
-			.addTag(BlockTags.STONE_ORE_REPLACEABLES);
-
 		prov.tag(AllBlockTags.PASSIVE_BOILER_HEATERS.tag)
 			.add(Blocks.MAGMA_BLOCK, Blocks.LAVA)
 			.addTag(BlockTags.CAMPFIRES)
@@ -124,13 +129,14 @@ public class CreateRegistrateTags {
 		prov.tag(AllBlockTags.CHEST_MOUNTED_STORAGE.tag).add(
 			Blocks.CHEST, Blocks.TRAPPED_CHEST
 		);
-		prov.tag(AllBlockTags.SIMPLE_MOUNTED_STORAGE.tag).add(
-			Blocks.BARREL, Blocks.SHULKER_BOX,
-			Blocks.WHITE_SHULKER_BOX, Blocks.ORANGE_SHULKER_BOX, Blocks.MAGENTA_SHULKER_BOX, Blocks.LIGHT_BLUE_SHULKER_BOX,
-			Blocks.YELLOW_SHULKER_BOX, Blocks.LIME_SHULKER_BOX, Blocks.PINK_SHULKER_BOX, Blocks.GRAY_SHULKER_BOX,
-			Blocks.LIGHT_GRAY_SHULKER_BOX, Blocks.CYAN_SHULKER_BOX, Blocks.PURPLE_SHULKER_BOX, Blocks.BLUE_SHULKER_BOX,
-			Blocks.BROWN_SHULKER_BOX, Blocks.GREEN_SHULKER_BOX, Blocks.RED_SHULKER_BOX, Blocks.BLACK_SHULKER_BOX
-		);
+		prov.tag(AllBlockTags.SIMPLE_MOUNTED_STORAGE.tag)
+			.add(Blocks.BARREL)
+			.add(SHULKER_BOXES);
+
+		prov.tag(AllBlockTags.SINGLE_BLOCK_INVENTORIES.tag)
+			.add(SHULKER_BOXES)
+			.add(Blocks.HOPPER, Blocks.DISPENSER, Blocks.DROPPER, Blocks.CHISELED_BOOKSHELF, Blocks.JUKEBOX)
+			.addTag(Tags.Blocks.BARRELS);
 
 		prov.tag(AllBlockTags.ROOTS.tag)
 			.add(Blocks.MANGROVE_ROOTS);
@@ -154,6 +160,12 @@ public class CreateRegistrateTags {
 				Blocks.BUBBLE_CORAL_WALL_FAN, Blocks.FIRE_CORAL_WALL_FAN, Blocks.HORN_CORAL_WALL_FAN
 			);
 
+		prov.tag(AllBlockTags.PLOUGH_WHITELIST.tag)
+			.add(Blocks.SNOW);
+
+		prov.tag(AllBlockTags.PLOUGH_BLACKLIST.tag)
+			.addTag(BlockTags.PORTALS);
+
 		// COMPAT
 
 		TagGen.addOptional(prov.tag(AllBlockTags.NON_MOVABLE.tag), Mods.IE, List.of(
@@ -164,21 +176,13 @@ public class CreateRegistrateTags {
 
 		TagGen.addOptional(prov.tag(AllBlockTags.ROOTS.tag), Mods.TF,
 			List.of("root", "liveroot_block", "mangrove_root"));
-
-		// VALIDATE
-
-		for (AllBlockTags tag : AllBlockTags.values()) {
-			if (tag.alwaysDatagen) {
-				prov.getOrCreateRawBuilder(tag.tag);
-			}
-		}
 	}
 
 	private static void genItemTags(RegistrateTagsProvider<Item> provIn) {
 		CreateTagsProvider<Item> prov = new CreateTagsProvider<>(provIn, Item::builtInRegistryHolder);
 
 		prov.tag(AllItemTags.CHAIN_RIDEABLE.tag)
-			.addTag(AllItemTags.WRENCH.tag);
+			.addTag(Tags.Items.TOOLS_WRENCH);
 
 		prov.tag(AllItemTags.PULPIFIABLE.tag)
 			.add(Items.BAMBOO, Items.SUGAR_CANE)
@@ -192,7 +196,8 @@ public class CreateRegistrateTags {
 
 		prov.tag(AllItemTags.UPRIGHT_ON_BELT.tag)
 			.add(Items.GLASS_BOTTLE, Items.POTION, Items.SPLASH_POTION, Items.LINGERING_POTION,
-				Items.HONEY_BOTTLE, Items.CAKE, Items.BOWL, Items.MUSHROOM_STEW, Items.SUSPICIOUS_STEW);
+				Items.HONEY_BOTTLE, Items.CAKE, Items.BOWL, Items.MUSHROOM_STEW, Items.RABBIT_STEW,
+				Items.BEETROOT_SOUP, Items.SUSPICIOUS_STEW);
 
 		prov.tag(AllItemTags.CONTRAPTION_CONTROLLED.tag)
 			.add(Items.BELL, Items.CAMPFIRE, Items.SOUL_CAMPFIRE, Items.DISPENSER, Items.DROPPER);
@@ -205,7 +210,20 @@ public class CreateRegistrateTags {
 
 		prov.tag(AllItemTags.OBSIDIAN_DUST.tag).add(AllItems.POWDERED_OBSIDIAN.get());
 
-		prov.tag(ConventionalItemTags.ENCHANTABLES).addTag(AllItemTags.PRESSURIZED_AIR_SOURCES.tag);
+		prov.tag(Tags.Items.ENCHANTABLES).addTag(AllItemTags.PRESSURIZED_AIR_SOURCES.tag);
+
+		prov.tag(ItemTags.TRIMMABLE_ARMOR)
+			.remove(
+				AllItems.COPPER_DIVING_BOOTS.getId(),
+				AllItems.COPPER_BACKTANK.getId(),
+				AllItems.COPPER_DIVING_HELMET.getId(),
+				AllItems.NETHERITE_DIVING_BOOTS.getId(),
+				AllItems.NETHERITE_BACKTANK.getId(),
+				AllItems.NETHERITE_DIVING_HELMET.getId()
+			);
+
+		prov.tag(ItemTags.DURABILITY_ENCHANTABLE)
+			.addTag(AllItemTags.SANDPAPER.tag);
 
 		// COMPAT
 
@@ -224,26 +242,28 @@ public class CreateRegistrateTags {
 			"finger_coral", "star_coral", "moss_coral", "petal_coral", "branch_coral",
 			"rock_coral", "pillow_coral", "chrome_coral", "silk_coral"));
 
-		// VALIDATE
+		TagGen.addOptional(prov.tag(AllItemTags.UPRIGHT_ON_BELT.tag), Mods.ATM, List.of(
+			"orange_pudding", "orange_sorbet", "passion_fruit_sorbet", "aloe_gel_bottle"));
 
-		for (AllItemTags tag : AllItemTags.values()) {
-			if (tag.alwaysDatagen) {
-				prov.getOrCreateRawBuilder(tag.tag);
-			}
-		}
+		TagGen.addOptional(prov.tag(AllItemTags.UPRIGHT_ON_BELT.tag), Mods.BWG, List.of(
+			"blue_glow_bottle", "green_glow_bottle", "red_glow_bottle", "yellow_glow_bottle",
+			"allium_oddion_soup", "white_puffball_stew", "aloe_vera_juice"));
+
+		TagGen.addOptional(prov.tag(AllItemTags.UPRIGHT_ON_BELT.tag), Mods.SILENT_GEMS, List.of(
+			"cup_of_coffee", "uncooked_meaty_stew", "meaty_stew", "uncooked_fishy_stew", "fishy_stew"));
+
+		TagGen.addOptional(prov.tag(AllItemTags.UPRIGHT_ON_BELT.tag), Mods.AUTUM, List.of("foul_soup",
+			"syrup_bottle", "sap_bottle"));
 	}
 
 	private static ArrayList<String> gsPalette(String material) {
 		ArrayList<String> toReturn = new ArrayList<>();
 		toReturn.add(material + "_block");
 		toReturn.add(material + "_stairs");
-		toReturn.add(material + "_slab");
 		toReturn.add("smooth_" + material);
 		toReturn.add("smooth_" + material + "_stairs");
-		toReturn.add("smooth_" + material + "_slab");
 		toReturn.add(material + "_bricks");
 		toReturn.add(material + "_brick_stairs");
-		toReturn.add(material + "_brick_slab");
 		toReturn.add("chiseled_" + material);
 		return toReturn;
 	}
@@ -281,7 +301,7 @@ public class CreateRegistrateTags {
 			.add(EntityType.BLAZE);
 
 		prov.tag(AllEntityTags.IGNORE_SEAT.tag)
-			.addTag(ConventionalEntityTypeTags.CAPTURING_NOT_SUPPORTED);
+			.addTag(Tags.EntityTypes.CAPTURING_NOT_SUPPORTED);
 
 		// VALIDATE
 
@@ -290,5 +310,6 @@ public class CreateRegistrateTags {
 				prov.getOrCreateRawBuilder(tag.tag);
 			}
 		}
+
 	}
 }

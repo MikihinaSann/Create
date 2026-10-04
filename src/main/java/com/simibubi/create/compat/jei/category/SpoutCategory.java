@@ -1,5 +1,6 @@
 package com.simibubi.create.compat.jei.category;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -11,8 +12,7 @@ import com.simibubi.create.compat.jei.category.animations.AnimatedSpout;
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 import com.simibubi.create.content.fluids.transfer.FillingRecipe;
 import com.simibubi.create.content.fluids.transfer.GenericItemFilling;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
-import com.simibubi.create.foundation.fluid.FluidIngredient;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.item.ItemHelper;
 
@@ -58,9 +58,11 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 				FluidStack fluidFromPotionItem = PotionFluidHandler.getFluidFromPotionItem(stack);
 				Ingredient bottle = Ingredient.of(Items.GLASS_BOTTLE);
 				ResourceLocation id = Create.asResource("potions");
-				FillingRecipe recipe = new ProcessingRecipeBuilder<>(FillingRecipe::new, id)
+				SizedFluidIngredient fluidIngredient = new SizedFluidIngredient(
+					DataComponentFluidIngredient.of(false, fluidFromPotionItem), fluidFromPotionItem.getAmount());
+				FillingRecipe recipe = new StandardProcessingRecipe.Builder<>(FillingRecipe::new, id)
 						.withItemIngredients(bottle)
-						.withFluidIngredients(FluidIngredient.fromFluidStack(fluidFromPotionItem))
+					.withFluidIngredients(fluidIngredient)
 						.withSingleItemOutput(stack)
 						.build();
 				consumer.accept(new RecipeHolder<>(id, recipe));
@@ -86,27 +88,20 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 				if (copyStorage == null)
 					continue;
 
-				if (!GenericItemFilling.isFluidHandlerValid(copy, copyStorage))
-					continue;
-				FluidStack fluidCopy = fluidStack.copy();
-				fluidCopy.setAmount(FluidConstants.BUCKET);
-				TransferUtil.insert(copyStorage, fluidStack);
-				ItemStack container = context.getItemVariant().toStack(TransferUtil.truncateLong(context.getAmount()));
-				if (ItemHelper.sameItem(container, copy))
-					continue;
-				if (container.isEmpty())
-					continue;
-
-				Ingredient bucket = Ingredient.of(stack);
-				ResourceLocation itemName = CatnipServices.REGISTRIES.getKeyOrThrow(stack.getItem());
-				ResourceLocation fluidName = CatnipServices.REGISTRIES.getKeyOrThrow(fluidCopy.getFluid());
-				consumer.accept(new ProcessingRecipeBuilder<>(FillingRecipe::new,
-					Create.asResource("fill_" + itemName.getNamespace() + "_" + itemName.getPath()
-						+ "_with_" + fluidName.getNamespace() + "_" + fluidName.getPath()))
-					.withItemIngredients(bucket)
-					.withFluidIngredients(FluidIngredient.fromFluidStack(fluidCopy))
-					.withSingleItemOutput(container)
-					.build());
+					Ingredient bucket = Ingredient.of(stack);
+					ResourceLocation itemName = RegisteredObjectsHelper.getKeyOrThrow(stack.getItem());
+					ResourceLocation fluidName = RegisteredObjectsHelper.getKeyOrThrow(fluidCopy.getFluid());
+					ResourceLocation id = Create.asResource("fill_" + itemName.getNamespace() + "_" + itemName.getPath()
+							+ "_with_" + fluidName.getNamespace() + "_" + fluidName.getPath());
+					SizedFluidIngredient fluidIngredient = new SizedFluidIngredient(
+						DataComponentFluidIngredient.of(false, fluidCopy), fluidCopy.getAmount());
+					FillingRecipe recipe = new StandardProcessingRecipe.Builder<>(FillingRecipe::new, id)
+							.withItemIngredients(bucket)
+						.withFluidIngredients(fluidIngredient)
+							.withSingleItemOutput(container)
+							.build();
+					consumer.accept(new RecipeHolder<>(id, recipe));
+				}
 			}
 		}
 	}
@@ -130,8 +125,8 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 	public void draw(FillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
 		AllGuiTextures.JEI_SHADOW.render(graphics, 62, 57);
 		AllGuiTextures.JEI_DOWN_ARROW.render(graphics, 126, 29);
-		spout.withFluids(recipe.getRequiredFluid()
-			.getMatchingFluidStacks())
+		spout.withFluids(Arrays.asList(recipe.getRequiredFluid()
+				.getFluids()))
 			.draw(graphics, getBackground().getWidth() / 2 - 13, 22);
 	}
 

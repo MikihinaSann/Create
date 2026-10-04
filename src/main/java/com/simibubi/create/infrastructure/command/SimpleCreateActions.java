@@ -1,8 +1,6 @@
 package com.simibubi.create.infrastructure.command;
 
 import com.simibubi.create.Create;
-import com.simibubi.create.content.equipment.goggles.GoggleConfigScreen;
-import com.simibubi.create.content.trains.CameraDistanceModifier;
 import com.simibubi.create.foundation.utility.CameraAngleAnimationService;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
@@ -77,32 +75,4 @@ public class SimpleCreateActions {
 			Create.LOGGER.debug("Received non-float value {} in camAngle packet, ignoring", value);
 		}
 	}
-
-	public static void camAngleFunction(String value) {
-		CameraAngleAnimationService.Mode mode = CameraAngleAnimationService.Mode.LINEAR;
-		String modeString = value;
-		float speed = -1;
-		String[] split = value.split(":");
-		if (split.length > 1) {
-			modeString = split[0];
-			try {
-				speed = Float.parseFloat(split[1]);
-			} catch (NumberFormatException ignored) {}
-		}
-		try {
-			mode = CameraAngleAnimationService.Mode.valueOf(modeString);
-		} catch (IllegalArgumentException ignored) {}
-
-		CameraAngleAnimationService.setAnimationMode(mode);
-		CameraAngleAnimationService.setAnimationSpeed(speed);
-	}
-
-	private static MutableComponent boolToText(boolean b) {
-        if (b) {
-            return Component.literal("enabled").withStyle(ChatFormatting.DARK_GREEN);
-        } else {
-            return Component.literal("disabled").withStyle(ChatFormatting.RED);
-        }
-	}
-
 }

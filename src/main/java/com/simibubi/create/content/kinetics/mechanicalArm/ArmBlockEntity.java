@@ -3,7 +3,9 @@ package com.simibubi.create.content.kinetics.mechanicalArm;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
+import net.minecraft.world.Clearable;
+
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.Create;
 import com.simibubi.create.api.contraption.transformable.TransformableBlockEntity;
@@ -51,11 +53,7 @@ import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
-
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
-
-public class ArmBlockEntity extends KineticBlockEntity implements TransformableBlockEntity {
+public class ArmBlockEntity extends KineticBlockEntity implements TransformableBlockEntity, Clearable {
 
 	// Server
 	List<ArmInteractionPoint> inputs;
@@ -270,6 +268,9 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 			ArmInteractionPoint armInteractionPoint = inputs.get(i);
 			if (!armInteractionPoint.isValid())
 				continue;
+			for (int j = 0; j < armInteractionPoint.getSlotCount(this); j++) {
+				if (getDistributableAmount(armInteractionPoint, j) == 0)
+					continue;
 
 			if (getDistributableAmount(armInteractionPoint) == 0)
 				continue;
@@ -309,7 +310,7 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 				if (!armInteractionPoint.isValid())
 					continue;
 
-			ItemStack remainder = armInteractionPoint.insert(held, true);
+			ItemStack remainder = armInteractionPoint.insert(this, held, true);
 			if (ItemStack.matches(remainder, heldItem))
 				continue;
 
@@ -343,28 +344,22 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 		setChanged();
 	}
 
-	protected int getDistributableAmount(ArmInteractionPoint armInteractionPoint) {
-		try (Transaction t = Transaction.openOuter()) {
-			ItemStack stack = armInteractionPoint.extract(t);
-
-			ItemStack remainder = stack.isEmpty() ? stack : simulateInsertion(stack);
-			if (ItemStack.isSameItem(stack, remainder)) {
-				return stack.getCount() - remainder.getCount();
-			} else {
-				return stack.getCount();
-			}
+	protected int getDistributableAmount(ArmInteractionPoint armInteractionPoint, int i) {
+		ItemStack stack = armInteractionPoint.extract(this, i, true);
+		ItemStack remainder = simulateInsertion(stack);
+		if (ItemStack.isSameItem(stack, remainder)) {
+			return stack.getCount() - remainder.getCount();
+		} else {
+			return stack.getCount();
 		}
 	}
 
 	private ItemStack simulateInsertion(ItemStack stack) {
-		try (Transaction t = Transaction.openOuter()) {
-			for (ArmInteractionPoint armInteractionPoint : outputs) {
-				if (armInteractionPoint.isValid())
-					stack = armInteractionPoint.insert(stack, t);
-				if (stack.isEmpty())
-					break;
-			}
-			return stack;
+		for (ArmInteractionPoint armInteractionPoint : outputs) {
+			if (armInteractionPoint.isValid())
+				stack = armInteractionPoint.insert(this, stack, true);
+			if (stack.isEmpty())
+				break;
 		}
 	}
 
@@ -372,10 +367,8 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 		ArmInteractionPoint armInteractionPoint = getTargetedInteractionPoint();
 		if (armInteractionPoint != null && armInteractionPoint.isValid()) {
 			ItemStack toInsert = heldItem.copy();
-			try (Transaction t = Transaction.openOuter()) {
-				ItemStack remainder = armInteractionPoint.insert(toInsert, t);
-				t.commit();
-				heldItem = remainder;
+			ItemStack remainder = armInteractionPoint.insert(this, toInsert, false);
+			heldItem = remainder;
 
 				if (armInteractionPoint instanceof JukeboxPoint && remainder.isEmpty())
 					award(AllAdvancements.MUSICAL_ARM);
@@ -394,13 +387,13 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 
 	protected void collectItem() {
 		ArmInteractionPoint armInteractionPoint = getTargetedInteractionPoint();
-		if (armInteractionPoint != null && armInteractionPoint.isValid()) {
-			try (Transaction t = Transaction.openOuter()) {
-				int amountExtracted = getDistributableAmount(armInteractionPoint);
+		if (armInteractionPoint != null && armInteractionPoint.isValid())
+			for (int i = 0; i < armInteractionPoint.getSlotCount(this); i++) {
+				int amountExtracted = getDistributableAmount(armInteractionPoint, i);
 				if (amountExtracted == 0)
 					return;
 				ItemStack prevHeld = heldItem;
-				heldItem = armInteractionPoint.extract(amountExtracted, t);
+				heldItem = armInteractionPoint.extract(this, i, amountExtracted, false);
 				phase = Phase.SEARCH_OUTPUTS;
 				chasedPointProgress = 0;
 				chasedPointIndex = -1;
@@ -657,7 +650,7 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 
 		SelectionMode(AllIcons icon) {
 			this.icon = icon;
-			this.translationKey = "mechanical_arm.selection_mode." + Lang.asId(name());
+			this.translationKey = "create.mechanical_arm.selection_mode." + Lang.asId(name());
 		}
 
 		@Override
@@ -669,6 +662,11 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 		public String getTranslationKey() {
 			return translationKey;
 		}
+	}
+
+	@Override
+	public void clearContent() {
+		heldItem = ItemStack.EMPTY;
 	}
 
 	private static class Client {

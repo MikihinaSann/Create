@@ -58,7 +58,8 @@ public class CreativeFluidTankBlockEntity extends FluidTankBlockEntity {
 			FluidStack.OPTIONAL_CODEC.fieldOf("fluid").forGetter(FluidTank::getFluid),
 			CreateCodecs.NON_NEGATIVE_LONG.fieldOf("capacity").forGetter(FluidTank::getCapacity)
 		).apply(i, (fluid, capacity) -> {
-			CreativeSmartFluidTank tank = new CreativeSmartFluidTank(capacity, $ -> {});
+			CreativeSmartFluidTank tank = new CreativeSmartFluidTank(capacity, $ -> {
+			});
 			tank.setFluid(fluid);
 			return tank;
 		}));

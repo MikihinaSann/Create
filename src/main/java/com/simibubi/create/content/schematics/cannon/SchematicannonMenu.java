@@ -5,7 +5,6 @@ import com.simibubi.create.foundation.gui.menu.MenuBase;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -71,7 +70,7 @@ public class SchematicannonMenu extends MenuBase<SchematicannonBlockEntity> {
 		ItemStack stack = clickedSlot.getItem();
 
 		if (index < 5) {
-			moveItemStackTo(stack, 5, slots.size(), false);
+			moveItemStackTo(stack, 5, slots.size(), true);
 		} else {
 			if (moveItemStackTo(stack, 0, 1, false) || moveItemStackTo(stack, 2, 3, false)
 					|| moveItemStackTo(stack, 4, 5, false))

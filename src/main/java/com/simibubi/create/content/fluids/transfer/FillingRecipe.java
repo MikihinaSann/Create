@@ -1,5 +1,6 @@
 package com.simibubi.create.content.fluids.transfer;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -7,10 +8,10 @@ import java.util.function.Supplier;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.compat.recipeViewerCommon.SequencedAssemblySubCategoryType;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder.ProcessingRecipeParams;
+import com.simibubi.create.content.processing.recipe.ProcessingRecipeParams;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+
 import com.simibubi.create.content.processing.sequenced.IAssemblyRecipe;
-import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.utility.CreateLang;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
@@ -23,7 +24,7 @@ import net.minecraft.world.level.Level;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-public class FillingRecipe extends ProcessingRecipe<SingleRecipeInput> implements IAssemblyRecipe {
+public class FillingRecipe extends StandardProcessingRecipe<SingleRecipeInput> implements IAssemblyRecipe {
 
 	public FillingRecipe(ProcessingRecipeParams params) {
 		super(AllRecipeTypes.FILLING, params);
@@ -50,9 +51,9 @@ public class FillingRecipe extends ProcessingRecipe<SingleRecipeInput> implement
 		return 1;
 	}
 
-	public FluidIngredient getRequiredFluid() {
+	public SizedFluidIngredient getRequiredFluid() {
 		if (fluidIngredients.isEmpty())
-			throw new IllegalStateException("Filling Recipe: " + id.toString() + " has no fluid ingredient!");
+			throw new IllegalStateException("Filling Recipe has no fluid ingredient!");
 		return fluidIngredients.get(0);
 	}
 
@@ -60,15 +61,15 @@ public class FillingRecipe extends ProcessingRecipe<SingleRecipeInput> implement
 	public void addAssemblyIngredients(List<Ingredient> list) {}
 
 	@Override
-	public void addAssemblyFluidIngredients(List<FluidIngredient> list) {
+	public void addAssemblyFluidIngredients(List<SizedFluidIngredient> list) {
 		list.add(getRequiredFluid());
 	}
 
 	@Override
 	@Environment(EnvType.CLIENT)
 	public Component getDescriptionForAssembly() {
-		List<FluidStack> matchingFluidStacks = fluidIngredients.get(0)
-			.getMatchingFluidStacks();
+		List<FluidStack> matchingFluidStacks = Arrays.asList(fluidIngredients.get(0)
+			.getFluids());
 		if (matchingFluidStacks.size() == 0) {
             return Component.literal("Invalid");
         }

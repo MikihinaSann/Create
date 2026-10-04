@@ -7,6 +7,7 @@ import com.simibubi.create.AllTags.AllMountedItemStorageTypeTags;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import com.simibubi.create.api.registry.CreateRegistries;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.IntrinsicHolderTagsProvider;
@@ -24,14 +25,6 @@ public class CreateMountedItemStorageTypeTagsProvider extends IntrinsicHolderTag
 		tag(AllMountedItemStorageTypeTags.FUEL_BLACKLIST.tag).add(
 			AllMountedStorageTypes.VAULT.get()
 		);
-
-		// VALIDATE
-
-		for (AllMountedItemStorageTypeTags tag : AllMountedItemStorageTypeTags.values()) {
-			if (tag.alwaysDatagen) {
-				getOrCreateRawBuilder(tag.tag);
-			}
-		}
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package com.simibubi.create.foundation.events;
 
+import com.simibubi.create.AllBlocks;
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.content.contraptions.elevator.ElevatorControlsHandler;
 import com.simibubi.create.content.contraptions.wrench.RadialWrenchHandler;

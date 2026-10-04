@@ -1,13 +1,21 @@
 package com.simibubi.create.content.logistics.redstoneRequester;
 
+import java.util.List;
+
+import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllSoundEvents;
+import com.simibubi.create.compat.Mods;
+import com.simibubi.create.compat.computercraft.AbstractComputerBehaviour;
+import com.simibubi.create.compat.computercraft.ComputerCraftProxy;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
 import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBehaviour.RequestType;
 import com.simibubi.create.content.logistics.packagerLink.WiFiParticle;
-import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.logistics.stockTicker.StockCheckingBlockEntity;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
+import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.createmod.catnip.codecs.CatnipCodecUtils;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.core.BlockPos;
@@ -31,9 +39,9 @@ import io.github.fabricators_of_create.porting_lib.util.NetworkHooks;
 
 public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity implements MenuProvider {
 
+	public AbstractComputerBehaviour computerBehaviour;
 	public boolean allowPartialRequests;
-	public PackageOrder encodedRequest = PackageOrder.empty();
-	public PackageOrder encodedRequestContext = PackageOrder.empty();
+	public PackageOrderWithCrafts encodedRequest = PackageOrderWithCrafts.empty();
 	public String encodedTargetAdress = "";
 
 	public boolean lastRequestSucceeded;
@@ -43,6 +51,28 @@ public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity imple
 	public RedstoneRequesterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
 		allowPartialRequests = false;
+	}
+
+	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+		if (Mods.COMPUTERCRAFT.isLoaded()) {
+			event.registerBlockEntity(
+				PeripheralCapability.get(),
+				AllBlockEntityTypes.REDSTONE_REQUESTER.get(),
+				(be, context) -> be.computerBehaviour.getPeripheralCapability()
+			);
+		}
+	}
+
+	@Override
+	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+		super.addBehaviours(behaviours);
+		behaviours.add(computerBehaviour = ComputerCraftProxy.behaviour(this));
+	}
+
+	@Override
+	public void invalidate() {
+		super.invalidate();
+		computerBehaviour.removePeripheral();
 	}
 
 	protected void onRedstonePowerChanged() {
@@ -81,7 +111,7 @@ public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity imple
 			}
 		}
 
-		broadcastPackageRequest(RequestType.REDSTONE, encodedRequest, null, encodedTargetAdress, encodedRequestContext.isEmpty() ? null : encodedRequestContext);
+		broadcastPackageRequest(RequestType.REDSTONE, encodedRequest, null, encodedTargetAdress);
 		if (level instanceof ServerLevel serverLevel)
 			CatnipServices.NETWORK.sendToClientsAround(serverLevel, worldPosition, 32, new RedstoneRequesterEffectPacket(worldPosition, anySucceeded));
 		lastRequestSucceeded = true;
@@ -93,8 +123,7 @@ public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity imple
 		redstonePowered = tag.getBoolean("Powered");
 		lastRequestSucceeded = tag.getBoolean("Success");
 		allowPartialRequests = tag.getBoolean("AllowPartial");
-		encodedRequest = CatnipCodecUtils.decode(PackageOrder.CODEC, tag.getCompound("EncodedRequest")).orElse(PackageOrder.empty());
-		encodedRequestContext = CatnipCodecUtils.decode(PackageOrder.CODEC, tag.getCompound("EncodedRequestContext")).orElse(PackageOrder.empty());
+		encodedRequest = CatnipCodecUtils.decode(PackageOrderWithCrafts.CODEC, registries, tag.getCompound("EncodedRequest")).orElse(PackageOrderWithCrafts.empty());
 		encodedTargetAdress = tag.getString("EncodedAddress");
 	}
 
@@ -103,8 +132,7 @@ public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity imple
 		super.writeSafe(tag, registries);
 		tag.putBoolean("AllowPartial", allowPartialRequests);
 		tag.putString("EncodedAddress", encodedTargetAdress);
-		tag.put("EncodedRequest", CatnipCodecUtils.encode(PackageOrder.CODEC, encodedRequest).orElseThrow());
-		tag.put("EncodedRequestContext", CatnipCodecUtils.encode(PackageOrder.CODEC, encodedRequestContext).orElseThrow());
+		tag.put("EncodedRequest", CatnipCodecUtils.encode(PackageOrderWithCrafts.CODEC, registries, encodedRequest).orElseThrow());
 	}
 
 	@Override
@@ -114,8 +142,7 @@ public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity imple
 		tag.putBoolean("Success", lastRequestSucceeded);
 		tag.putBoolean("AllowPartial", allowPartialRequests);
 		tag.putString("EncodedAddress", encodedTargetAdress);
-		tag.put("EncodedRequest", CatnipCodecUtils.encode(PackageOrder.CODEC, encodedRequest).orElseThrow());
-		tag.put("EncodedRequestContext", CatnipCodecUtils.encode(PackageOrder.CODEC, encodedRequestContext).orElseThrow());
+		tag.put("EncodedRequest", CatnipCodecUtils.encode(PackageOrderWithCrafts.CODEC, registries, encodedRequest).orElseThrow());
 	}
 
 	public InteractionResult use(Player player) {
@@ -134,8 +161,8 @@ public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity imple
 
 	@Override
 	public Component getDisplayName() {
-        return Component.empty();
-    }
+		return Component.empty();
+	}
 
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {

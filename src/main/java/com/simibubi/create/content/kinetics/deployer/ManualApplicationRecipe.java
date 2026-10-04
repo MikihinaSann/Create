@@ -6,8 +6,6 @@ import java.util.Optional;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder.ProcessingRecipeParams;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.advancement.CreateAdvancement;
 import com.simibubi.create.foundation.utility.AdventureUtil;
@@ -21,7 +19,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -73,9 +71,9 @@ public class ManualApplicationRecipe extends ItemApplicationRecipe {
 		ManualApplicationRecipe recipe = (ManualApplicationRecipe) foundRecipe.get().value();
 		level.destroyBlock(pos, false);
 
-		BlockState transformedBlock = recipe.transformBlock(blockState);
-		level.setBlock(pos, transformedBlock, 3);
-		recipe.rollResults()
+		BlockState transformedBlock = recipe.transformBlock(blockState, level.random);
+		level.setBlock(pos, transformedBlock, Block.UPDATE_ALL);
+		recipe.rollResults(level.random)
 			.forEach(stack -> Block.popResource(level, pos, stack));
 
 		boolean creative = player != null && player
@@ -88,6 +86,14 @@ public class ManualApplicationRecipe extends ItemApplicationRecipe {
 				heldItem.hurtAndBreak(1, player, LivingEntity.getSlotForHand(InteractionHand.MAIN_HAND));
 			else
 				heldItem.shrink(1);
+				if (heldItem.isEmpty()) {
+					player.setItemInHand(hand, leftover);
+				} else {
+					if (!player.getInventory().add(leftover)) {
+						player.drop(leftover, false);
+					}
+				}
+			}
 		}
 
 		awardAdvancements(player, transformedBlock);
@@ -111,15 +117,16 @@ public class ManualApplicationRecipe extends ItemApplicationRecipe {
 		advancement.awardTo(player);
 	}
 
-	public ManualApplicationRecipe(ProcessingRecipeParams params) {
+	public ManualApplicationRecipe(ItemApplicationRecipeParams params) {
 		super(AllRecipeTypes.ITEM_APPLICATION, params);
 	}
 
 	public static RecipeHolder<DeployerApplicationRecipe> asDeploying(RecipeHolder<?> recipe) {
 		ManualApplicationRecipe mar = (ManualApplicationRecipe) recipe.value();
-		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(mar.id.getNamespace(), mar.id.getPath() + "_using_deployer");
-		ProcessingRecipeBuilder<DeployerApplicationRecipe> builder =
-			new ProcessingRecipeBuilder<>(DeployerApplicationRecipe::new, id)
+		ResourceLocation id = AllRecipeTypes.CAN_BE_AUTOMATED.test(recipe) ?
+			recipe.id().withSuffix("_using_deployer") : recipe.id();
+		ItemApplicationRecipe.Builder<DeployerApplicationRecipe> builder =
+			new ItemApplicationRecipe.Builder<>(DeployerApplicationRecipe::new, id)
 					.require(mar.ingredients.get(0))
 					.require(mar.ingredients.get(1));
 		for (ProcessingOutput output : mar.results)
@@ -135,9 +142,9 @@ public class ManualApplicationRecipe extends ItemApplicationRecipe {
 				.asItem()));
 	}
 
-	public BlockState transformBlock(BlockState in) {
+	public BlockState transformBlock(BlockState in, RandomSource randomSource) {
 		ProcessingOutput mainOutput = results.get(0);
-		ItemStack output = mainOutput.rollOutput();
+		ItemStack output = mainOutput.rollOutput(randomSource);
 		if (output.getItem() instanceof BlockItem bi)
 			return BlockHelper.copyProperties(in, bi.getBlock()
 				.defaultBlockState());
@@ -145,8 +152,8 @@ public class ManualApplicationRecipe extends ItemApplicationRecipe {
 	}
 
 	@Override
-	public List<ItemStack> rollResults() {
-		return rollResults(getRollableResultsExceptBlock());
+	public List<ItemStack> rollResults(RandomSource randomSource) {
+		return rollResults(getRollableResultsExceptBlock(), randomSource);
 	}
 
 	public List<ProcessingOutput> getRollableResultsExceptBlock() {

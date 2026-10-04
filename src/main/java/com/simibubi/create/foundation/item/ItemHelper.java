@@ -5,9 +5,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import javax.annotation.Nullable;
-
-import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
@@ -22,11 +20,11 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.simibubi.create.content.logistics.box.PackageEntity;
 import com.simibubi.create.foundation.block.IBE;
+import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 
 import net.createmod.catnip.data.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.Containers;
@@ -73,8 +71,8 @@ public class ItemHelper {
 		ItemStack result = out.copy();
 		result.setCount(in.getCount() * out.getCount());
 
-		while (result.getCount() > result.getOrDefault(DataComponents.MAX_STACK_SIZE, 64)) {
-			stacks.add(result.split(result.getOrDefault(DataComponents.MAX_STACK_SIZE, 64)));
+		while (result.getCount() > result.getMaxStackSize()) {
+			stacks.add(result.split(result.getMaxStackSize()));
 		}
 
 		stacks.add(result);
@@ -85,7 +83,7 @@ public class ItemHelper {
 		for (ItemStack s : stacks) {
 			if (!ItemStack.isSameItemSameComponents(stack, s))
 				continue;
-			int transferred = Math.min(s.getOrDefault(DataComponents.MAX_STACK_SIZE, 64) - s.getCount(), stack.getCount());
+			int transferred = Math.min(s.getMaxStackSize() - s.getCount(), stack.getCount());
 			s.grow(transferred);
 			stack.shrink(transferred);
 		}
@@ -116,17 +114,16 @@ public class ItemHelper {
 		float f = 0.0F;
 		int totalSlots = 0;
 
-		try (Transaction t = Transaction.openOuter()) {
-			for (StorageView<ItemVariant> view : inv) {
-				long slotLimit = view.getCapacity();
-				if (slotLimit == 0) {
-					continue;
-				}
-				totalSlots++;
-				if (!view.isResourceBlank()) {
-					f += (float) view.getAmount() / (float) Math.min(slotLimit, view.getResource().getItem().getMaxStackSize());
-					++i;
-				}
+		for (int j = 0; j < inv.getSlots(); ++j) {
+			int slotLimit = inv.getSlotLimit(j);
+			if (slotLimit == 0) {
+				totalSlots--;
+				continue;
+			}
+			ItemStack itemstack = inv.getStackInSlot(j);
+			if (!itemstack.isEmpty()) {
+				f += (float) itemstack.getCount() / (float) Math.min(slotLimit, itemstack.getMaxStackSize());
+				++i;
 			}
 		}
 
@@ -206,40 +203,25 @@ public class ItemHelper {
 		ItemVariant extracting = null;
 		List<ItemVariant> otherTargets = null;
 
-		if (inv.supportsExtraction()) {
-			try (Transaction t = Transaction.openOuter()) {
-				for (StorageView<ItemVariant> view : inv.nonEmptyViews()) {
-					ItemVariant contained = view.getResource();
-					int maxStackSize = contained.getItem().getMaxStackSize();
-					// amount stored, amount needed, or max size, whichever is lowest.
-					int amountToExtractFromThisSlot = Math.min(truncateLong(view.getAmount()), Math.min(amount - extracted, maxStackSize));
-					if (!test.test(contained.toStack(amountToExtractFromThisSlot)))
-						continue;
-					if (extracting == null) {
-						extracting = contained; // we found a target
-					}
-					boolean sameType = extracting.equals(contained);
-					if (sameType && maxStackSize == extracted) {
-						// stack is maxed out, skip
-						continue;
-					}
-					if (!sameType) {
-						// multiple types passed the test
-						if (otherTargets == null) {
-							otherTargets = new ArrayList<>();
-						}
-						otherTargets.add(contained);
-						continue;
-					}
-					ItemVariant toExtract = extracting;
-					long actualExtracted = view.extract(toExtract, amountToExtractFromThisSlot, t);
-					if (actualExtracted == 0) continue;
-					extracted += actualExtracted;
-					if (extracted == amount) {
-						if (!simulate)
-							t.commit();
-						return toExtract.toStack(extracted);
-					}
+		Extraction:
+		do {
+			extracting = ItemStack.EMPTY;
+
+			for (int slot = 0; slot < inv.getSlots(); slot++) {
+				ItemStack slotStack = inv.getStackInSlot(slot);
+				if (slotStack.isEmpty())
+					continue;
+				int amountToExtractFromThisSlot =
+					Math.min(maxExtractionCount - extracting.getCount(), slotStack.getMaxStackSize());
+				ItemStack stack = inv.extractItem(slot, amountToExtractFromThisSlot, true);
+
+				if (stack.isEmpty())
+					continue;
+				if (!test.test(stack))
+					continue;
+				if (!extracting.isEmpty() && !canItemStackAmountsStack(stack, extracting)) {
+					potentialOtherMatch = true;
+					continue;
 				}
 
 				// if the code reaches this point, we've extracted as much as possible, and it isn't enough.
@@ -312,7 +294,7 @@ public class ItemHelper {
 	}
 
 	public static boolean canItemStackAmountsStack(ItemStack a, ItemStack b) {
-		return ItemStack.isSameItemSameComponents(a, b) && a.getCount() + b.getCount() <= a.getOrDefault(DataComponents.MAX_STACK_SIZE, 64);
+		return ItemStack.isSameItemSameComponents(a, b) && a.getCount() + b.getCount() <= a.getMaxStackSize();
 	}
 
 	public static int truncateLong(long l) {
@@ -331,7 +313,7 @@ public class ItemHelper {
 		if (entityIn instanceof PackageEntity packageEntity) {
 			return packageEntity.getBox();
 		}
-		return entityIn instanceof ItemEntity ? ((ItemEntity) entityIn).getItem() : ItemStack.EMPTY;
+		return entityIn instanceof ItemEntity itemEntity ? itemEntity.getItem() : ItemStack.EMPTY;
 	}
 
 	public static void fillItemStackHandler(ItemContainerContents contents, ItemStackHandler inv) {
@@ -362,7 +344,11 @@ public class ItemHelper {
 			throw new IllegalArgumentException("Slot count mismatch");
 		}
 
-		for (int i = 0; i < from.getSlotCount(); i++) {
+		for (int slot = to.getSlots() - 1; slot >= 0; slot--) {
+			to.setStackInSlot(slot, ItemStack.EMPTY);
+		}
+
+		for (int i = 0; i < from.getSlots(); i++) {
 			to.setStackInSlot(i, from.getStackInSlot(i).copy());
 		}
 	}

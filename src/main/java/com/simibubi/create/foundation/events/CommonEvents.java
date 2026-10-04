@@ -16,6 +16,8 @@ import com.simibubi.create.content.contraptions.actors.trainControls.ControlsSer
 import com.simibubi.create.content.contraptions.glue.SuperGlueHandler;
 import com.simibubi.create.content.contraptions.glue.SuperGlueItem;
 import com.simibubi.create.content.contraptions.minecart.CouplingHandler;
+import com.simibubi.create.content.contraptions.chassis.StickerBlockEntity;
+
 import com.simibubi.create.content.contraptions.minecart.CouplingPhysics;
 import com.simibubi.create.content.contraptions.minecart.MinecartCouplingItem;
 import com.simibubi.create.content.contraptions.minecart.capability.CapabilityMinecartController;
@@ -57,6 +59,7 @@ import com.simibubi.create.content.kinetics.drill.CobbleGenOptimisation;
 import com.simibubi.create.content.kinetics.gauge.SpeedGaugeBlockEntity;
 import com.simibubi.create.content.kinetics.gauge.StressGaugeBlockEntity;
 import com.simibubi.create.content.kinetics.millstone.MillstoneBlockEntity;
+import com.simibubi.create.content.kinetics.motor.CreativeMotorBlockEntity;
 import com.simibubi.create.content.kinetics.saw.SawBlockEntity;
 import com.simibubi.create.content.kinetics.speedController.SpeedControllerBlockEntity;
 import com.simibubi.create.content.kinetics.transmission.sequencer.SequencedGearshiftBlockEntity;
@@ -69,7 +72,9 @@ import com.simibubi.create.content.logistics.packagePort.frogport.FrogportBlockE
 import com.simibubi.create.content.logistics.packagePort.postbox.PostboxBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.repackager.RepackagerBlockEntity;
+import com.simibubi.create.content.logistics.redstoneRequester.RedstoneRequesterBlockEntity;
 import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;
+import com.simibubi.create.content.logistics.tableCloth.TableClothBlockEntity;
 import com.simibubi.create.content.logistics.tunnel.BeltTunnelBlockEntity;
 import com.simibubi.create.content.logistics.tunnel.BrassTunnelBlockEntity;
 import com.simibubi.create.content.logistics.vault.ItemVaultBlockEntity;
@@ -80,7 +85,10 @@ import com.simibubi.create.content.processing.burner.BlazeBurnerHandler;
 import com.simibubi.create.content.redstone.displayLink.ClickToLinkBlockItem;
 import com.simibubi.create.content.redstone.link.LinkHandler;
 import com.simibubi.create.content.redstone.link.controller.LinkedControllerServerHandler;
+import com.simibubi.create.content.redstone.nixieTube.NixieTubeBlockEntity;
 import com.simibubi.create.content.trains.entity.CarriageEntityHandler;
+import com.simibubi.create.content.trains.observer.TrackObserverBlockEntity;
+import com.simibubi.create.content.trains.signal.SignalBlockEntity;
 import com.simibubi.create.content.trains.station.StationBlockEntity;
 import com.simibubi.create.content.trains.schedule.ScheduleItemEntityInteraction;
 import com.simibubi.create.foundation.block.ItemUseOverrides;
@@ -91,6 +99,7 @@ import com.simibubi.create.foundation.map.StationMapDecorationRenderer;
 import com.simibubi.create.foundation.pack.DynamicPack;
 import com.simibubi.create.foundation.pack.DynamicPackSource;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
+import com.simibubi.create.foundation.recipe.trie.RecipeTrieFinder;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
 import com.simibubi.create.foundation.utility.TickBasedCache;
 import com.simibubi.create.infrastructure.command.AllCommands;
@@ -207,7 +216,9 @@ public class CommonEvents {
 
 	public static void addReloadListeners() {
 		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(RecipeFinder.LISTENER);
+		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(RecipeTrieFinder.LISTENER);
 		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(BeltHelper.LISTENER);
+
 	}
 
 	public static void serverStopping(MinecraftServer server) {
@@ -244,6 +255,7 @@ public class CommonEvents {
 		}
 	}
 
+	@EventBusSubscriber
 	public static class ModBusEvents {
 
 //		@SubscribeEvent

@@ -1,7 +1,6 @@
 package com.simibubi.create.content.equipment.wrench;
 
 import com.simibubi.create.AllItems;
-import com.simibubi.create.AllTags.AllItemTags;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;

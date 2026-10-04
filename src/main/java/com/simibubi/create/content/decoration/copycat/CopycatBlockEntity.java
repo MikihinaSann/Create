@@ -23,6 +23,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -38,13 +39,11 @@ import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 public class CopycatBlockEntity extends SmartBlockEntity
 	implements SpecialBlockEntityItemRequirement, TransformableBlockEntity, PartialSafeNBT, RenderDataBlockEntity {
 
-	private BlockState material;
-	private ItemStack consumedItem;
+	private BlockState material = AllBlocks.COPYCAT_BASE.getDefaultState();
+	private ItemStack consumedItem = ItemStack.EMPTY;
 
 	public CopycatBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
-		material = AllBlocks.COPYCAT_BASE.getDefaultState();
-		consumedItem = ItemStack.EMPTY;
 	}
 
 	public BlockState getMaterial() {
@@ -64,7 +63,7 @@ public class CopycatBlockEntity extends SmartBlockEntity
 				BlockState neighbourState = level.getBlockState(neighbour);
 				if (neighbourState != wrapperState)
 					continue;
-				if (!(level.getBlockEntity(neighbour)instanceof CopycatBlockEntity cbe))
+				if (!(level.getBlockEntity(neighbour) instanceof CopycatBlockEntity cbe))
 					continue;
 				BlockState otherMaterial = cbe.getMaterial();
 				if (!otherMaterial.is(blockState.getBlock()))
@@ -118,14 +117,27 @@ public class CopycatBlockEntity extends SmartBlockEntity
 		// fabric: no need for requestModelDataUpdate
 		if (hasLevel()) {
 			level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
-			level.getChunkSource()
-				.getLightEngine()
-				.checkBlock(worldPosition);
+			updateLight();
+		}
+	}
+
+	private void updateLight() {
+		if (level != null) {
+			AuxiliaryLightManager lightManager = level.getAuxLightManager(getBlockPos());
+			if (lightManager != null)
+				lightManager.setLightAt(getBlockPos(), material.getLightEmission(level, getBlockPos()));
 		}
 	}
 
 	@Override
-	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {}
+	public void onLoad() {
+		super.onLoad();
+		updateLight();
+	}
+
+	@Override
+	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+	}
 
 	@Override
 	public ItemRequirement getRequiredItems(BlockState state) {
@@ -197,4 +209,9 @@ public class CopycatBlockEntity extends SmartBlockEntity
 		return material;
 	}
 
+	@Override
+	public void clearContent() {
+		material = AllBlocks.COPYCAT_BASE.getDefaultState();
+		consumedItem = ItemStack.EMPTY;
+	}
 }

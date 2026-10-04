@@ -7,6 +7,7 @@ import com.simibubi.create.AllTags.AllContraptionTypeTags;
 import com.simibubi.create.api.contraption.ContraptionType;
 import com.simibubi.create.api.registry.CreateRegistries;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.TagsProvider;
@@ -22,14 +23,6 @@ public class CreateContraptionTypeTagsProvider extends TagsProvider<ContraptionT
 			.add(AllContraptionTypes.CARRIAGE.key());
 		tag(AllContraptionTypeTags.REQUIRES_VEHICLE_FOR_RENDER.tag)
 			.add(AllContraptionTypes.MOUNTED.key());
-
-		// VALIDATE
-
-		for (AllContraptionTypeTags tag : AllContraptionTypeTags.values()) {
-			if (tag.alwaysDatagen) {
-				getOrCreateRawBuilder(tag.tag);
-			}
-		}
 	}
 
 	@Override

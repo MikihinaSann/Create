@@ -15,11 +15,11 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.google.common.cache.Cache;
 import com.simibubi.create.Create;
+import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagingRequest;
-import com.simibubi.create.content.logistics.packager.fabric.InventoryIdentifier;
-import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
+import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -72,15 +72,15 @@ public class LogisticallyLinkedBehaviour extends BlockEntityBehaviour {
 	}
 
 	public static Collection<LogisticallyLinkedBehaviour> getAllPresent(UUID freq, boolean sortByPriority,
-		boolean clientSide) {
+																		boolean clientSide) {
 		Cache<Integer, WeakReference<LogisticallyLinkedBehaviour>> cache =
 			(clientSide ? CLIENT_LINKS : LINKS).getIfPresent(freq);
 		if (cache == null)
 			return Collections.emptyList();
 		Stream<LogisticallyLinkedBehaviour> stream = new LinkedList<>(cache.asMap()
 			.values()).stream()
-				.map(WeakReference::get)
-				.filter(LogisticallyLinkedBehaviour::isValidLink);
+			.map(WeakReference::get)
+			.filter(LogisticallyLinkedBehaviour::isValidLink);
 
 		if (sortByPriority)
 			stream = stream.sorted((e1, e2) -> Integer.compare(e1.redstonePower, e2.redstonePower));
@@ -138,6 +138,10 @@ public class LogisticallyLinkedBehaviour extends BlockEntityBehaviour {
 		if (!loadedGlobally && global) {
 			loadedGlobally = true;
 			Create.LOGISTICS.linkLoaded(freqId, getGlobalPos());
+			// Call keepAlive regardless of redstone power.
+			// Otherwise, when no redstone power is present
+			// keepAlive won't be called until next lazy tick.
+			keepAlive(this);
 		}
 
 		if (!addedGlobally && global) {
@@ -173,17 +177,16 @@ public class LogisticallyLinkedBehaviour extends BlockEntityBehaviour {
 	}
 
 	public Pair<PackagerBlockEntity, PackagingRequest> processRequest(ItemStack stack, int amount, String address,
-		int linkIndex, MutableBoolean finalLink, int orderId, @Nullable PackageOrder orderContext,
-		@Nullable InventoryIdentifier identifier) {
+		int linkIndex, MutableBoolean finalLink, int orderId, @Nullable PackageOrderWithCrafts context,
+		@Nullable IdentifiedInventory ignoredHandler) {
 
 		if (blockEntity instanceof PackagerLinkBlockEntity plbe)
-			return plbe.processRequest(stack, amount, address, linkIndex, finalLink, orderId, orderContext,
-				identifier);
+			return plbe.processRequest(stack, amount, address, linkIndex, finalLink, orderId, context, ignoredHandler);
 
 		return null;
 	}
 
-	public InventorySummary getSummary(@Nullable InventoryIdentifier identifier) {
+	public InventorySummary getSummary(@Nullable IdentifiedInventory ignoredHandler) {
 		if (blockEntity instanceof PackagerLinkBlockEntity plbe)
 			return plbe.fetchSummaryFromPackager(identifier);
 		return InventorySummary.EMPTY;

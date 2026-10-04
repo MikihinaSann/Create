@@ -24,13 +24,13 @@ import com.simibubi.create.content.trains.entity.Carriage.DimensionalCarriageEnt
 import com.simibubi.create.content.trains.entity.TravellingPoint.SteerDirection;
 import com.simibubi.create.content.trains.graph.TrackGraph;
 import com.simibubi.create.content.trains.station.GlobalStation;
-import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.VecHelper;
+import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.theme.Color;
 
 import net.fabricmc.api.EnvType;
@@ -55,6 +55,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.Vec3;
 
@@ -286,6 +287,8 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 
 			entityData.set(TRACK_GRAPH, Optional.ofNullable(carriage.train.graph)
 				.map(g -> g.id));
+
+			level().gameEvent(this, GameEvent.RESONATE_8, this.position());
 
 			return;
 		}
@@ -578,7 +581,7 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 			return true;
 		if (player.isSpectator())
 			return false;
-		if (!toGlobalVector(VecHelper.getCenterOf(controlsLocalPos), 1).closerThan(player.position(), 8))
+		if (!canInteractWithBlock(player, VecHelper.getCenterOf(controlsLocalPos), 8))
 			return false;
 		if (heldControls.contains(5))
 			return false;

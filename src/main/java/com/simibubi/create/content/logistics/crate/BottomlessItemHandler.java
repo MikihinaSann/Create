@@ -60,13 +60,19 @@ public class BottomlessItemHandler extends ItemStackHandler implements SingleSlo
 		if (!resource.matches(stack))
 			return 0;
 		if (!stack.isEmpty())
-			return Math.min(stack.getMaxStackSize(), maxAmount);
-		return 0;
+			return stack.copyWithCount(stack.getMaxStackSize());
+		return stack;
 	}
 
 	protected ItemStack getStack() {
 		ItemStack stack = suppliedItemStack.get();
-		return stack == null || stack.isEmpty() ? ItemStack.EMPTY : stack;
+		if (slot == 1)
+			return ItemStack.EMPTY;
+		if (stack == null)
+			return ItemStack.EMPTY;
+		if (!stack.isEmpty())
+			return stack.copyWithCount(Math.min(stack.getMaxStackSize(), amount));
+		return ItemStack.EMPTY;
 	}
 
 	@Override

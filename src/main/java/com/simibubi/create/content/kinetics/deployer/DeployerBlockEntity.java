@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllBlocks;
@@ -50,6 +50,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -78,7 +79,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerContainer;
 
 
-public class DeployerBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
+public class DeployerBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity, Clearable {
 
 	protected State state;
 	protected Mode mode;
@@ -507,6 +508,11 @@ public class DeployerBlockEntity extends KineticBlockEntity implements SidedStor
 	@Override
 	public void invalidate() {
 		super.invalidate();
+	}
+
+	@Override
+	public void clearContent() {
+		filtering.setFilter(ItemStack.EMPTY);
 	}
 
 	public void changeMode() {

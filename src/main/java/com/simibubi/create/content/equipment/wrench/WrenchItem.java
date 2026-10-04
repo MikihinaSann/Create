@@ -40,7 +40,7 @@ public class WrenchItem extends Item {
 		consumer.accept(SimpleCustomRenderer.create(this, new WrenchItemRenderer()));
 	}
 
-	@Nonnull
+	@NotNull
 	@Override
 	public InteractionResult useOn(UseOnContext context) {
 		Player player = context.getPlayer();

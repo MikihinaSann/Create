@@ -13,10 +13,13 @@ import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
-import com.simibubi.create.AllTags;
-import com.simibubi.create.Create;
+import com.simibubi.create.AllTags.AllItemTags;
+import com.simibubi.create.api.data.recipe.ProcessingRecipeGen;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.data.CachedOutput;
+import net.minecraft.data.DataGenerator;
+import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
@@ -33,7 +36,9 @@ import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 
-	protected final List<GeneratedRecipe> all = new ArrayList<>();
+	static final List<ProcessingRecipeGen<?, ?, ?>> GENERATORS = new ArrayList<>();
+	static final int BUCKET = FluidType.BUCKET_VOLUME;
+	static final int BOTTLE = 250;
 
 	public CreateRecipeProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registries) {
 		super(output, registries);
@@ -45,17 +50,35 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		Create.LOGGER.info("{} registered {} recipe{}", getName(), all.size(), all.size() == 1 ? "" : "s");
 	}
 
-	protected GeneratedRecipe register(GeneratedRecipe recipe) {
-		all.add(recipe);
-		return recipe;
-	}
+	public static void registerAllProcessing(DataGenerator gen, PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+		GENERATORS.add(new CreateCrushingRecipeGen(output, registries));
+		GENERATORS.add(new CreateMillingRecipeGen(output, registries));
+		GENERATORS.add(new CreateCuttingRecipeGen(output, registries));
+		GENERATORS.add(new CreateWashingRecipeGen(output, registries));
+		GENERATORS.add(new CreatePolishingRecipeGen(output, registries));
+		GENERATORS.add(new CreateDeployingRecipeGen(output, registries));
+		GENERATORS.add(new CreateMixingRecipeGen(output, registries));
+		GENERATORS.add(new CreateCompactingRecipeGen(output, registries));
+		GENERATORS.add(new CreatePressingRecipeGen(output, registries));
+		GENERATORS.add(new CreateFillingRecipeGen(output, registries));
+		GENERATORS.add(new CreateEmptyingRecipeGen(output, registries));
+		GENERATORS.add(new CreateHauntingRecipeGen(output, registries));
+		GENERATORS.add(new CreateItemApplicationRecipeGen(output, registries));
 
-	@FunctionalInterface
-	public interface GeneratedRecipe {
-		void register(RecipeOutput output);
-	}
+		gen.addProvider(true, new DataProvider() {
 
-	protected static class Marker {
+			@Override
+			public String getName() {
+				return "Create's Processing Recipes";
+			}
+
+			@Override
+			public CompletableFuture<?> run(CachedOutput dc) {
+				return CompletableFuture.allOf(GENERATORS.stream()
+					.map(gen -> gen.run(dc))
+					.toArray(CompletableFuture[]::new));
+			}
+		});
 	}
 
 	protected static class I {
@@ -77,7 +100,7 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		}
 
 		static TagKey<Item> goldSheet() {
-			return AllTags.commonItemTag("gold_plates");
+			return CommonMetal.GOLD.plates;
 		}
 
 		static TagKey<Item> stone() {
@@ -113,11 +136,11 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		}
 
 		static TagKey<Item> brass() {
-			return AllTags.commonItemTag("brass_ingots");
+			return CommonMetal.BRASS.ingots;
 		}
 
 		static TagKey<Item> brassSheet() {
-			return AllTags.commonItemTag("brass_plates");
+			return CommonMetal.BRASS.plates;
 		}
 
 		static TagKey<Item> iron() {
@@ -129,15 +152,15 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		}
 
 		static TagKey<Item> zinc() {
-			return AllTags.commonItemTag("zinc_ingots");
+			return CommonMetal.ZINC.ingots;
 		}
 
 		static TagKey<Item> ironSheet() {
-			return AllTags.commonItemTag("iron_plates");
+			return CommonMetal.IRON.plates;
 		}
 
 		static TagKey<Item> sturdySheet() {
-			return AllTags.commonItemTag("obsidian_plates");
+			return AllItemTags.OBSIDIAN_PLATES.tag;
 		}
 
 		static ItemLike brassCasing() {
@@ -161,15 +184,15 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		}
 
 		static TagKey<Item> brassBlock() {
-			return AllTags.commonItemTag("brass_blocks");
+			return CommonMetal.BRASS.storageBlocks.items();
 		}
 
 		static TagKey<Item> zincBlock() {
-			return AllTags.commonItemTag("zinc_blocks");
+			return CommonMetal.ZINC.storageBlocks.items();
 		}
 
 		static TagKey<Item> wheatFlour() {
-			return AllTags.commonItemTag("flours/wheat");
+			return AllItemTags.WHEAT_FLOURS.tag;
 		}
 
 		static TagKey<Item> copper() {
@@ -177,7 +200,7 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		}
 
 		static TagKey<Item> copperNugget() {
-			return AllTags.commonItemTag("copper_nuggets");
+			return CommonMetal.COPPER.nuggets;
 		}
 
 		static TagKey<Item> copperBlock() {
@@ -185,15 +208,15 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		}
 
 		static TagKey<Item> copperSheet() {
-			return AllTags.commonItemTag("copper_plates");
+			return CommonMetal.COPPER.plates;
 		}
 
 		static TagKey<Item> brassNugget() {
-			return AllTags.commonItemTag("brass_nuggets");
+			return CommonMetal.BRASS.nuggets;
 		}
 
 		static TagKey<Item> zincNugget() {
-			return AllTags.commonItemTag("zinc_nuggets");
+			return CommonMetal.ZINC.nuggets;
 		}
 
 		static ItemLike copperCasing() {

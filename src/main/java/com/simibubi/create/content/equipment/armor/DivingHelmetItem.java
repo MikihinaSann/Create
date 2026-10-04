@@ -16,12 +16,9 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup.RegistryLookup;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
@@ -111,8 +108,9 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 				return;
 		}
 
-		if (drowning)
-			entity.setAirSupply(10);
+		float visualBacktankAir = 0f;
+		for (ItemStack stack : backtanks)
+			visualBacktankAir += BacktankUtil.getAir(stack);
 
 		if (world.isClientSide)
 			entity.getCustomData()
@@ -120,10 +118,8 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 					.map(BacktankUtil::getAir)
 					.reduce(0, Integer::sum)));
 
-		if (!second)
-			return;
-
-		BacktankUtil.consumeAir(entity, backtanks.get(0), 1);
+		if (level.getGameTime() % 20 == 0)
+			BacktankUtil.consumeAir(entity, backtanks.get(0), 1);
 
 		if (lavaDiving)
 			return;
@@ -131,7 +127,7 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 		if (entity instanceof ServerPlayer sp)
 			AllAdvancements.DIVING_SUIT.awardTo(sp);
 
-		entity.setAirSupply(Math.min(entity.getMaxAirSupply(), entity.getAirSupply() + 10));
-		entity.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 30, 0, true, false, true));
+		event.setCanBreathe(true);
+		event.setRefillAirAmount(entity.getMaxAirSupply());
 	}
 }

@@ -37,6 +37,19 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.bus.api.ICancellableEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderHighlightEvent.Block;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteract;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickItem;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
@@ -60,7 +73,7 @@ public class ClipboardValueSettingsHandler {
 			return false;
 		if (!(smartBE instanceof ClipboardBlockEntity) && !smartBE.getAllBehaviours()
 			.stream()
-			.anyMatch(b -> b instanceof ClipboardCloneable cc
+			.noneMatch(b -> b instanceof ClipboardCloneable cc
 				&& cc.writeToClipboard(mc.level.registryAccess(), new CompoundTag(), target.getDirection()))
 			&& !(smartBE instanceof ClipboardCloneable))
 			return false;
@@ -102,7 +115,12 @@ public class ClipboardValueSettingsHandler {
 			return;
 		}
 
-		CompoundTag tagElement = mc.player.getMainHandItem().get(AllDataComponents.CLIPBOARD_COPIED_VALUES);
+		ClipboardContent content = mc.player.getMainHandItem()
+			.get(AllDataComponents.CLIPBOARD_CONTENT);
+		if (content == null)
+			return;
+
+		CompoundTag tagElement = content.copiedValues().orElse(null);
 
 		boolean canCopy = smartBE.getAllBehaviours()
 			.stream()
@@ -150,6 +168,8 @@ public class ClipboardValueSettingsHandler {
 		if (!(world.getBlockEntity(pos) instanceof SmartBlockEntity smartBE))
 			return InteractionResult.PASS;
 
+		ClipboardContent clipboardContent = itemStack.getOrDefault(AllDataComponents.CLIPBOARD_CONTENT, ClipboardContent.EMPTY);
+
 		if (smartBE instanceof ClipboardBlockEntity cbe) {
 			if (event instanceof ICancellableEvent cancellableEvent) {
 				cancellableEvent.setCanceled(true);
@@ -164,8 +184,8 @@ public class ClipboardValueSettingsHandler {
 			}
 
 			if (!world.isClientSide()) {
-				List<List<ClipboardEntry>> listTo = ClipboardEntry.readAll(itemStack);
-				List<List<ClipboardEntry>> listFrom = ClipboardEntry.readAll(cbe.dataContainer);
+				List<List<ClipboardEntry>> listTo = ClipboardEntry.readAll(clipboardContent);
+				List<List<ClipboardEntry>> listFrom = ClipboardEntry.readAll(cbe.components());
 				List<ClipboardEntry> toAdd = new ArrayList<>();
 
 				for (List<ClipboardEntry> page : listFrom) {
@@ -192,10 +212,13 @@ public class ClipboardValueSettingsHandler {
 						listTo.add(page);
 					}
 					page.add(entry);
-					ClipboardOverrides.switchTo(ClipboardType.WRITTEN, itemStack);
+
+					clipboardContent = clipboardContent.setType(ClipboardType.WRITTEN);
+					itemStack.set(AllDataComponents.CLIPBOARD_CONTENT, clipboardContent);
 				}
 
-				ClipboardEntry.saveAll(listTo, itemStack);
+				clipboardContent = clipboardContent.setPages(listTo);
+				itemStack.set(AllDataComponents.CLIPBOARD_CONTENT, clipboardContent);
 			}
 
 			player.displayClientMessage(CreateLang.translate("clipboard.copied_from_clipboard", world.getBlockState(pos)
@@ -207,7 +230,7 @@ public class ClipboardValueSettingsHandler {
 			return InteractionResult.SUCCESS;
 		}
 
-		CompoundTag tag = itemStack.get(AllDataComponents.CLIPBOARD_COPIED_VALUES);
+		CompoundTag tag = clipboardContent.copiedValues().orElse(null);
 		if (paste && tag == null)
 			return InteractionResult.PASS;
 		if (!paste)
@@ -268,8 +291,9 @@ public class ClipboardValueSettingsHandler {
 			.component(), true);
 
 		if (!paste) {
-			ClipboardOverrides.switchTo(ClipboardType.WRITTEN, itemStack);
-			itemStack.set(AllDataComponents.CLIPBOARD_COPIED_VALUES, tag);
+			clipboardContent = clipboardContent.setType(ClipboardType.WRITTEN);
+			clipboardContent = clipboardContent.setCopiedValues(tag);
+			itemStack.set(AllDataComponents.CLIPBOARD_CONTENT, clipboardContent);
 		}
 		return InteractionResult.SUCCESS;
 	}

@@ -11,6 +11,7 @@ import net.fabricmc.api.Environment;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.jetbrains.annotations.Nullable;
 
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import com.simibubi.create.AllItems;
@@ -20,10 +21,10 @@ import com.simibubi.create.content.trains.entity.TrainRelocator;
 import com.simibubi.create.foundation.utility.RaycastHelper;
 import com.simibubi.create.foundation.utility.RaycastHelper.PredicateTraceResult;
 
-import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.VecHelper;
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.player.RemotePlayer;
@@ -145,7 +146,7 @@ public class ContraptionHandlerClient {
 	@Environment(EnvType.CLIENT)
 	public static Couple<Vec3> getRayInputs(LocalPlayer player) {
 		Minecraft mc = Minecraft.getInstance();
-		Vec3 origin = RaycastHelper.getTraceOrigin(player);
+		Vec3 origin = player.getEyePosition();
 		double reach = player.blockInteractionRange();
 		if (mc.hitResult != null && mc.hitResult.getLocation() != null)
 			reach = Math.min(mc.hitResult.getLocation()

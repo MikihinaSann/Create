@@ -2,15 +2,12 @@ package com.simibubi.create.content.logistics.tunnel;
 
 import com.simibubi.create.foundation.item.ItemHelper;
 
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.item.ItemStack;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+import net.neoforged.neoforge.items.IItemHandler;
 
-public class BrassTunnelItemHandler implements SingleSlotStorage<ItemVariant> {
+public class BrassTunnelItemHandler implements IItemHandler, Clearable {
 
 	private BrassTunnelBlockEntity blockEntity;
 
@@ -19,7 +16,22 @@ public class BrassTunnelItemHandler implements SingleSlotStorage<ItemVariant> {
 	}
 
 	@Override
-	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+	public void clearContent() {
+		blockEntity.stackToDistribute = ItemStack.EMPTY;
+	}
+
+	@Override
+	public int getSlots() {
+		return 1;
+	}
+
+	@Override
+	public ItemStack getStackInSlot(int slot) {
+		return blockEntity.stackToDistribute;
+	}
+
+	@Override
+	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
 		if (!blockEntity.hasDistributionBehaviour()) {
 			Storage<ItemVariant> beltCapability = blockEntity.getBeltCapability();
 			if (beltCapability == null)
@@ -70,4 +82,15 @@ public class BrassTunnelItemHandler implements SingleSlotStorage<ItemVariant> {
 			return ItemStack.EMPTY;
 		return stack;
 	}
+
+	@Override
+	public int getSlotLimit(int slot) {
+		return blockEntity.stackToDistribute.isEmpty() ? 64 : blockEntity.stackToDistribute.getMaxStackSize();
+	}
+
+	@Override
+	public boolean isItemValid(int slot, ItemStack stack) {
+		return true;
+	}
+
 }

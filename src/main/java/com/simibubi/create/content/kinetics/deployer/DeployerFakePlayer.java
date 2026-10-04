@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;

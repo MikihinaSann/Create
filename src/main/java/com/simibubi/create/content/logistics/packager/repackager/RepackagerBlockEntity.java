@@ -3,9 +3,10 @@ package com.simibubi.create.content.logistics.packager.repackager;
 import java.util.List;
 
 import com.simibubi.create.AllBlockEntityTypes;
+import com.simibubi.create.compat.Mods;
+import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.crate.BottomlessItemHandler;
-import com.simibubi.create.content.logistics.packager.PackageDefragmenter;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagerItemHandler;
 import com.simibubi.create.content.logistics.packager.PackagingRequest;
@@ -37,11 +38,11 @@ import io.github.fabricators_of_create.porting_lib.transfer.callbacks.Transactio
 
 public class RepackagerBlockEntity extends PackagerBlockEntity {
 
-	public PackageDefragmenter defragmenter;
+	public PackageRepackageHelper repackageHelper;
 
 	public RepackagerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
 		super(typeIn, pos, state);
-		defragmenter = new PackageDefragmenter();
+		repackageHelper = new PackageRepackageHelper();
 	}
 
 	public boolean unwrapBox(ItemStack box, TransactionContext ctx) {
@@ -60,18 +61,17 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 		if (!targetIsCreativeCrate && !anySpace)
 			return false;
 
-		TransactionSuccessCallback.register(ctx, () -> {
-			previouslyUnwrapped = box;
-			animationInward = true;
-			animationTicks = CYCLE;
-			notifyUpdate();
-		});
-
+		computerBehaviour.prepareComputerEvent(new PackageEvent(box, "package_received"));
+		previouslyUnwrapped = box;
+		animationInward = true;
+		animationTicks = CYCLE;
+		notifyUpdate();
 		return true;
 	}
 
 	@Override
-	public void recheckIfLinksPresent() {}
+	public void recheckIfLinksPresent() {
+	}
 
 	@Override
 	public boolean redstoneModeActive() {
@@ -79,14 +79,16 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 	}
 
 	public void attemptToSend(List<PackagingRequest> queuedRequests) {
-		if (queuedRequests == null && (!heldBox.isEmpty() || animationTicks != 0))
+		if (!heldBox.isEmpty() || animationTicks != 0 || buttonCooldown > 0)
+			return;
+		if (!queuedExitingPackages.isEmpty())
 			return;
 
 		Storage<ItemVariant> targetInv = targetInventory.getInventory();
 		if (targetInv == null || targetInv instanceof PackagerItemHandler)
 			return;
 
-		attemptToDefrag(targetInv);
+		attemptToRepackage(targetInv);
 		if (heldBox.isEmpty())
 			return;
 
@@ -95,8 +97,8 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 			PackageItem.addAddress(heldBox, signBasedAddress);
 	}
 
-	protected void attemptToDefrag(Storage<ItemVariant> targetInv) {
-		defragmenter.clear();
+	protected void attemptToRepackage(IItemHandler targetInv) {
+		repackageHelper.clear();
 		int completedOrderId = -1;
 
 		for (StorageView<ItemVariant> view : targetInv.nonEmptyViews()) {
@@ -104,21 +106,16 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 			if (!PackageItem.isPackage(resource))
 				continue;
 
-			if (!defragmenter.isFragmented(resource)) {
-				try (Transaction t = Transaction.openOuter()) {
-					if (view.extract(resource, 1, t) == 1) {
-						t.commit();
-						heldBox = resource.toStack();
-						animationInward = false;
-						animationTicks = CYCLE;
-						notifyUpdate();
-					}
-				}
+			if (!repackageHelper.isFragmented(extracted)) {
+				targetInv.extractItem(slot, 1, false);
+				heldBox = extracted.copy();
+				animationInward = false;
+				animationTicks = CYCLE;
+				notifyUpdate();
 				return;
 			}
 
-			ItemStack stack = resource.toStack(TransferUtil.truncateLong(view.getAmount()));
-			completedOrderId = defragmenter.addPackageFragment(stack);
+			completedOrderId = repackageHelper.addPackageFragment(extracted);
 			if (completedOrderId != -1)
 				break;
 		}
@@ -126,7 +123,7 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 		if (completedOrderId == -1)
 			return;
 
-		List<ItemStack> boxesToExport = defragmenter.repack(completedOrderId);
+		List<BigItemStack> boxesToExport = repackageHelper.repack(completedOrderId, level.getRandom());
 
 		try (Transaction t = Transaction.openOuter()) {
 			for (StorageView<ItemVariant> view : targetInv.nonEmptyViews()) {
@@ -158,6 +155,15 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 			t.commit();
 		}
 
+		if (boxesToExport.isEmpty())
+			return;
+
+		if (computerBehaviour.hasAttachedComputer()) {
+			for (BigItemStack box : boxesToExport) {
+				computerBehaviour.prepareComputerEvent(new RepackageEvent(box.stack, box.count));
+			}
+		}
+		queuedExitingPackages.addAll(boxesToExport);
 		notifyUpdate();
 	}
 
@@ -167,6 +173,14 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 			AllBlockEntityTypes.REPACKAGER.get(),
 			(be, context) -> be.inventory
 		);
+
+		if (Mods.COMPUTERCRAFT.isLoaded()) {
+			event.registerBlockEntity(
+				PeripheralCapability.get(),
+				AllBlockEntityTypes.REPACKAGER.get(),
+				(be, context) -> be.computerBehaviour.getPeripheralCapability()
+			);
+		}
 	}
 
 }

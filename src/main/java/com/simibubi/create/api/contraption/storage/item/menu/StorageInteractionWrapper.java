@@ -3,16 +3,14 @@ package com.simibubi.create.api.contraption.storage.item.menu;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import net.minecraft.world.Container;
+import com.simibubi.create.foundation.blockEntity.ItemHandlerContainer;
+
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 
-import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
-
-public class StorageInteractionWrapper implements Container {
-	private final SlottedStackStorage storage;
+public class StorageInteractionWrapper extends ItemHandlerContainer {
 	private final Predicate<Player> stillValid;
 	private final Consumer<Player> onClose;
 

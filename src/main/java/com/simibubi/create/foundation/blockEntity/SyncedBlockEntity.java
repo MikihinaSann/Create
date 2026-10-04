@@ -70,5 +70,4 @@ public abstract class SyncedBlockEntity extends BlockEntity implements CustomDat
 	public HolderGetter<Block> blockHolderGetter() {
 		return level != null ? level.holderLookup(Registries.BLOCK) : BuiltInRegistries.BLOCK.asLookup();
 	}
-
 }

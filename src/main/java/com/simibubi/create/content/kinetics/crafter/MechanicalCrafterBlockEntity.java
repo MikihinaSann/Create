@@ -17,8 +17,9 @@ import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllBlocks;
-import com.simibubi.create.AllItems;
 import com.simibubi.create.AllSoundEvents;
+import com.simibubi.create.api.contraption.transformable.TransformableBlockEntity;
+import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
 import com.simibubi.create.content.kinetics.crafter.ConnectedInputHandler.ConnectedInput;
@@ -44,6 +45,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -55,7 +57,8 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
 
-public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
+public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity, TransformableBlockEntity {
+
 
 	enum Phase {
 		IDLE, ACCEPTING, ASSEMBLING, EXPORTING, WAITING, CRAFTING, INSERTING;
@@ -138,9 +141,10 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements 
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
 		super.addBehaviours(behaviours);
 		inserting = new InvManipulationBehaviour(this, this::getTargetFace);
+		//noinspection deprecation
 		connectivity = new EdgeInteractionBehaviour(this, ConnectedInputHandler::toggleConnection)
 			.connectivity(ConnectedInputHandler::shouldConnect)
-			.require(AllItems.WRENCH.get());
+			.require(item -> item.builtInRegistryHolder().is(Items.TOOLS_WRENCH));
 		behaviours.add(inserting);
 		behaviours.add(connectivity);
 		registerAwardables(behaviours, AllAdvancements.CRAFTER, AllAdvancements.CRAFTER_LAZY);
@@ -568,5 +572,11 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements 
 
 	public ConnectedInput getInput() {
 		return input;
+	}
+
+	@Override
+	public void transform(BlockEntity be, StructureTransform transform) {
+		input.data.replaceAll(transform::applyWithoutOffset);
+		notifyUpdate();
 	}
 }

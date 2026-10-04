@@ -15,6 +15,8 @@ import com.simibubi.create.foundation.utility.CreateLang;
 
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.Clearable;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,7 +26,8 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
-public class CreativeCrateBlockEntity extends CrateBlockEntity implements SidedStorageBlockEntity {
+public class CreativeCrateBlockEntity extends CrateBlockEntity implements SidedStorageBlockEntity, Clearable {
+
 	FilteringBehaviour filtering;
 	BottomlessItemHandler inv;
 
@@ -50,9 +53,13 @@ public class CreativeCrateBlockEntity extends CrateBlockEntity implements SidedS
 		return inv;
 	}
 
+	@Override
+	public void clearContent() {
+		filtering.setFilter(ItemStack.EMPTY);
+	}
+
 	public FilteringBehaviour createFilter() {
 		return new FilteringBehaviour(this, new ValueBoxTransform() {
-
 			@Override
 			public void rotate(LevelAccessor level, BlockPos pos, BlockState state, PoseStack ms) {
 				TransformStack.of(ms)
@@ -67,8 +74,6 @@ public class CreativeCrateBlockEntity extends CrateBlockEntity implements SidedS
 			public float getScale() {
 				return super.getScale();
 			};
-
 		});
 	}
-
 }

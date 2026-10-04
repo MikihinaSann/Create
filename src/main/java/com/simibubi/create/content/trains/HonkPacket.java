@@ -7,10 +7,11 @@ import com.simibubi.create.AllPackets;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.trains.entity.Train;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
-import net.createmod.catnip.net.base.ClientboundPacketPayload;
-import net.createmod.catnip.platform.CatnipServices;
-import net.createmod.catnip.net.base.ServerboundPacketPayload;
 
+import io.netty.buffer.ByteBuf;
+import net.createmod.catnip.net.base.ClientboundPacketPayload;
+import net.createmod.catnip.net.base.ServerboundPacketPayload;
+import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -20,6 +21,9 @@ import net.minecraft.server.level.ServerPlayer;
 import io.netty.buffer.ByteBuf;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.gameevent.GameEvent;
+
 
 public abstract class HonkPacket implements CustomPacketPayload {
 	protected final UUID trainId;
@@ -87,6 +91,11 @@ public abstract class HonkPacket implements CustomPacketPayload {
 
 			AllAdvancements.TRAIN_WHISTLE.awardTo(player);
 			CatnipServices.NETWORK.sendToAllClients(new HonkPacket.Clientbound(train, isHonk));
+			
+			Entity entity = train.carriages.get(0).anyAvailableEntity();
+			if (entity == null) entity = player;
+
+			player.level().gameEvent(entity, GameEvent.RESONATE_15, player.position());
 		}
 
 		@Override

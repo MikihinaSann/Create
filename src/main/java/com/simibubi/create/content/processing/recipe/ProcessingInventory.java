@@ -13,6 +13,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
+import net.neoforged.neoforge.items.ItemStackHandler;
+
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
@@ -28,7 +30,7 @@ public class ProcessingInventory extends ItemStackHandlerContainer {
 	private boolean limit;
 
 	public ProcessingInventory(Consumer<ItemStack> callback) {
-		super(16);
+		super(32);
 		this.callback = callback;
 	}
 
@@ -75,7 +77,7 @@ public class ProcessingInventory extends ItemStackHandlerContainer {
 		recipeDuration = nbt.getFloat("RecipeTime");
 		appliedRecipe = nbt.getBoolean("AppliedRecipe");
 		super.deserializeNBT(registries, nbt);
-		if(isEmpty())
+		if (isEmpty())
 			appliedRecipe = false;
 	}
 

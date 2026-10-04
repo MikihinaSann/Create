@@ -5,17 +5,15 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.processing.burner.BlazeBurnerBlock.HeatLevel;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder.ProcessingRecipeParams;
+import com.simibubi.create.content.processing.recipe.ProcessingRecipeParams;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.TankSegment;
-import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.recipe.DummyCraftingContainer;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 
@@ -40,7 +38,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
-public class BasinRecipe extends ProcessingRecipe<RecipeInput> {
+public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 
 	public static boolean match(BasinBlockEntity basin, Recipe<?> recipe) {
 		FilteringBehaviour filter = basin.getFilter();
@@ -76,9 +74,7 @@ public class BasinRecipe extends ProcessingRecipe<RecipeInput> {
 		if (availableItems == null || availableFluids == null)
 			return false;
 
-		HeatLevel heat = BasinBlockEntity.getHeatLevelOf(basin.getLevel()
-				.getBlockState(basin.getBlockPos()
-						.below(1)));
+		HeatLevel heat = basin.getHeatLevel();
 		if (isBasinRecipe && !((BasinRecipe) recipe).getRequiredHeat()
 				.testBlazeBurner(heat))
 			return false;
@@ -87,8 +83,8 @@ public class BasinRecipe extends ProcessingRecipe<RecipeInput> {
 		List<FluidStack> recipeOutputFluids = new ArrayList<>();
 
 		List<Ingredient> ingredients = new LinkedList<>(recipe.getIngredients());
-		List<FluidIngredient> fluidIngredients =
-				isBasinRecipe ? ((BasinRecipe) recipe).getFluidIngredients() : Collections.emptyList();
+		List<SizedFluidIngredient> fluidIngredients =
+			isBasinRecipe ? ((BasinRecipe) recipe).getFluidIngredients() : Collections.emptyList();
 
 		NonNullList<ItemStack> consumedItems = NonNullList.create();
 
@@ -114,13 +110,18 @@ public class BasinRecipe extends ProcessingRecipe<RecipeInput> {
 
 			boolean fluidsAffected = false;
 			FluidIngredients:
-			for (FluidIngredient fluidIngredient : fluidIngredients) {
-				long amountRequired = fluidIngredient.getRequiredAmount();
-				for (StorageView<FluidVariant> view : availableFluids.nonEmptyViews()) {
-					FluidStack fluidStack = new FluidStack(view);
-					if (!fluidIngredient.test(fluidStack)) continue;
-					long drainedAmount = Math.min(amountRequired, fluidStack.getAmount());
-					if (view.extract(fluidStack.getVariant(), drainedAmount, t) == drainedAmount) {
+			for (SizedFluidIngredient fluidIngredient : fluidIngredients) {
+				int amountRequired = fluidIngredient.amount();
+
+				for (int tank = 0; tank < availableFluids.getTanks(); tank++) {
+					FluidStack fluidStack = availableFluids.getFluidInTank(tank);
+					if (simulate && fluidStack.getAmount() <= extractedFluidsFromTank[tank])
+						continue;
+					if (!fluidIngredient.test(fluidStack))
+						continue;
+					int drainedAmount = Math.min(amountRequired, fluidStack.getAmount());
+					if (!simulate) {
+						fluidStack.shrink(drainedAmount);
 						fluidsAffected = true;
 						amountRequired -= drainedAmount;
 						if (amountRequired != 0) continue;
@@ -143,8 +144,8 @@ public class BasinRecipe extends ProcessingRecipe<RecipeInput> {
 			CraftingInput remainderInput = new DummyCraftingContainer(availableItems, extractedItemsFromSlot)
 					.asCraftInput();
 
-			if (recipe instanceof BasinRecipe basinRecipe) {
-				recipeOutputItems.addAll(basinRecipe.rollResults());
+				if (recipe instanceof BasinRecipe basinRecipe) {
+					recipeOutputItems.addAll(basinRecipe.rollResults(basin.getLevel().random));
 
 					for (FluidStack fluidStack : basinRecipe.getFluidResults())
 						if (!fluidStack.isEmpty())
@@ -179,7 +180,7 @@ public class BasinRecipe extends ProcessingRecipe<RecipeInput> {
 
 	public static RecipeHolder<BasinRecipe> convertShapeless(RecipeHolder<?> recipe) {
 		BasinRecipe basinRecipe =
-			new ProcessingRecipeBuilder<>(BasinRecipe::new, recipe.id()).withItemIngredients(recipe.value().getIngredients())
+			new Builder<>(BasinRecipe::new, recipe.id()).withItemIngredients(recipe.value().getIngredients())
 				.withSingleItemOutput(recipe.value().getResultItem(Minecraft.getInstance().level.registryAccess()))
 				.build();
 		return new RecipeHolder<>(recipe.id(), basinRecipe);
@@ -195,7 +196,7 @@ public class BasinRecipe extends ProcessingRecipe<RecipeInput> {
 
 	@Override
 	protected int getMaxInputCount() {
-		return 9;
+		return 64;
 	}
 
 	@Override
@@ -224,7 +225,7 @@ public class BasinRecipe extends ProcessingRecipe<RecipeInput> {
 	}
 
 	@Override
-	public boolean matches(RecipeInput input, @Nonnull Level worldIn) {
+	public boolean matches(RecipeInput input, @NotNull Level worldIn) {
 		return false;
 	}
 

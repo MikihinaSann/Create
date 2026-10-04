@@ -21,6 +21,11 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.Mth;
 
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.RenderTooltipEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+
 public class FTBChunksTrainMap {
 
 	private static int cancelTooltips = 0;
@@ -102,7 +107,7 @@ public class FTBChunksTrainMap {
 			Mth.floor(largeMapScreen.width / regionTileSize), Mth.floor(largeMapScreen.height / regionTileSize));
 
 		List<FormattedText> tooltip = TrainMapManager.renderAndPick(graphics, Mth.floor(mouseX), Mth.floor(mouseY),
-			partialTicks, linearFiltering, bounds);
+			linearFiltering, bounds);
 
 		pose.popPose();
 

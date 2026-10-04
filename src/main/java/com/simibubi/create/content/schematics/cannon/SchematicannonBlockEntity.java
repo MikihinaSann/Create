@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -27,6 +27,9 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.foundation.item.ItemHelper;
+import com.simibubi.create.foundation.item.ItemHelper.ExtractionCountMode;
+import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
@@ -56,6 +59,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
@@ -89,7 +93,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
 
-public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuProvider, CustomRenderBoundingBoxBlockEntity {
+public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuProvider, CustomRenderBoundingBoxBlockEntity, Clearable {
 
 	public static final int NEIGHBOUR_CHECKING = 100;
 	public static final int MAX_ANCHOR_DISTANCE = 256;
@@ -174,6 +178,11 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 	}
 
 	@Override
+	public void clearContent() {
+		((ItemStackHandlerAccessor) inventory).create$getStacks().clear();
+	}
+
+	@Override
 	protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
 		if (!clientPacket) {
 			inventory.deserializeNBT(registries, compound.getCompound("Inventory"));
@@ -195,8 +204,8 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 		}
 
 		// Settings
-		SchematicannonOptions options = CatnipCodecUtils.decode(SchematicannonOptions.CODEC, compound.getCompound("Options"))
-			.orElse(new SchematicannonOptions(2, true, false));
+		SchematicannonOptions options = CatnipCodecUtils.decode(SchematicannonOptions.CODEC, registries, compound.getCompound("Options"))
+			.orElse(new SchematicannonOptions(2, false, false));
 		replaceMode = options.replaceMode;
 		skipMissing = options.skipMissing;
 		replaceBlockEntities = options.replaceBlockEntities;
@@ -269,7 +278,7 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 			compound.put("MissingItem", missingItem.saveOptional(registries));
 
 		// Settings
-		Tag options = CatnipCodecUtils.encode(SchematicannonOptions.CODEC, new SchematicannonOptions(replaceMode, skipMissing, replaceBlockEntities)).orElseThrow();
+		Tag options = CatnipCodecUtils.encode(SchematicannonOptions.CODEC, registries, new SchematicannonOptions(replaceMode, skipMissing, replaceBlockEntities)).orElseThrow();
 		compound.put("Options", options);
 
 		// Printer & Flying Blocks
@@ -814,7 +823,7 @@ if (printer.isErrored())
 			return;
 		}
 
-		CompoundTag data = BlockHelper.prepareBlockEntityData(blockState, blockEntity);
+		CompoundTag data = BlockHelper.prepareBlockEntityData(level, blockState, blockEntity);
 		launchBlock(target, icon, blockState, data);
 	}
 
@@ -924,5 +933,4 @@ if (printer.isErrored())
 				SchematicannonOptions::new
 		);
 	}
-
 }

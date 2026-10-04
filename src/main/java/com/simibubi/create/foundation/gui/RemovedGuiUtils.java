@@ -3,13 +3,11 @@ package com.simibubi.create.foundation.gui;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -25,10 +23,10 @@ import net.minecraft.world.item.ItemStack;
 import io.github.fabricators_of_create.porting_lib.util.client.ScreenUtils;
 
 public class RemovedGuiUtils {
-	@Nonnull
+	@NotNull
 	private static ItemStack cachedTooltipStack = ItemStack.EMPTY;
 
-	public static void preItemToolTip(@Nonnull ItemStack stack) {
+	public static void preItemToolTip(@NotNull ItemStack stack) {
 		cachedTooltipStack = stack;
 	}
 
@@ -50,17 +48,17 @@ public class RemovedGuiUtils {
 				backgroundColor, borderColorStart, borderColorEnd, font);
 	}
 
-	public static void drawHoveringText(@Nonnull final ItemStack stack, GuiGraphics graphics,
-										List<? extends FormattedText> textLines, int mouseX, int mouseY, int screenWidth, int screenHeight,
-										int maxTextWidth, Font font) {
+	public static void drawHoveringText(@NotNull final ItemStack stack, GuiGraphics graphics,
+		List<? extends FormattedText> textLines, int mouseX, int mouseY, int screenWidth, int screenHeight,
+		int maxTextWidth, Font font) {
 		drawHoveringText(stack, graphics, textLines, mouseX, mouseY, screenWidth, screenHeight, maxTextWidth,
 			ScreenUtils.DEFAULT_BACKGROUND_COLOR, ScreenUtils.DEFAULT_BORDER_COLOR_START, ScreenUtils.DEFAULT_BORDER_COLOR_END,
 			font);
 	}
 
-	public static void drawHoveringText(@Nonnull final ItemStack stack, GuiGraphics graphics,
-										List<? extends FormattedText> textLines, int mouseX, int mouseY, int screenWidth, int screenHeight,
-										int maxTextWidth, int backgroundColor, int borderColorStart, int borderColorEnd, Font font) {
+	public static void drawHoveringText(@NotNull final ItemStack stack, GuiGraphics graphics,
+		List<? extends FormattedText> textLines, int mouseX, int mouseY, int screenWidth, int screenHeight,
+		int maxTextWidth, int backgroundColor, int borderColorStart, int borderColorEnd, Font font) {
 		if (textLines.isEmpty())
 			return;
 
