@@ -3,6 +3,7 @@ package com.simibubi.create.content.equipment.potatoCannon;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.Create;
+import com.simibubi.create.api.behaviour.SpecialPlantable;
 import com.simibubi.create.api.equipment.potatoCannon.PotatoProjectileBlockHitAction;
 import com.simibubi.create.api.registry.CreateBuiltInRegistries;
 import com.simibubi.create.foundation.mixin.accessor.FallingBlockEntityAccessor;

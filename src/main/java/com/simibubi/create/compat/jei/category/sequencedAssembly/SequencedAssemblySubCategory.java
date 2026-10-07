@@ -19,13 +19,13 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 
-import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 
 public abstract class SequencedAssemblySubCategory {
 
 	private final int width;
 
-	public JeiSequencedAssemblySubCategory(int width) {
+	public SequencedAssemblySubCategory(int width) {
 		this.width = width;
 	}
 
@@ -37,7 +37,7 @@ public abstract class SequencedAssemblySubCategory {
 
 	public abstract void draw(SequencedRecipe<?> recipe, GuiGraphics graphics, double mouseX, double mouseY, int index);
 
-	public static class AssemblyPressing extends JeiSequencedAssemblySubCategory {
+	public static class AssemblyPressing extends SequencedAssemblySubCategory {
 
 		AnimatedPress press;
 
@@ -59,7 +59,7 @@ public abstract class SequencedAssemblySubCategory {
 
 	}
 
-	public static class AssemblySpouting extends JeiSequencedAssemblySubCategory {
+	public static class AssemblySpouting extends SequencedAssemblySubCategory {
 
 		AnimatedSpout spout;
 
@@ -84,17 +84,17 @@ public abstract class SequencedAssemblySubCategory {
 			ms.pushPose();
 			ms.translate(-7, 50, 0);
 			ms.scale(.75f, .75f, .75f);
-			spout.withFluids(Arrays.asList(recipe.getRecipe()
+			spout.withFluids(recipe.getRecipe()
 					.getFluidIngredients()
 					.get(0)
-					.getFluids()))
+					.getFluids())
 				.draw(graphics, getWidth() / 2, 0);
 			ms.popPose();
 		}
 
 	}
 
-	public static class AssemblyDeploying extends JeiSequencedAssemblySubCategory {
+	public static class AssemblyDeploying extends SequencedAssemblySubCategory {
 
 		AnimatedDeployer deployer;
 
@@ -130,7 +130,7 @@ public abstract class SequencedAssemblySubCategory {
 
 	}
 
-	public static class AssemblyCutting extends JeiSequencedAssemblySubCategory {
+	public static class AssemblyCutting extends SequencedAssemblySubCategory {
 
 		AnimatedSaw saw;
 

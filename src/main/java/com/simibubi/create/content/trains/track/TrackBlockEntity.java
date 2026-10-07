@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.blockview.v2.RenderDataBlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.api.contraption.transformable.TransformableBlockEntity;
 import com.simibubi.create.content.contraptions.StructureTransform;
@@ -253,7 +254,7 @@ public class TrackBlockEntity extends SmartBlockEntity implements TransformableB
 	@Override
 	@Environment(EnvType.CLIENT)
 	public AABB getRenderBoundingBox() {
-		return AABB.INFINITE;
+		return BlockHelper.INFINITE_AABB;
 	}
 
 	@Override

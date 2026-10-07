@@ -5,7 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": "#c:ingots/iron"
+            "items": "#c:iron_ingots"
           }
         ]
       },
@@ -21,7 +21,7 @@
   "requirements": [
     [
       "has_the_recipe",
-      "has_ingots_iron"
+      "has_iron_ingots"
     ]
   ],
   "rewards": {

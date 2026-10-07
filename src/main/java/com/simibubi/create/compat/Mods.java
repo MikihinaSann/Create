@@ -47,7 +47,6 @@ public enum Mods {
 	TRINKETS,
 	MODMENU,
 	BOTANIA,
-	SODIUM,
 	INDIUM,
 	FARMERSDELIGHT;
 

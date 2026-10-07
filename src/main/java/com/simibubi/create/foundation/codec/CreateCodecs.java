@@ -7,16 +7,9 @@ import org.jetbrains.annotations.ApiStatus.ScheduledForRemoval;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.simibubi.create.foundation.fluid.FluidIngredientOld;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 import com.simibubi.create.foundation.item.ItemSlots;
-
-import net.minecraft.util.ExtraCodecs;
-
-import net.neoforged.neoforge.common.util.NeoForgeExtraCodecs;
-import net.neoforged.neoforge.fluids.crafting.FluidIngredient;
-import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 public class CreateCodecs {
 	public static final Codec<Long> NON_NEGATIVE_LONG = Codec.LONG.validate(
@@ -55,13 +48,5 @@ public class CreateCodecs {
 		);
 	}
 
-	public static Codec<SizedFluidIngredient> FLAT_SIZED_FLUID_INGREDIENT_WITH_TYPE = RecordCodecBuilder.create(instance -> instance.group(
-		NeoForgeRegistries.FLUID_INGREDIENT_TYPES.byNameCodec().fieldOf("type").forGetter(i -> i.ingredient().getType()),
-		FluidIngredient.MAP_CODEC_NONEMPTY.forGetter(SizedFluidIngredient::ingredient),
-		NeoForgeExtraCodecs.optionalFieldAlwaysWrite(ExtraCodecs.POSITIVE_INT, "amount", 1000).forGetter(SizedFluidIngredient::amount)
-	).apply(instance, (type, ingredient, amount) -> new SizedFluidIngredient(ingredient, amount)));
-
-	@ScheduledForRemoval(inVersion = "1.21.1+ Port")
-	@Deprecated(since = "6.0.7", forRemoval = true)
-	public static Codec<SizedFluidIngredient> SIZED_FLUID_INGREDIENT = Codec.withAlternative(FLAT_SIZED_FLUID_INGREDIENT_WITH_TYPE, FluidIngredientOld.CODEC);
+	public static Codec<SizedFluidIngredient> SIZED_FLUID_INGREDIENT = SizedFluidIngredient.CODEC;
 }

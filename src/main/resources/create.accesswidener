@@ -18,8 +18,14 @@ accessible method net/minecraft/world/level/block/WeatheringCopper getPrevious (
 # Mixin can't handle an invoker here thanks to weird generics, so we need this AW'd
 accessible method net/minecraft/client/gui/screens/Screen addRenderableWidget (Lnet/minecraft/client/gui/components/events/GuiEventListener;)Lnet/minecraft/client/gui/components/events/GuiEventListener;
 
+# milk-lib calls the private two-arg ResourceLocation constructor directly
+accessible method net/minecraft/resources/ResourceLocation <init> (Ljava/lang/String;Ljava/lang/String;)V
+
 # Can't figure out an invoker with more than 1 constructor
 accessible method net/minecraft/world/item/context/UseOnContext <init> (Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/phys/BlockHitResult;)V
+
+# NeoForge patches this ctor protected; vanilla keeps it private
+accessible method net/minecraft/world/item/crafting/CraftingInput <init> (IILjava/util/List;)V
 
 accessible field net/minecraft/data/tags/TagsProvider$TagAppender builder Lnet/minecraft/tags/TagBuilder;
 

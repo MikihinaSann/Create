@@ -11,9 +11,10 @@ import com.simibubi.create.compat.rei.ConversionRecipe;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 
 import dev.emi.emi.api.widget.WidgetHolder;
+import net.minecraft.world.item.crafting.RecipeHolder;
 
 public class MysteriousConversionEmiRecipe extends CreateEmiRecipe<ConversionRecipe> {
-	public static final List<ConversionRecipe> RECIPES = Lists.newArrayList();
+	public static final List<RecipeHolder<ConversionRecipe>> RECIPES = Lists.newArrayList();
 
 	static {
 		RECIPES.add(ConversionRecipe.create(AllItems.EMPTY_BLAZE_BURNER.asStack(), AllBlocks.BLAZE_BURNER.asStack()));

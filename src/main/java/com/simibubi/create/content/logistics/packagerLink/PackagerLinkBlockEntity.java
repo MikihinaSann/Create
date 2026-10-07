@@ -14,7 +14,7 @@ import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
 import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagingRequest;
-import com.simibubi.create.content.logistics.packager.fabric.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.content.logistics.packager.repackager.RepackagerBlockEntity;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.redstone.displayLink.LinkWithBulbBlockEntity;
@@ -49,7 +49,7 @@ public class PackagerLinkBlockEntity extends LinkWithBulbBlockEntity {
 		PackagerBlockEntity packager = getPackager();
 		if (packager == null)
 			return InventorySummary.EMPTY;
-		if (packager.isTargetingSameInventory(identifier))
+		if (packager.isTargetingSameInventory(ignoredHandler))
 			return InventorySummary.EMPTY;
 		return packager.getAvailableItems();
 	}
@@ -83,7 +83,7 @@ public class PackagerLinkBlockEntity extends LinkWithBulbBlockEntity {
 		PackagerBlockEntity packager = getPackager();
 		if (packager == null)
 			return null;
-		if (packager.isTargetingSameInventory(identifier))
+		if (packager.isTargetingSameInventory(ignoredHandler))
 			return null;
 
 		InventorySummary summary = packager.getAvailableItems();

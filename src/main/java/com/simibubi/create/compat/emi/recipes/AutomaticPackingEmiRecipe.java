@@ -11,16 +11,17 @@ import dev.emi.emi.api.widget.WidgetHolder;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeHolder;
 
 public class AutomaticPackingEmiRecipe extends CreateEmiRecipe<BasinRecipe> {
 
-	public AutomaticPackingEmiRecipe(BasinRecipe recipe) {
-		super(CreateEmiPlugin.AUTOMATIC_PACKING, recipe, 177, 108);
+	public AutomaticPackingEmiRecipe(RecipeHolder<BasinRecipe> holder) {
+		super(CreateEmiPlugin.AUTOMATIC_PACKING, holder.value(), 177, 108);
 		if (recipe.getRequiredHeat() == HeatCondition.NONE) {
 			height = 90;
 		}
-		ResourceLocation id = recipe.getId();
-		this.id = new ResourceLocation("emi", "create/automatic_packing/" + id.getNamespace() + "/" + id.getPath());
+		ResourceLocation id = holder.id();
+		this.id = ResourceLocation.fromNamespaceAndPath("emi", "create/automatic_packing/" + id.getNamespace() + "/" + id.getPath());
 	}
 
 	@Override

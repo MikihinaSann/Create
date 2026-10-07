@@ -1,8 +1,9 @@
 package com.simibubi.create.content.kinetics.deployer;
 
 import static com.simibubi.create.content.kinetics.base.DirectionalKineticBlock.FACING;
-
 import java.util.ArrayList;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackH
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
@@ -136,16 +138,12 @@ public class DeployerBlockEntity extends KineticBlockEntity implements SidedStor
 			.startWithValue(0);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.DEPLOYER.get(),
-				(be, context) ->  {
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) ->  {
 					if (be.invHandler == null)
 						be.initHandler();
 					return be.invHandler;
-				}
-		);
+				}, AllBlockEntityTypes.DEPLOYER.get());
 	}
 
 	@Override
@@ -610,7 +608,7 @@ public class DeployerBlockEntity extends KineticBlockEntity implements SidedStor
 		recipeInv.setStackInSlot(0, stack);
 		recipeInv.setStackInSlot(1, heldItemMainhand);
 
-		DeployerRecipeSearchEvent event = new DeployerRecipeSearchEvent(this, recipeInv);
+		DeployerRecipeSearchEvent event = new DeployerRecipeSearchEvent(this, new RecipeWrapper(recipeInv));
 
 		event.addRecipe(() -> SequencedAssemblyRecipe.getRecipe(level, event.getInventory(),
 			AllRecipeTypes.DEPLOYING.getType(), DeployerApplicationRecipe.class), 100);

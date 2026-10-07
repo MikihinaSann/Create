@@ -10,8 +10,8 @@ import net.minecraft.world.phys.Vec3;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 
 public class VanillaHatOffsetGenerator extends TrainHatInfoProvider {
-	public VanillaHatOffsetGenerator(FabricDataOutput output) {
-		super(output);
+	public VanillaHatOffsetGenerator(FabricDataOutput output, java.util.concurrent.CompletableFuture<net.minecraft.core.HolderLookup.Provider> registries) {
+		super(output, registries);
 	}
 
 	@Override

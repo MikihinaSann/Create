@@ -8,7 +8,7 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.Create;
 
@@ -30,14 +30,15 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
+import net.minecraft.core.HolderLookup;
+
 /**
  * Processing for structures exported on Forge to allow using the same ones on Forge and Fabric.
  */
 public class FabricStructureProcessing {
-	public static final Codec<Processor> PROCESSOR_CODEC = ResourceLocation.CODEC
+	public static final MapCodec<Processor> PROCESSOR_CODEC = ResourceLocation.CODEC
 			.fieldOf("structureId")
-			.xmap(Processor::new, processor -> processor.structureId)
-			.codec();
+			.xmap(Processor::new, processor -> processor.structureId);
 
 	public static final StructureProcessorType<Processor> PROCESSOR_TYPE = Registry.register(
 			BuiltInRegistries.STRUCTURE_PROCESSOR,
@@ -109,7 +110,7 @@ public class FabricStructureProcessing {
 
 			if (AllBlocks.FLUID_TANK.has(relativeBlockInfo.state()) && nbt.contains("TankContent", Tag.TAG_COMPOUND)) {
 				CompoundTag copy = nbt.copy();
-				fixTankContent(copy.getCompound("TankContent"));
+				fixTankContent(copy.getCompound("TankContent"), level.registryAccess());
 				return new StructureBlockInfo(relativeBlockInfo.pos(), relativeBlockInfo.state(), copy);
 			} else if (AllBlocks.BASIN.has(relativeBlockInfo.state())) {
 				CompoundTag copy = nbt.copy();
@@ -118,7 +119,7 @@ public class FabricStructureProcessing {
 					for (int i = 0; i < inputTanks.size(); i++) {
 						CompoundTag compound = inputTanks.getCompound(i);
 						CompoundTag content = compound.getCompound("TankContent");
-						fixTankContent(content);
+						fixTankContent(content, level.registryAccess());
 					}
 				}
 				ListTag outputTanks = copy.getList("OutputTanks", Tag.TAG_COMPOUND);
@@ -126,7 +127,7 @@ public class FabricStructureProcessing {
 					for (int i = 0; i < outputTanks.size(); i++) {
 						CompoundTag compound = outputTanks.getCompound(i);
 						CompoundTag content = compound.getCompound("TankContent");
-						fixTankContent(content);
+						fixTankContent(content, level.registryAccess());
 					}
 				}
 
@@ -144,16 +145,16 @@ public class FabricStructureProcessing {
 		}
 	}
 
-	private static void fixTankContent(CompoundTag content) {
+	private static void fixTankContent(CompoundTag content, HolderLookup.Provider registries) {
 		if (content.contains("FluidName", Tag.TAG_STRING) && content.getString("FluidName").equals("minecraft:milk")) {
 			content.putString("FluidName", "milk:still_milk");
 		}
-		FluidStack stack = FluidStack.loadFluidStackFromNBT(content);
+		FluidStack stack = FluidStack.parseOptional(registries, content);
 		long amount = stack.getAmount();
 		double buckets = amount / 1000d;
 		long fixedAmount = Math.round(buckets * FluidConstants.BUCKET);
 		stack.setAmount(fixedAmount);
 		Set.copyOf(content.getAllKeys()).forEach(content::remove);
-		stack.writeToNBT(content);
+		stack.save(registries, content);
 	}
 }

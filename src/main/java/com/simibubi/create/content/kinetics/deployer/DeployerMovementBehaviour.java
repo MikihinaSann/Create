@@ -169,9 +169,9 @@ public class DeployerMovementBehaviour implements MovementBehaviour {
 			}
 		}
 
-		CompoundTag data = BlockHelper.prepareBlockEntityData(blockState, schematicWorld.getBlockEntity(pos));
+		CompoundTag data = BlockHelper.prepareBlockEntityData(level, blockState, schematicWorld.getBlockEntity(pos));
 //		BlockSnapshot blocksnapshot = BlockSnapshot.create(world.dimension(), world, pos);
-		BlockHelper.placeSchematicBlock(world, blockState, pos, contextStack, data);
+		BlockHelper.placeSchematicBlock(level, blockState, pos, contextStack, data);
 
 //		if (ForgeEventFactory.onBlockPlace(player, blocksnapshot, Direction.UP))
 //			blocksnapshot.restore(true, false);

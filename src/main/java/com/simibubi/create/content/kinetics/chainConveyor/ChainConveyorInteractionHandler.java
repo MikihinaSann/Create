@@ -54,7 +54,7 @@ public class ChainConveyorInteractionHandler {
 		}
 
 		Minecraft mc = Minecraft.getInstance();
-		boolean isWrench = mc.player.isHolding(i -> i.is(Tags.Items.TOOLS_WRENCH));
+		boolean isWrench = mc.player.isHolding(i -> i.is(AllItemTags.WRENCH.tag));
 		boolean dismantling = isWrench && mc.player.isShiftKeyDown();
 		double range = mc.player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE) + 1;
 

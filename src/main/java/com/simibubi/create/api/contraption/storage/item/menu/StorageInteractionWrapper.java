@@ -1,6 +1,7 @@
 package com.simibubi.create.api.contraption.storage.item.menu;
 
 import java.util.function.Consumer;
+import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
 import java.util.function.Predicate;
 
 import com.simibubi.create.foundation.blockEntity.ItemHandlerContainer;
@@ -15,7 +16,7 @@ public class StorageInteractionWrapper extends ItemHandlerContainer {
 	private final Consumer<Player> onClose;
 
 	public StorageInteractionWrapper(SlottedStackStorage storage, Predicate<Player> stillValid, Consumer<Player> onClose) {
-		this.storage = storage;
+		super(storage);
 		this.stillValid = stillValid;
 		this.onClose = onClose;
 	}
@@ -32,28 +33,28 @@ public class StorageInteractionWrapper extends ItemHandlerContainer {
 
 	@Override
 	public int getContainerSize() {
-		return this.storage.getSlotCount();
+		return this.inv.getSlotCount();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return this.storage.nonEmptyIterator().hasNext();
+		return this.inv.nonEmptyIterator().hasNext();
 	}
 
 	@Override
 	public ItemStack getItem(int slot) {
-		return this.storage.getStackInSlot(slot);
+		return this.inv.getStackInSlot(slot);
 	}
 
 	@Override
 	public ItemStack removeItem(int index, int count) {
-		if (index >= 0 && index < this.storage.getSlotCount()) {
-			ItemStack current = this.storage.getStackInSlot(index);
+		if (index >= 0 && index < this.inv.getSlotCount()) {
+			ItemStack current = this.inv.getStackInSlot(index);
 			if (current.isEmpty())
 				return ItemStack.EMPTY;
 			current = current.copy();
 			ItemStack extracted = current.split(count);
-			this.storage.setStackInSlot(index, current);
+			this.inv.setStackInSlot(index, current);
 			return extracted;
 		}
 		return ItemStack.EMPTY;
@@ -66,7 +67,7 @@ public class StorageInteractionWrapper extends ItemHandlerContainer {
 
 	@Override
 	public void setItem(int slot, ItemStack stack) {
-		this.storage.setStackInSlot(slot, stack);
+		this.inv.setStackInSlot(slot, stack);
 	}
 
 	@Override
@@ -75,13 +76,13 @@ public class StorageInteractionWrapper extends ItemHandlerContainer {
 
 	@Override
 	public boolean canPlaceItem(int index, ItemStack stack) {
-		return this.storage.isItemValid(index, ItemVariant.of(stack), stack.getCount());
+		return this.inv.isItemValid(index, ItemVariant.of(stack), stack.getCount());
 	}
 
 	@Override
 	public void clearContent() {
-		for (int i = 0; i < this.storage.getSlotCount(); i++) {
-			this.storage.setStackInSlot(i, ItemStack.EMPTY);
+		for (int i = 0; i < this.inv.getSlotCount(); i++) {
+			this.inv.setStackInSlot(i, ItemStack.EMPTY);
 		}
 	}
 }

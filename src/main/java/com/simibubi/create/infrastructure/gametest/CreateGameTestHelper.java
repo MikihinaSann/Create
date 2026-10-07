@@ -428,7 +428,7 @@ public class CreateGameTestHelper extends GameTestHelper {
 	 */
 	public void assertContainerContains(BlockPos pos, ItemStack item) {
 		Storage<ItemVariant> storage = itemStorageAt(pos);
-		ItemStack extracted = ItemHelper.extract(storage, stack -> ItemHandlerHelper.canItemStacksStack(stack, item), item.getCount(), true);
+		ItemStack extracted = ItemHelper.extract(storage, stack -> ItemHelper.canItemStacksStack(stack, item), item.getCount(), true);
 		if (extracted.isEmpty())
 			fail("item not present: " + item);
 	}

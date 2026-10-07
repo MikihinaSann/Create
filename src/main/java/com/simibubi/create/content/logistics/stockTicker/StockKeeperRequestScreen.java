@@ -1031,7 +1031,7 @@ public class StockKeeperRequestScreen extends AbstractSimiContainerScreen<StockK
 			int x, y;
 			BigItemStack entry;
 			if (recipeHovered) {
-				int jeiX = getGuiLeft() + (windowWidth - colWidth * recipesToOrder.size()) / 2 + 1;
+				int jeiX = leftPos + (windowWidth - colWidth * recipesToOrder.size()) / 2 + 1;
 				int jeiY = orderY - 31;
 
 				x = jeiX + (index * colWidth);

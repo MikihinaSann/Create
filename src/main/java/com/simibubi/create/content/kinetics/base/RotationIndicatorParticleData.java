@@ -1,6 +1,7 @@
 package com.simibubi.create.content.kinetics.base;
 
 import com.mojang.serialization.Codec;
+import net.minecraft.network.codec.StreamCodec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.AllParticleTypes;

@@ -10,6 +10,9 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 public class OverlayConfigCommand {
 	public static ArgumentBuilder<CommandSourceStack, ?> register() {
 		return Commands.literal("overlay")
@@ -24,9 +27,18 @@ public class OverlayConfigCommand {
 				})
 			)
 			.executes(ctx -> {
-				ScreenOpener.open(new GoggleConfigScreen());
+				Client.openScreen();
 				return Command.SINGLE_SUCCESS;
 			});
 
+	}
+
+	// fabric: lazily-loaded so the enclosing class verifies on a dedicated server;
+	// only ever invoked from the client command
+	@Environment(EnvType.CLIENT)
+	static class Client {
+		static void openScreen() {
+			ScreenOpener.open(new GoggleConfigScreen());
+		}
 	}
 }

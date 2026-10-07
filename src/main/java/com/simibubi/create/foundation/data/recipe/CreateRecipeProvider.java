@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 
@@ -18,7 +19,6 @@ import com.simibubi.create.api.data.recipe.ProcessingRecipeGen;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.CachedOutput;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
@@ -29,16 +29,18 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
+import com.simibubi.create.Create;
 
 public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 
 	static final List<ProcessingRecipeGen<?, ?, ?>> GENERATORS = new ArrayList<>();
-	static final int BUCKET = FluidType.BUCKET_VOLUME;
-	static final int BOTTLE = 250;
+
+	protected final List<GeneratedRecipe> all = new ArrayList<>();
 
 	public CreateRecipeProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registries) {
 		super(output, registries);
@@ -50,7 +52,23 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		Create.LOGGER.info("{} registered {} recipe{}", getName(), all.size(), all.size() == 1 ? "" : "s");
 	}
 
-	public static void registerAllProcessing(DataGenerator gen, PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+	protected GeneratedRecipe register(GeneratedRecipe recipe) {
+		all.add(recipe);
+		return recipe;
+	}
+
+	@FunctionalInterface
+	public interface GeneratedRecipe {
+		void register(RecipeOutput output);
+	}
+
+	protected static class Marker {
+	}
+
+	// fabric: upstream registers a raw DataProvider on the generator; here we
+	// register through the fabric pack factory which supplies output + registries
+	public static void registerAllProcessing(FabricDataGenerator.Pack pack) {
+		pack.addProvider((output, registries) -> {
 		GENERATORS.add(new CreateCrushingRecipeGen(output, registries));
 		GENERATORS.add(new CreateMillingRecipeGen(output, registries));
 		GENERATORS.add(new CreateCuttingRecipeGen(output, registries));
@@ -65,7 +83,7 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 		GENERATORS.add(new CreateHauntingRecipeGen(output, registries));
 		GENERATORS.add(new CreateItemApplicationRecipeGen(output, registries));
 
-		gen.addProvider(true, new DataProvider() {
+		return new DataProvider() {
 
 			@Override
 			public String getName() {
@@ -78,6 +96,7 @@ public abstract class CreateRecipeProvider extends FabricRecipeProvider {
 					.map(gen -> gen.run(dc))
 					.toArray(CompletableFuture[]::new));
 			}
+		};
 		});
 	}
 

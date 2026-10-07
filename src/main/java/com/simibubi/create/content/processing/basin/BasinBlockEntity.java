@@ -1,6 +1,7 @@
 package com.simibubi.create.content.processing.basin;
 
 import java.util.ArrayList;
+import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -81,12 +82,9 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
-public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, Clearable {
-
-
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
 
-public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
+public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity, Clearable {
 
 	private boolean needsUpdate; // fabric: need to delay to avoid doing stuff mid-transaction, causing a crash
 	private boolean areFluidsMoving;

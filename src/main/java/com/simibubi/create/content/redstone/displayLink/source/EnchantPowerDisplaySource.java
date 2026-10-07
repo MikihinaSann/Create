@@ -1,5 +1,7 @@
 package com.simibubi.create.content.redstone.displayLink.source;
 
+import net.minecraft.world.level.block.entity.EnchantingTableBlockEntity;
+import net.minecraft.world.level.block.EnchantingTableBlock;
 import com.simibubi.create.content.redstone.displayLink.DisplayLinkContext;
 import com.simibubi.create.content.redstone.displayLink.target.DisplayTargetStats;
 
@@ -14,11 +16,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.EnchantmentTableBlock;
-import net.minecraft.world.level.block.entity.EnchantmentTableBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-
-import io.github.fabricators_of_create.porting_lib.enchant.EnchantmentBonusBlock;
 
 public class EnchantPowerDisplaySource extends NumericSingleLineDisplaySource {
 

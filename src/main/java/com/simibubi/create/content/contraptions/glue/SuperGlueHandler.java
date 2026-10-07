@@ -8,6 +8,8 @@ import com.simibubi.create.api.contraption.BlockMovementChecks;
 import com.simibubi.create.foundation.utility.AdventureUtil;
 import com.simibubi.create.foundation.utility.fabric.ReachUtil;
 
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent.EntityPlaceEvent;
+
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.levelWrappers.RayTraceLevel;
 import net.createmod.catnip.placement.IPlacementHelper;
@@ -35,13 +37,16 @@ import net.minecraft.world.phys.Vec3;
 
 public class SuperGlueHandler {
 
-	public static void glueListensForBlockPlacement(BlockPlaceContext context, BlockPos pos, BlockState state) {
-		LevelAccessor world = context.getLevel();
-		Player entity = context.getPlayer();
+	public static void glueListensForBlockPlacement(EntityPlaceEvent event) {
+		LevelAccessor world = event.getLevel();
+		Entity entity = event.getEntity();
+		BlockPos pos = event.getPos();
 
-		if (entity == null || AdventureUtil.isAdventure(entity))
+		if (entity == null || world == null || pos == null)
 			return;
 		if (world.isClientSide())
+			return;
+		if (entity instanceof Player player && AdventureUtil.isAdventure(player))
 			return;
 
 		Set<SuperGlueEntity> cached = new HashSet<>();
@@ -52,7 +57,8 @@ public class SuperGlueHandler {
 				CatnipServices.NETWORK.sendToClientsTrackingAndSelf(entity, new GlueEffectPacket(pos, direction, true));
 		}
 
-		glueInOffHandAppliesOnBlockPlace(context.getLevel().getBlockState(context.getClickedPos().relative(context.getClickedFace().getOpposite())), pos, entity);
+		if (entity instanceof Player)
+			glueInOffHandAppliesOnBlockPlace(event.getPlacedAgainst(), pos, (Player) entity);
 	}
 
 	public static void glueInOffHandAppliesOnBlockPlace(BlockState placedAgainst, BlockPos pos, Player placer) {

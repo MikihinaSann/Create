@@ -13,13 +13,18 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
@@ -97,36 +102,42 @@ public class ArmInteractionPoint {
 	}
 
 	@Nullable
-	protected IItemHandler getHandler(ArmBlockEntity armBlockEntity) {
-		if (cachedHandler == null && level instanceof ServerLevel serverLevel) {
+	protected Storage<ItemVariant> getHandler(ArmBlockEntity armBlockEntity) {
+		if (handlerProvider == null && level instanceof ServerLevel) {
 			BlockEntity be = level.getBlockEntity(pos);
 			if (be == null)
 				return null;
-			cachedHandler = BlockCapabilityCache.create(
-				Capabilities.ItemHandler.BLOCK,
-				serverLevel,
-				pos,
-				Direction.UP,
-				() -> !armBlockEntity.isRemoved(),
-				() -> cachedHandler = null
-			);
+			handlerProvider = StorageProvider.createForItems(level, pos);
 		}
-		return handlerProvider.get(Direction.UP);
+		return handlerProvider == null ? null : handlerProvider.get(Direction.UP);
 	}
 
 	public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
-		IItemHandler handler = getHandler(armBlockEntity);
+		Storage<ItemVariant> handler = getHandler(armBlockEntity);
 		if (handler == null)
 			return stack;
-		long inserted = handler.insert(ItemVariant.of(stack), stack.getCount(), ctx);
-		return ItemHandlerHelper.copyStackWithSize(stack, ItemHelper.truncateLong(stack.getCount() - inserted));
+		try (Transaction t = Transaction.openOuter()) {
+			long inserted = handler.insert(ItemVariant.of(stack), stack.getCount(), t);
+			if (!simulate)
+				t.commit();
+			return stack.copyWithCount(stack.getCount() - (int) inserted);
+		}
 	}
 
 	public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
-		IItemHandler handler = getHandler(armBlockEntity);
-		if (handler == null)
+		Storage<ItemVariant> handler = getHandler(armBlockEntity);
+		if (!(handler instanceof SlottedStorage<ItemVariant> slotted) || slot >= slotted.getSlotCount())
 			return ItemStack.EMPTY;
-		return TransferUtil.extractAnyItem(handler, amount);
+		SingleSlotStorage<ItemVariant> slotStorage = slotted.getSlot(slot);
+		ItemVariant resource = slotStorage.getResource();
+		if (resource.isBlank())
+			return ItemStack.EMPTY;
+		try (Transaction t = Transaction.openOuter()) {
+			long extracted = slotStorage.extract(resource, amount, t);
+			if (!simulate)
+				t.commit();
+			return resource.toStack((int) extracted);
+		}
 	}
 
 	public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, boolean simulate) {
@@ -134,10 +145,10 @@ public class ArmInteractionPoint {
 	}
 
 	public int getSlotCount(ArmBlockEntity armBlockEntity) {
-		IItemHandler handler = getHandler(armBlockEntity);
-		if (handler == null)
-			return 0;
-		return handler.getSlots();
+		Storage<ItemVariant> handler = getHandler(armBlockEntity);
+		if (handler instanceof SlottedStorage<ItemVariant> slotted)
+			return slotted.getSlotCount();
+		return 0;
 	}
 
 	protected void serialize(CompoundTag nbt, BlockPos anchor) {

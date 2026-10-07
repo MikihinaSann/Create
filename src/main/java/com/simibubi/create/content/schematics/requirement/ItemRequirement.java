@@ -16,14 +16,11 @@ import com.simibubi.create.api.schematic.requirement.SchematicRequirementRegistr
 import com.simibubi.create.api.schematic.requirement.SpecialBlockEntityItemRequirement;
 import com.simibubi.create.api.schematic.requirement.SpecialBlockItemRequirement;
 import com.simibubi.create.api.schematic.requirement.SpecialEntityItemRequirement;
-import com.simibubi.create.api.schematic.requirement.SpecialBlockEntityItemRequirement;
-import com.simibubi.create.api.schematic.requirement.SpecialBlockItemRequirement;
-import com.simibubi.create.api.schematic.requirement.SpecialEntityItemRequirement;
 import com.simibubi.create.compat.framedblocks.FramedBlocksInSchematics;
 import com.simibubi.create.foundation.data.recipe.Mods;
-import com.simibubi.create.foundation.mixin.accessor.ItemFrameAccessor;
 
 import net.createmod.catnip.components.ComponentProcessors;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -150,10 +147,10 @@ public class ItemRequirement {
 		}
 
 		if (entity instanceof ItemFrame itemFrame) {
-			ItemStack frame = ((ItemFrameAccessor) itemFrame).create$getFrameItemStack();
+			ItemStack frame = new ItemStack(Items.ITEM_FRAME);
 			ItemStack displayedItem = ComponentProcessors.withUnsafeComponentsDiscarded(itemFrame.getItem());
 			if (displayedItem.isEmpty())
-				return new ItemRequirement(ItemUseType.CONSUME, frame);
+				return new ItemRequirement(ItemUseType.CONSUME, Items.ITEM_FRAME);
 			return new ItemRequirement(List.of(new ItemRequirement.StackRequirement(frame, ItemUseType.CONSUME),
 				new ItemRequirement.StrictNbtStackRequirement(displayedItem, ItemUseType.CONSUME)));
 		}

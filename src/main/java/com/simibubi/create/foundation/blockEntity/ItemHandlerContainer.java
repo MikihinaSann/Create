@@ -4,12 +4,12 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
 
 public class ItemHandlerContainer implements Container {
-	protected final IItemHandlerModifiable inv;
+	protected final SlottedStackStorage inv;
 
-	public ItemHandlerContainer(IItemHandlerModifiable inv) {
+	public ItemHandlerContainer(SlottedStackStorage inv) {
 		this.inv = inv;
 	}
 
@@ -18,7 +18,7 @@ public class ItemHandlerContainer implements Container {
 	 */
 	@Override
 	public int getContainerSize() {
-		return inv.getSlots();
+		return inv.getSlotCount();
 	}
 
 	/**
@@ -61,7 +61,7 @@ public class ItemHandlerContainer implements Container {
 
 	@Override
 	public boolean isEmpty() {
-		for (int i = 0; i < inv.getSlots(); i++) {
+		for (int i = 0; i < inv.getSlotCount(); i++) {
 			if (!inv.getStackInSlot(i).isEmpty())
 				return false;
 		}
@@ -75,7 +75,7 @@ public class ItemHandlerContainer implements Container {
 
 	@Override
 	public void clearContent() {
-		for (int i = 0; i < inv.getSlots(); i++)
+		for (int i = 0; i < inv.getSlotCount(); i++)
 			inv.setStackInSlot(i, ItemStack.EMPTY);
 	}
 

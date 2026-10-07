@@ -7,6 +7,7 @@ import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.crafter.ConnectedInputHandler.ConnectedInput;
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity.Phase;
+import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -198,11 +199,11 @@ public class MechanicalCrafterBlock extends HorizontalKineticBlock
 				if (capability == null)
 					return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 				try (Transaction t = Transaction.openOuter()) {
-					long inserted = capability.insert(ItemVariant.of(heldItem), heldItem.getCount(), t);
+					long inserted = capability.insert(ItemVariant.of(stack), stack.getCount(), t);
 					if (inserted <= 0)
 						return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
-					player.setItemInHand(handIn, ItemHandlerHelper.copyStackWithSize(heldItem, (int) (heldItem.getCount() - inserted)));
+					player.setItemInHand(hand, ItemHelper.copyStackWithSize(stack, (int) (stack.getCount() - inserted)));
 					t.commit();
 					return ItemInteractionResult.SUCCESS;
 				}

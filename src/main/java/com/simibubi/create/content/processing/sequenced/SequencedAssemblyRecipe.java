@@ -1,17 +1,24 @@
 package com.simibubi.create.content.processing.sequenced;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
+
+import com.simibubi.create.foundation.recipe.RecipeHelper;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.AllDataComponents;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 import com.simibubi.create.foundation.utility.CreateLang;
+import com.simibubi.create.foundation.fluid.FluidIngredient;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 
 import io.netty.buffer.ByteBuf;
 
@@ -29,6 +36,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -133,6 +141,24 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 		return loops;
 	}
 
+	public void addAdditionalIngredientsAndMachines(List<Ingredient> list) {
+		sequence.forEach(sr -> sr.getAsAssemblyRecipe()
+			.addAssemblyIngredients(list));
+		Set<ItemLike> machines = new HashSet<>();
+		sequence.forEach(sr -> sr.getAsAssemblyRecipe()
+			.addRequiredMachines(machines));
+		machines.stream()
+			.map(Ingredient::of)
+			.forEach(list::add);
+	}
+
+	public void addAdditionalFluidIngredients(List<FluidIngredient> list) {
+		List<SizedFluidIngredient> sized = new ArrayList<>();
+		sequence.forEach(sr -> sr.getAsAssemblyRecipe()
+			.addAssemblyFluidIngredients(sized));
+		sized.forEach(s -> list.add(s.ingredient()));
+	}
+
 	private ItemStack rollResult(RandomSource random) {
 		float totalWeight = 0;
 		for (ProcessingOutput entry : resultPool)
@@ -176,7 +202,7 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 	}
 
 	@Override
-	public ItemStack assemble(RecipeInput input, HolderLookup.Provider registries) {
+	public ItemStack assemble(RecipeWrapper input, HolderLookup.Provider registries) {
 		return ItemStack.EMPTY;
 	}
 
@@ -264,7 +290,7 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 			ingredientList = NonNullList.create();
 			ingredientList.add(ingredient);
 			for (SequencedRecipe<?> recipe : this.sequence) {
-				ingredientList.addAll(recipe.getRecipe().getIngredients());
+				ingredientList.addAll(RecipeHelper.getIngredients(recipe.getRecipe()));
 			}
 		}
 		return ingredientList;

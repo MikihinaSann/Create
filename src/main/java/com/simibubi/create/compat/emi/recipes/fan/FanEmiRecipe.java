@@ -10,6 +10,8 @@ import com.simibubi.create.foundation.utility.CreateLang;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.WidgetHolder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.crafting.Recipe;
 
@@ -36,11 +38,12 @@ public abstract class FanEmiRecipe<T extends Recipe<?>> extends CreateEmiRecipe<
 	}
 
 	public static EmiStack getFan(String name) {
-		return EmiStack.of(AllBlocks.ENCASED_FAN.asStack()
-				.setHoverName(CreateLang.translateDirect("recipe." + name + ".fan").withStyle(style -> style.withItalic(false))));
+		ItemStack fan = AllBlocks.ENCASED_FAN.asStack();
+		fan.set(DataComponents.CUSTOM_NAME, CreateLang.translateDirect("recipe." + name + ".fan").withStyle(style -> style.withItalic(false)));
+		return EmiStack.of(fan);
 	}
 
-	public static abstract class MultiOutput<T extends ProcessingRecipe<?>> extends FanEmiRecipe<T> {
+	public static abstract class MultiOutput<T extends ProcessingRecipe<?, ?>> extends FanEmiRecipe<T> {
 
 		public MultiOutput(EmiRecipeCategory type, T recipe) {
 			super(type, recipe);

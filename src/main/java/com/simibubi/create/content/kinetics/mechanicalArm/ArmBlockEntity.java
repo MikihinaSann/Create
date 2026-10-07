@@ -272,12 +272,10 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 				if (getDistributableAmount(armInteractionPoint, j) == 0)
 					continue;
 
-			if (getDistributableAmount(armInteractionPoint) == 0)
-				continue;
-
-			selectIndex(true, i);
-			foundInput = true;
-			break InteractionPoints;
+				selectIndex(true, i);
+				foundInput = true;
+				break InteractionPoints;
+			}
 		}
 		if (!foundInput && selectionMode.get() == SelectionMode.ROUND_ROBIN) {
 			// if we didn't find an input, but don't want to enforce round robin, reset the
@@ -304,20 +302,18 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 		if (scanRange > outputs.size())
 			scanRange = outputs.size();
 
-		try (Transaction t = Transaction.openOuter()) {
-			for (int i = startIndex; i < scanRange; i++) {
-				ArmInteractionPoint armInteractionPoint = outputs.get(i);
-				if (!armInteractionPoint.isValid())
-					continue;
+		for (int i = startIndex; i < scanRange; i++) {
+			ArmInteractionPoint armInteractionPoint = outputs.get(i);
+			if (!armInteractionPoint.isValid())
+				continue;
 
 			ItemStack remainder = armInteractionPoint.insert(this, held, true);
 			if (ItemStack.matches(remainder, heldItem))
 				continue;
 
-				selectIndex(false, i);
-				foundOutput = true;
-				break;
-			}
+			selectIndex(false, i);
+			foundOutput = true;
+			break;
 		}
 
 		if (!foundOutput && selectionMode.get() == SelectionMode.ROUND_ROBIN) {
@@ -361,6 +357,7 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 			if (stack.isEmpty())
 				break;
 		}
+		return stack;
 	}
 
 	protected void depositItem() {
@@ -370,9 +367,8 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 			ItemStack remainder = armInteractionPoint.insert(this, toInsert, false);
 			heldItem = remainder;
 
-				if (armInteractionPoint instanceof JukeboxPoint && remainder.isEmpty())
-					award(AllAdvancements.MUSICAL_ARM);
-			}
+			if (armInteractionPoint instanceof JukeboxPoint && remainder.isEmpty())
+				award(AllAdvancements.MUSICAL_ARM);
 		}
 
 		phase = heldItem.isEmpty() ? Phase.SEARCH_INPUTS : Phase.SEARCH_OUTPUTS;
@@ -402,11 +398,9 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 
 				if (!ItemStack.isSameItem(heldItem, prevHeld))
 					level.playSound(null, worldPosition, SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, .125f,
-							.5f + Create.RANDOM.nextFloat() * .25f);
-				t.commit();
+						.5f + Create.RANDOM.nextFloat() * .25f);
 				return;
 			}
-		}
 
 		phase = Phase.SEARCH_INPUTS;
 		chasedPointProgress = 0;

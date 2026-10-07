@@ -12,6 +12,9 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import com.simibubi.create.AllDataComponents;
+import com.simibubi.create.content.equipment.sandPaper.SandPaperItemComponent;
+import net.minecraft.util.Unit;
 
 
 
@@ -34,9 +37,8 @@ public class PolishingEmiRecipe extends CreateEmiRecipe<SandPaperPolishingRecipe
 		if (!ingredients.isEmpty() && !ingredients.get(0).isEmpty()) {
 			ItemStack[] matchingStacks = ingredients.get(0).getItems();
 			ItemStack stack = AllItems.SAND_PAPER.asStack();
-			CompoundTag tag = stack.getOrCreateTag();
-			tag.put("Polishing", NBTSerializer.serializeNBT(matchingStacks[0]));
-			tag.putBoolean("JEI", true);
+			stack.set(AllDataComponents.SAND_PAPER_POLISHING, new SandPaperItemComponent(matchingStacks[0]));
+			stack.set(AllDataComponents.SAND_PAPER_JEI, Unit.INSTANCE);
 			widgets.addDrawable(49, 4, 0, 0, (graphics, mouseX, mouseY, delta) -> {
 				PoseStack matrices = graphics.pose();
 				matrices.translate(0, 0, 100);

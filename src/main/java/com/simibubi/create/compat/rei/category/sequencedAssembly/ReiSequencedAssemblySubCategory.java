@@ -84,7 +84,8 @@ public abstract class ReiSequencedAssemblySubCategory {
 		public int addFluidIngredients(SequencedRecipe<?> recipe, List<Widget> widgets, int x, int index, Point origin) {
 			FluidIngredient fluidIngredient = recipe.getRecipe()
 				.getFluidIngredients()
-				.get(0);
+				.get(0)
+				.ingredient();
 			// Always pass 0 to the fluid ingredient get, because spouting only supports one fluid per step
 			// and the passed index to this method will produce an out-of-bounds exception if used
 			Slot fluidSlot = basicSlot(x + 4, 15, origin).markInput().entries(EntryIngredients.of(CreateRecipeCategory.convertToREIFluid(fluidIngredient.getMatchingFluidStacks().get(0))));

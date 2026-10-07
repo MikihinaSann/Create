@@ -1,5 +1,6 @@
 package com.simibubi.create.content.fluids;
 
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import java.lang.ref.WeakReference;
 import java.util.function.Predicate;
 
@@ -19,14 +20,8 @@ import net.createmod.catnip.math.BlockFace;
 import net.createmod.ponder.api.level.PonderLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.ResourceAmount;
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
-
-import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
 
 public abstract class FlowSource {

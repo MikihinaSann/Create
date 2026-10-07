@@ -85,7 +85,7 @@ public class StockKeeperCategoryMenu extends MenuBase<StockTickerBlockEntity> {
 	}
 
 	class InactiveItemHandlerSlot extends SlotItemHandler {
-		public InactiveItemHandlerSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
+		public InactiveItemHandlerSlot(SlottedStackStorage itemHandler, int index, int xPosition, int yPosition) {
 			super(itemHandler, index, xPosition, yPosition);
 		}
 

@@ -9,6 +9,7 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.api.data.datamaps.BlazeBurnerFuel;
 import com.simibubi.create.api.registry.CreateDataMaps;
+import com.simibubi.create.impl.registry.CreateDataMapsImpl;
 import com.simibubi.create.content.fluids.tank.FluidTankBlock;
 import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;
 import com.simibubi.create.content.processing.basin.BasinBlock;
@@ -245,8 +246,8 @@ public class BlazeBurnerBlockEntity extends SmartBlockEntity {
 		int newBurnTime;
 
 		Holder<Item> holder = itemStack.getItem().builtInRegistryHolder();
-		BlazeBurnerFuel superheatedFuel = holder.getData(CreateDataMaps.SUPERHEATED_BLAZE_BURNER_FUELS);
-		BlazeBurnerFuel normalFuel = holder.getData(CreateDataMaps.REGULAR_BLAZE_BURNER_FUELS);
+		BlazeBurnerFuel superheatedFuel = CreateDataMapsImpl.getData(holder, CreateDataMaps.SUPERHEATED_BLAZE_BURNER_FUELS);
+		BlazeBurnerFuel normalFuel = CreateDataMapsImpl.getData(holder, CreateDataMaps.REGULAR_BLAZE_BURNER_FUELS);
 
 		// TODO: 1.21.1+ - Remove fallback to tags
 		if (superheatedFuel != null) {

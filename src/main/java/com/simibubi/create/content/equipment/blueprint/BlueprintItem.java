@@ -1,6 +1,9 @@
 package com.simibubi.create.content.equipment.blueprint;
 
 import java.util.ArrayList;
+
+import com.simibubi.create.foundation.recipe.RecipeHelper;
+import net.minecraft.core.component.DataComponents;
 import java.util.Collection;
 import java.util.List;
 
@@ -15,7 +18,9 @@ import com.simibubi.create.foundation.item.ItemHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.HangingEntity;
@@ -70,7 +75,7 @@ public class BlueprintItem extends Item {
 	}
 
 	public static void assignCompleteRecipe(Level level, ItemStackHandler inv, Recipe<?> recipe) {
-		NonNullList<Ingredient> ingredients = recipe.getIngredients();
+		NonNullList<Ingredient> ingredients = RecipeHelper.getIngredients(recipe);
 
 		for (int i = 0; i < 9; i++)
 			inv.setStackInSlot(i, ItemStack.EMPTY);
@@ -88,7 +93,7 @@ public class BlueprintItem extends Item {
 	}
 
 	private static ItemStack convertIngredientToFilter(Ingredient ingredient) {
-		boolean isCompoundIngredient = ingredient.getCustomIngredient() instanceof CompoundIngredient;
+		boolean isCompoundIngredient = ingredient.getCustomIngredient() != null;
 		Value[] acceptedItems = ingredient.values;
 		if (acceptedItems == null || acceptedItems.length > 18)
 			return ItemStack.EMPTY;
@@ -116,7 +121,7 @@ public class BlueprintItem extends Item {
 			ItemStack filterItem = AllItems.ATTRIBUTE_FILTER.asStack();
 			filterItem.set(AllDataComponents.ATTRIBUTE_FILTER_WHITELIST_MODE, AttributeFilterWhitelistMode.WHITELIST_DISJ);
 			List<ItemAttributeEntry> attributes = new ArrayList<>();
-			ItemAttribute at = new InTagAttribute(ItemTags.create(tagValue.tag().location()));
+			ItemAttribute at = new InTagAttribute(TagKey.create(Registries.ITEM, tagValue.tag().location()));
 			attributes.add(new ItemAttribute.ItemAttributeEntry(at, false));
 			filterItem.set(AllDataComponents.ATTRIBUTE_FILTER_MATCHED_ATTRIBUTES, attributes);
 			return filterItem;

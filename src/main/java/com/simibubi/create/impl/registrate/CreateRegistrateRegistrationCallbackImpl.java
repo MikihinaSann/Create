@@ -53,7 +53,7 @@ public class CreateRegistrateRegistrationCallbackImpl {
 		either.ifRight(callbackImpl::addToRegistrate);
 	}
 
-	private record CallbackImpl<R, T extends R>(ResourceKey<? extends Registry<R>> registry, ResourceLocation id, NonNullConsumer<? super T> callback) {
+	public record CallbackImpl<R, T extends R>(ResourceKey<? extends Registry<R>> registry, ResourceLocation id, NonNullConsumer<? super T> callback) {
 		// Helper method so javac doesn't explode on the generic types.
 		// Otherwise, IntelliJ does type inference better than javac,
 		// and everything becomes illegible with generic erasure casts.

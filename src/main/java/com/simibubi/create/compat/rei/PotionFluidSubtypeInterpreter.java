@@ -1,14 +1,11 @@
 package com.simibubi.create.compat.rei;
 
-import java.util.List;
-
+import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.content.fluids.potion.PotionFluid.BottleType;
 
-import net.createmod.catnip.nbt.NBTHelper;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.item.alchemy.Potion;
-import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.PotionContents;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
@@ -17,27 +14,21 @@ public class PotionFluidSubtypeInterpreter /*implements IIngredientSubtypeInterp
 
 //	@Override
 	public String apply(FluidStack ingredient) {
-		if (!ingredient.hasTag())
+		PotionContents contents = ingredient.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+		if (contents.equals(PotionContents.EMPTY))
 			return "";
 
-		CompoundTag tag = ingredient.getOrCreateTag();
-		Potion potionType = PotionUtils.getPotion(tag);
-		String potionTypeString = potionType.getName("");
-		String bottleType = NBTHelper.readEnum(tag, "Bottle", BottleType.class)
+		String potionTypeString = contents.potion()
+			.map(potion -> potion.value().getEffects().isEmpty() ? ""
+				: potion.unwrapKey().map(k -> k.location().toString()).orElse(""))
+			.orElse("");
+		String bottleType = ingredient.getOrDefault(AllDataComponents.POTION_FLUID_BOTTLE_TYPE, BottleType.REGULAR)
 			.toString();
 
 		StringBuilder stringBuilder = new StringBuilder(potionTypeString);
-		List<MobEffectInstance> effects = PotionUtils.getCustomEffects(tag);
-
-		stringBuilder.append(";")
-			.append(bottleType);
-		for (MobEffectInstance effect : potionType.getEffects())
-			stringBuilder.append(";")
-				.append(effect);
-		for (MobEffectInstance effect : effects)
-			stringBuilder.append(";")
-				.append(effect);
+		stringBuilder.append(";").append(bottleType);
+		for (MobEffectInstance effect : contents.getAllEffects())
+			stringBuilder.append(";").append(effect);
 		return stringBuilder.toString();
 	}
-
 }

@@ -18,8 +18,10 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -34,7 +36,7 @@ public interface LayeredArmorItem extends CustomRenderedArmorItem {
 		if (!(stack.getItem() instanceof ArmorItem item)) {
 			return;
 		}
-		if (LivingEntity.getEquipmentSlotForItem(stack) != slot) {
+		if (item.getEquipmentSlot() != slot) {
 			return;
 		}
 

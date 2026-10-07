@@ -24,10 +24,14 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.util.datafix.fixes.ItemStackComponentizationFix;
 import net.minecraft.world.item.DyeColor;
 
+import com.simibubi.create.foundation.utility.ItemStackDataAccessor;
+
+import org.spongepowered.asm.mixin.injection.Coerce;
+
 @Mixin(ItemStackComponentizationFix.class)
 public class ItemStackComponentizationFixMixin {
 	@Inject(method = "fixItemStack", at = @At("TAIL"))
-	private static void create$fixItemsAndTranslateNBTIntoComponents(ItemStackComponentizationFix.ItemStackData stack, Dynamic<?> dynamic, CallbackInfo ci) {
+	private static void create$fixItemsAndTranslateNBTIntoComponents(@Coerce ItemStackDataAccessor stack, Dynamic<?> dynamic, CallbackInfo ci) {
 		// create:symmetry_wand is skipped since it doesn't have anything important
 		stack.removeTag("SequencedAssembly").result().ifPresent(d -> {
 			float progress = d.get("Progress").asFloat(0);
@@ -138,7 +142,7 @@ public class ItemStackComponentizationFixMixin {
 	}
 
 	@Unique
-	private static boolean create$isCheckWithDyeColors(ItemStackComponentizationFix.ItemStackData stack, String template) {
+	private static boolean create$isCheckWithDyeColors(ItemStackDataAccessor stack, String template) {
 		Set<String> ids = new HashSet<>();
 		for (DyeColor dyeColor : DyeColor.values()) {
 			ids.add(template.replace("{}", dyeColor.getName()));
@@ -149,13 +153,13 @@ public class ItemStackComponentizationFixMixin {
 	/**
 	 * Converts an int nbt tag storing an enum via it's ordinal to a component storing the enum by using {@link StringRepresentable#fromValues}
 	 *
-	 * @param stack {@link ItemStackComponentizationFix.ItemStackData}
+	 * @param stack {@link ItemStackDataAccessor}
 	 * @param key {@link String} The NBT Tag key that holds the int value
 	 * @param component {@link String} The data component type ID
 	 * @param enumClass The class holding the enum values
 	 */
 	@Unique
-	private static <T extends Enum<?>> void create$moveTagToEnumComponent(ItemStackComponentizationFix.ItemStackData stack, String key, String component, Class<T> enumClass) {
+	private static <T extends Enum<?>> void create$moveTagToEnumComponent(ItemStackDataAccessor stack, String key, String component, Class<T> enumClass) {
 		if (!enumClass.isEnum())
 			throw new IllegalArgumentException("moveTagToEnumComponent must be called with a enum class!");
 
@@ -176,7 +180,7 @@ public class ItemStackComponentizationFixMixin {
 	}
 
 	@Unique
-	private static void create$moveItemStackHandlerToItemContainerContents(ItemStackComponentizationFix.ItemStackData stack, Dynamic<?> dynamic, String key, String component) {
+	private static void create$moveItemStackHandlerToItemContainerContents(ItemStackDataAccessor stack, Dynamic<?> dynamic, String key, String component) {
 		try {
 			stack.removeTag(key).result().ifPresent(itemDynamic -> {
 				List<Dynamic<?>> list = new ArrayList<>();

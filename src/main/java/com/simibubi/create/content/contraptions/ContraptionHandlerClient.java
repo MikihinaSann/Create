@@ -3,17 +3,15 @@ package com.simibubi.create.content.contraptions;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 
-import javax.annotation.Nullable;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent;
 
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 
-import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.contraptions.sync.ContraptionInteractionPacket;
 import com.simibubi.create.content.trains.entity.CarriageContraptionEntity;
@@ -52,7 +50,7 @@ public class ContraptionHandlerClient {
 		if (!(player instanceof RemotePlayer remotePlayer))
 			return;
 
-		CompoundTag data = remotePlayer.getPersistentData();
+		CompoundTag data = remotePlayer.getCustomData();
 		if (!data.contains("LastOverrideLimbSwingUpdate"))
 			return;
 

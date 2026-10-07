@@ -3,17 +3,16 @@ package com.simibubi.create.compat.jei;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.simibubi.create.AllRecipeTypes;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeParams;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 
 
 /**
@@ -39,7 +38,7 @@ public class ConversionRecipe extends StandardProcessingRecipe<RecipeWrapper> {
 	}
 
 	@Override
-	public boolean matches(Container inv, Level worldIn) {
+	public boolean matches(RecipeWrapper inv, Level worldIn) {
 		return false;
 	}
 

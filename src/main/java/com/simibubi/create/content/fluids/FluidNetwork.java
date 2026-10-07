@@ -214,7 +214,7 @@ public class FluidNetwork {
 
 					if (transfer.isEmpty())
 						break;
-					FlowSource targetHandler = pair.getSecond();
+					Storage<FluidVariant> targetHandler = pair.getSecond().provideHandler();
 					if (targetHandler == null) {
 						iterator.remove();
 						continue;

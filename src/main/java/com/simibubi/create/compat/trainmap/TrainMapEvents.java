@@ -15,6 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
+import io.github.fabricators_of_create.porting_lib.event.client.PreRenderTooltipCallback;
 
 public class TrainMapEvents {
 

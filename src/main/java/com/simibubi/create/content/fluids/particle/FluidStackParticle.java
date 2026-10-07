@@ -26,7 +26,6 @@ public class FluidStackParticle extends TextureSheetParticle {
 	private final float uo;
 	private final float vo;
 	private final FluidStack fluid;
-//	private final IClientFluidTypeExtensions clientFluid; // fabric: replaced with FluidVariantRendering
 
 	public static FluidStackParticle create(ParticleType<FluidParticleData> type, ClientLevel world, FluidStack fluid,
 		double x, double y, double z, double vx, double vy, double vz) {
@@ -103,7 +102,8 @@ public class FluidStackParticle extends TextureSheetParticle {
 		if (!onGround && level.random.nextFloat() < 1 / 8f)
 			return;
 
-		Color color = new Color(clientFluid.getTintColor(fluid));
+		Color color = new Color(FluidVariantRendering.getHandlerOrDefault(fluid.getFluid())
+			.getColor(fluid.getVariant(), level, BlockPos.containing(x, y, z)));
 		level.addParticle(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, color.getRedAsFloat(), color.getGreenAsFloat(), color.getBlueAsFloat()), x, y, z, 0, 0, 0);
 	}
 

@@ -71,8 +71,7 @@ import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.level.BlockEvent;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent;
 
 public class FactoryPanelBlock extends FaceAttachedHorizontalDirectionalBlock
 	implements ProperWaterloggedBlock, IBE<FactoryPanelBlockEntity>, IWrenchable, SpecialBlockItemRequirement, PlayerDestroyBlock {

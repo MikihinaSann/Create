@@ -25,8 +25,8 @@ public class CreateMixinPlugin implements IMixinConfigPlugin {
 			return Mods.FTBCHUNKS.isLoaded();
 		}
 
-		if (mixinClassName.equals("compat/journeymap") && !Mods.JOURNEYMAP.isLoaded())
-			return false;
+		if (mixinClassName.contains("journeymap"))
+			return Mods.JOURNEYMAP.isLoaded();
 
 		if (mixinClassName.startsWith("com.simibubi.create.foundation.mixin.compat.xaeros") && !Mods.XAEROWORLDMAP.isLoaded())
 

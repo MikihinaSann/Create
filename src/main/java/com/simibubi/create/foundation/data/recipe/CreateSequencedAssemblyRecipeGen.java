@@ -1,6 +1,7 @@
 package com.simibubi.create.foundation.data.recipe;
 
 import java.util.concurrent.CompletableFuture;
+import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.TagValueAccessor;
 import java.util.stream.Stream;
 
 import com.simibubi.create.AllBlocks;
@@ -58,10 +59,10 @@ public final class CreateSequencedAssemblyRecipeGen extends SequencedAssemblyRec
 		.loops(1)
 		.addStep(DeployerApplicationRecipe::new,
 			rb -> rb.require(Ingredient.fromValues(
-				Stream.of(new Ingredient.TagValue(I.ironNugget()), new Ingredient.TagValue(I.zincNugget())))))
+				Stream.of(TagValueAccessor.createTagValue(I.ironNugget()), TagValueAccessor.createTagValue(I.zincNugget())))))
 		.addStep(DeployerApplicationRecipe::new,
 			rb -> rb.require(Ingredient.fromValues(
-				Stream.of(new Ingredient.TagValue(I.ironNugget()), new Ingredient.TagValue(I.zincNugget())))))
+				Stream.of(TagValueAccessor.createTagValue(I.ironNugget()), TagValueAccessor.createTagValue(I.zincNugget())))))
 		.addStep(PressingRecipe::new, rb -> rb))
 
 		;

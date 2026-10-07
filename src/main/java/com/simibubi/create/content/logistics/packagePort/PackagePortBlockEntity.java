@@ -1,6 +1,7 @@
 package com.simibubi.create.content.logistics.packagePort;
 
 import java.util.ArrayList;
+import com.simibubi.create.foundation.gui.menu.OpenMenuHelper;
 import java.util.List;
 
 import com.simibubi.create.AllBlocks;
@@ -101,7 +102,7 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 		super.read(tag, registries, clientPacket);
 		inventory.deserializeNBT(registries, tag.getCompound("Inventory"));
 		PackagePortTarget prevTarget = target;
-		target = CatnipCodecUtils.decodeOrNull(PackagePortTarget.CODEC, registries, tag.getCompound("Target"));
+		target = CatnipCodecUtils.decode(PackagePortTarget.CODEC, registries, tag.getCompound("Target")).orElse(null);
 		addressFilter = tag.getString("AddressFilter");
 		acceptsPackages = tag.getBoolean("AcceptsPackages");
 		if (clientPacket && prevTarget != target)
@@ -160,7 +161,7 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 			return ItemInteractionResult.SUCCESS;
 		}
 
-		player.openMenu(this, worldPosition);
+		player.openMenu(OpenMenuHelper.create(this, worldPosition));
 		return ItemInteractionResult.SUCCESS;
 	}
 

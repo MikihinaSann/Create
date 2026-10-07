@@ -1,5 +1,6 @@
 package com.simibubi.create.content.fluids.tank;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -31,16 +32,12 @@ public class CreativeFluidTankBlockEntity extends FluidTankBlockEntity {
 		super(type, pos, state);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.CREATIVE_FLUID_TANK.get(),
-				(be, context) -> {
-					if (be.fluidCapability == null)
+	public static void registerCapabilities() {
+		FluidStorage.SIDED.registerForBlockEntity((be, context) -> {
+					if (be.exposedTank == null)
 						be.refreshCapability();
-					return be.fluidCapability;
-				}
-		);
+					return be.exposedTank;
+				}, AllBlockEntityTypes.CREATIVE_FLUID_TANK.get());
 	}
 
 	@Override

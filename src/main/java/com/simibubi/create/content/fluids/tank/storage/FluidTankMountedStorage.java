@@ -8,6 +8,7 @@ import net.minecraft.util.ExtraCodecs;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.AllMountedStorageTypes;
@@ -17,7 +18,7 @@ import com.simibubi.create.api.contraption.storage.fluid.WrapperMountedFluidStor
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import com.simibubi.create.content.fluids.tank.storage.FluidTankMountedStorage.Handler;
-import com.simibubi.create.foundation.utility.CreateCodecs;
+import com.simibubi.create.foundation.codec.CreateCodecs;
 
 import net.createmod.catnip.animation.LerpedFloat;
 import net.minecraft.core.BlockPos;
@@ -32,7 +33,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidTank;
 
 public class FluidTankMountedStorage extends WrapperMountedFluidStorage<Handler> implements SyncedMountedStorage {
 	public static final MapCodec<FluidTankMountedStorage> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
-		ExtraCodecs.NON_NEGATIVE_INT.fieldOf("capacity").forGetter(FluidTankMountedStorage::getCapacity),
+		Codec.LONG.fieldOf("capacity").forGetter(FluidTankMountedStorage::getCapacity),
 		FluidStack.OPTIONAL_CODEC.fieldOf("fluid").forGetter(FluidTankMountedStorage::getFluid)
 	).apply(i, FluidTankMountedStorage::new));
 

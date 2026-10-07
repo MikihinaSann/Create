@@ -109,7 +109,9 @@ public class FunnelMovementBehaviour implements MovementBehaviour {
 		FilterItemStack filter = context.getFilterFromBE();
 
 		try (Transaction t = Transaction.openOuter()) {
-			for (ItemEntity item : items) {
+			for (Entity entity : items) {
+				if (!(entity instanceof ItemEntity item))
+					continue;
 				if (!item.isAlive())
 					continue;
 				ItemStack toInsert = item.getItem();

@@ -11,7 +11,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.compat.jei.category.sequencedAssembly.JeiSequencedAssemblySubCategory;
+import com.simibubi.create.compat.jei.category.sequencedAssembly.SequencedAssemblySubCategory;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
 import com.simibubi.create.content.processing.sequenced.SequencedRecipe;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
@@ -20,7 +20,7 @@ import com.simibubi.create.foundation.utility.CreateLang;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
-import mezz.jei.api.neoforge.NeoForgeTypes;
+import mezz.jei.api.fabric.constants.FabricTypes;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
@@ -34,12 +34,12 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 
-import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 
 @ParametersAreNonnullByDefault
 public class SequencedAssemblyCategory extends CreateRecipeCategory<SequencedAssemblyRecipe> {
 
-	Map<ResourceLocation, JeiSequencedAssemblySubCategory> subCategories = new HashMap<>();
+	Map<ResourceLocation, SequencedAssemblySubCategory> subCategories = new HashMap<>();
 
 	public SequencedAssemblyCategory(Info<SequencedAssemblyRecipe> info) {
 		super(info);
@@ -74,7 +74,7 @@ public class SequencedAssemblyCategory extends CreateRecipeCategory<SequencedAss
 		int x = width / -2 + getBackground().getWidth() / 2;
 
 		for (SequencedRecipe<?> sequencedRecipe : recipe.getSequence()) {
-			JeiSequencedAssemblySubCategory subCategory = getSubCategory(sequencedRecipe);
+			SequencedAssemblySubCategory subCategory = getSubCategory(sequencedRecipe);
 			subCategory.setRecipe(builder, sequencedRecipe, focuses, x);
 			x += subCategory.getWidth() + margin;
 		}
@@ -89,12 +89,12 @@ public class SequencedAssemblyCategory extends CreateRecipeCategory<SequencedAss
 				for (SizedFluidIngredient fluidIngredient : sequencedRecipe.getRecipe()
 					.getFluidIngredients())
 					builder.addInvisibleIngredients(RecipeIngredientRole.INPUT)
-						.addIngredients(NeoForgeTypes.FLUID_STACK, Arrays.asList(fluidIngredient.getFluids()));
+						.addIngredients(FabricTypes.FLUID_STACK, CreateRecipeCategory.toJei(fluidIngredient.getFluids()));
 			}
 		}
 	}
 
-	private JeiSequencedAssemblySubCategory getSubCategory(SequencedRecipe<?> sequencedRecipe) {
+	private SequencedAssemblySubCategory getSubCategory(SequencedRecipe<?> sequencedRecipe) {
 		return subCategories.computeIfAbsent(RegisteredObjectsHelper.getKeyOrThrow(sequencedRecipe.getRecipe()
 						.getSerializer()),
 			rl -> sequencedRecipe.getAsAssemblyRecipe()
@@ -147,7 +147,7 @@ public class SequencedAssemblyCategory extends CreateRecipeCategory<SequencedAss
 		List<SequencedRecipe<?>> sequence = recipe.getSequence();
 		for (int i = 0; i < sequence.size(); i++) {
 			SequencedRecipe<?> sequencedRecipe = sequence.get(i);
-			JeiSequencedAssemblySubCategory subCategory = getSubCategory(sequencedRecipe);
+			SequencedAssemblySubCategory subCategory = getSubCategory(sequencedRecipe);
 			int subWidth = subCategory.getWidth();
             MutableComponent component = Component.literal("" + romans[Math.min(i, 6)]);
 			graphics.drawString(font, component, font.width(component) / -2 + subWidth / 2, 2, 0x888888, false);
@@ -202,7 +202,7 @@ public class SequencedAssemblyCategory extends CreateRecipeCategory<SequencedAss
 			List<SequencedRecipe<?>> sequence = recipe.getSequence();
 			for (int i = 0; i < sequence.size(); i++) {
 				SequencedRecipe<?> sequencedRecipe = sequence.get(i);
-				JeiSequencedAssemblySubCategory subCategory = getSubCategory(sequencedRecipe);
+				SequencedAssemblySubCategory subCategory = getSubCategory(sequencedRecipe);
 				if (relativeX >= 0 && relativeX < subCategory.getWidth()) {
 					tooltip.add(CreateLang.translateDirect("recipe.assembly.step", i + 1));
 					tooltip.add(sequencedRecipe.getAsAssemblyRecipe()

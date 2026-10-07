@@ -18,7 +18,6 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.utility.DynamicComponent;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.createmod.catnip.data.Couple;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,7 +29,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public class NixieTubeBlockEntity extends SmartBlockEntity {
 	public static final class ComputerSignal {
@@ -98,14 +96,8 @@ public class NixieTubeBlockEntity extends SmartBlockEntity {
 		cachedSignalTE = new WeakReference<>(null);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-				PeripheralCapability.get(),
-				AllBlockEntityTypes.NIXIE_TUBE.get(),
-				(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
-		}
+	public static void registerCapabilities() {
+		
 	}
 
 	@Override

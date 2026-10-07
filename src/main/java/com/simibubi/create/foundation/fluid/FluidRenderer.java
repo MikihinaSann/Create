@@ -6,7 +6,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.render.FluidRenderHelper;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
@@ -21,11 +20,12 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
 @Environment(EnvType.CLIENT)
-public class FluidRenderer extends BasicFluidRenderer {
+public class FluidRenderer {
 
 	public static void renderFluidStream(FluidStack fluidStack, Direction direction, float radius, float progress,
 		boolean inbound, MultiBufferSource buffer, PoseStack ms, int light) {
-		renderFluidStream(fluidStack, direction, radius, progress, inbound, FluidRenderHelper.getFluidBuilder(buffer), ms, light);
+		renderFluidStream(fluidStack, direction, radius, progress, inbound, FluidRenderHelper.getFluidBuilder(buffer),
+			ms, light);
 	}
 
 	public static void renderFluidStream(FluidStack fluidStack, Direction direction, float radius, float progress,
@@ -69,7 +69,8 @@ public class FluidRenderer extends BasicFluidRenderer {
 		}
 
 		if (progress != 1)
-			FluidRenderHelper.renderStillTiledFace(Direction.DOWN, hMin, hMin, hMax, hMax, yMin, builder, ms, light, color, stillTexture);
+			FluidRenderHelper.renderStillTiledFace(Direction.DOWN, hMin, hMin, hMax, hMax, yMin, builder, ms, light,
+				color, stillTexture);
 
 		ms.popPose();
 	}

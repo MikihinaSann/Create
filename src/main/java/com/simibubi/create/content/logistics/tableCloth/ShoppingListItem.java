@@ -19,7 +19,11 @@ import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.IntAttached;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
@@ -33,7 +37,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 
 public class ShoppingListItem extends Item {
@@ -133,7 +136,8 @@ public class ShoppingListItem extends Item {
 		ShoppingList list = getList(stack);
 
 		if (list != null) {
-			Couple<InventorySummary> lists = list.bakeEntries(context.level(), null);
+			Level level = Client.getLevel();
+			Couple<InventorySummary> lists = level == null ? null : list.bakeEntries(level, null);
 
 			if (lists != null) {
 				for (InventorySummary items : lists) {
@@ -204,5 +208,14 @@ public class ShoppingListItem extends Item {
 			.sendStatus(pPlayer);
 		pPlayer.playSound(SoundEvents.BOOK_PAGE_TURN);
 		return InteractionResult.SUCCESS;
+	}
+
+	// fabric: kept in a lazily-loaded nested class so the client-only Minecraft reference
+	// is never verified on a dedicated server
+	@Environment(EnvType.CLIENT)
+	private static class Client {
+		static Level getLevel() {
+			return Minecraft.getInstance().level;
+		}
 	}
 }

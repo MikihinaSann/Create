@@ -1,5 +1,7 @@
 package com.simibubi.create.content.equipment.blueprint;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.AllMenuTypes;
 import com.simibubi.create.content.equipment.blueprint.BlueprintEntity.BlueprintSection;

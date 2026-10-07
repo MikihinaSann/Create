@@ -24,6 +24,8 @@ import net.minecraft.world.level.Level;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
+
 public class FillingRecipe extends StandardProcessingRecipe<SingleRecipeInput> implements IAssemblyRecipe {
 
 	public FillingRecipe(ProcessingRecipeParams params) {
@@ -68,8 +70,7 @@ public class FillingRecipe extends StandardProcessingRecipe<SingleRecipeInput> i
 	@Override
 	@Environment(EnvType.CLIENT)
 	public Component getDescriptionForAssembly() {
-		List<FluidStack> matchingFluidStacks = Arrays.asList(fluidIngredients.get(0)
-			.getFluids());
+		List<FluidStack> matchingFluidStacks = fluidIngredients.get(0).getMatchingFluidStacks();
 		if (matchingFluidStacks.size() == 0) {
             return Component.literal("Invalid");
         }

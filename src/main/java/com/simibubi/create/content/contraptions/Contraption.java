@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import javax.annotation.Nullable;
 
 import net.minecraft.core.HolderLookup;
 

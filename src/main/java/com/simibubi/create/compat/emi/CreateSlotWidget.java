@@ -3,6 +3,7 @@ package com.simibubi.create.compat.emi;
 import java.util.List;
 
 import com.simibubi.create.foundation.mixin.fabric.ClientTextTooltipAccessor;
+import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
@@ -22,7 +23,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
 import net.fabricmc.loader.api.FabricLoader;
 
 import io.github.fabricators_of_create.porting_lib.util.FluidTextUtil;
-import io.github.fabricators_of_create.porting_lib.util.FluidUnit;
+import com.simibubi.create.infrastructure.fabric.util.FluidUnit;
 
 public class CreateSlotWidget extends SlotWidget {
 	public CreateSlotWidget(EmiIngredient stack, int x, int y) {
@@ -34,7 +35,7 @@ public class CreateSlotWidget extends SlotWidget {
 		List<ClientTooltipComponent> tooltip = super.getTooltip(mouseX, mouseY);
 		if (stack instanceof EmiStack emiStack && emiStack.getKey() instanceof Fluid fluid) {
 			// add custom fluid tooltip
-			FluidVariant variant = FluidVariant.of(fluid, emiStack.getNbt());
+			FluidVariant variant = FluidVariant.of(fluid, emiStack.getComponentChanges());
 			addCreateAmount(tooltip, variant);
 			removeEmiAmount(tooltip, variant);
 		}
@@ -43,10 +44,11 @@ public class CreateSlotWidget extends SlotWidget {
 
 	private void addCreateAmount(List<ClientTooltipComponent> tooltip, FluidVariant fluid) {
 		FluidUnit unit = AllConfigs.client().fluidUnitType.get();
-		String amount = FluidTextUtil.getUnicodeMillibuckets(stack.getAmount(), unit, AllConfigs.client().simplifyFluidUnit.get());
+		String amount = FluidTextUtil.getUnicodeMillibuckets(stack.getAmount(),
+				io.github.fabricators_of_create.porting_lib.util.FluidUnit.valueOf(unit.name()), true);
 
 		Component amountComponent = Component.literal(" " + amount)
-				.append(CreateLang.translateDirect(unit.getTranslationKey()))
+				.append(unit.name)
 				.withStyle(ChatFormatting.GOLD);
 
 		MutableComponent fluidName = FluidVariantAttributes.getName(fluid)

@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.api.behaviour.SpecialPlantable;
 import com.simibubi.create.AllTags.AllBlockTags;
 import com.simibubi.create.api.schematic.nbt.PartialSafeNBT;
 import com.simibubi.create.api.schematic.nbt.SafeNbtWriterRegistry;
@@ -41,6 +42,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -51,6 +53,7 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.BaseRailBlock;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
@@ -59,6 +62,7 @@ import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.IceBlock;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.SlimeBlock;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -69,19 +73,26 @@ import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.common.SpecialPlantable;
-import net.neoforged.neoforge.event.level.BlockDropsEvent;
+import io.github.fabricators_of_create.porting_lib.block.CustomSoundTypeBlock;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockDropsEvent;
 
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.item.PlayerInventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.phys.Vec3;
+
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
 public class BlockHelper {
+	// fabric: vanilla AABB has no INFINITE constant (NeoForge adds it)
+	public static final AABB INFINITE_AABB = new AABB(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY,
+		Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+
 	private static final List<IntegerProperty> COUNT_STATES = List.of(
 		BlockStateProperties.EGGS,
 		BlockStateProperties.PICKLES,
@@ -206,9 +217,9 @@ public class BlockHelper {
 		BlockEntity blockEntity = state.hasBlockEntity() ? level.getBlockEntity(pos) : null;
 
 		if (player != null) {
-			boolean allowed = PlayerBlockBreakEvents.BEFORE.invoker().beforeBlockBreak(world, player, pos, state, blockEntity);
+			boolean allowed = PlayerBlockBreakEvents.BEFORE.invoker().beforeBlockBreak(level, player, pos, state, blockEntity);
 			if (!allowed) {
-				PlayerBlockBreakEvents.CANCELED.invoker().onBlockBreakCanceled(world, player, pos, state, blockEntity);
+				PlayerBlockBreakEvents.CANCELED.invoker().onBlockBreakCanceled(level, player, pos, state, blockEntity);
 				return;
 			}
 
@@ -216,38 +227,33 @@ public class BlockHelper {
 			player.awardStat(Stats.BLOCK_MINED.get(state.getBlock()));
 		}
 
-		if (world instanceof ServerLevel serverLevel && world.getGameRules()
+		if (level instanceof ServerLevel serverLevel && level.getGameRules()
 			.getBoolean(GameRules.RULE_DOBLOCKDROPS)
 			&& (player == null || !player.isCreative())) {
 			List<ItemStack> drops = Block.getDrops(state, serverLevel, pos, blockEntity, player, usedTool);
 
 			BlockDropsEvent event = new BlockDropsEvent(serverLevel, pos, state, blockEntity, new ArrayList<>(), player, usedTool);
-			NeoForge.EVENT_BUS.post(event);
+			event.sendEvent();
 			if (!event.isCanceled()) {
 				if (event.getDroppedExperience() > 0) {
-					state.getBlock().popExperience(serverLevel, pos, event.getDroppedExperience());
+					ExperienceOrb.award(serverLevel, Vec3.atCenterOf(pos), event.getDroppedExperience());
 				}
 			}
 
 			for (ItemStack itemStack : drops)
 				droppedItemCallback.accept(itemStack);
-			}
 
 			// Simulating IceBlock#playerDestroy. Not calling method directly as it would drop item
 			// entities as a side-effect
-			Registry<Enchantment> enchantmentRegistry = world.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+			Registry<Enchantment> enchantmentRegistry = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
 			if (state.getBlock() instanceof IceBlock
-				&& EnchantmentHelper.getItemEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(Enchantments.SILK_TOUCH, usedTool)) == 0) {
-				if (world.dimensionType()
-					.ultraWarm())
-					return;
-
-				BlockState blockstate = world.getBlockState(pos.below());
-				if (blockstate.blocksMotion() || blockstate.liquid()) {
-					world.setBlockAndUpdate(pos, Blocks.WATER.defaultBlockState());
-					afterBreak(world, player, pos, state, blockEntity);
+				&& EnchantmentHelper.getItemEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(Enchantments.SILK_TOUCH), usedTool) == 0) {
+				if (!level.dimensionType().ultraWarm()) {
+					BlockState below = level.getBlockState(pos.below());
+					if (below.blocksMotion() || below.liquid()) {
+						fluidState = IceBlock.meltsInto().getFluidState();
+					}
 				}
-				return;
 			}
 
 			state.spawnAfterBreak(serverLevel, pos, ItemStack.EMPTY, false);
@@ -479,5 +485,11 @@ safeNbtBE.writeSafe(data, access);
 		} else {
 			PlayerBlockBreakEvents.CANCELED.invoker().onBlockBreakCanceled(level, player, pos, state, be);
 		}
+	}
+
+	public static SoundType getSoundType(BlockState state, LevelReader level, BlockPos pos, @Nullable Entity entity) {
+		if (state.getBlock() instanceof CustomSoundTypeBlock custom)
+			return custom.getSoundType(state, level, pos, entity);
+		return state.getSoundType();
 	}
 }

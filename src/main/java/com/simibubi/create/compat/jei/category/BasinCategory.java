@@ -29,6 +29,8 @@ import net.minecraft.world.item.crafting.Ingredient;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
+
 @ParametersAreNonnullByDefault
 public class BasinCategory extends CreateRecipeCategory<BasinRecipe> {
 

@@ -14,6 +14,7 @@ import net.minecraft.data.PackOutput.Target;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
+import net.fabricmc.fabric.api.registry.FlammableBlockRegistry;
 import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -47,7 +48,9 @@ public class CreateWikiBlockInfoProvider implements DataProvider {
 				element.addProperty("luminous", state.getLightEmission() > 0);
 				//element.addProperty("transparent", block.propagatesSkylightDown());
 				element.addProperty("waterloggable", block instanceof SimpleWaterloggedBlock);
-				element.addProperty("flammable", ((FireBlock) Blocks.FIRE).getBurnOdds(state) > 0);
+				element.addProperty("flammable", FlammableBlockRegistry.getInstance(Blocks.FIRE)
+					.get(block)
+					.getBurnChance() > 0);
 				element.addProperty("ignited_by_lava", state.ignitedByLava());
 
 				return DataProvider.saveStable(cachedOutput, element, path.json(id));

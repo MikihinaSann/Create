@@ -261,9 +261,9 @@ public class BlueprintOverlayRenderer {
 					CraftingContainer craftingInventory = new BlueprintCraftingInventory(craftingGrid);
 					if (!recipe.isPresent())
 						recipe = mc.level.getRecipeManager()
-								.getRecipeFor(RecipeType.CRAFTING, craftingInventory, mc.level);
-					ItemStack resultFromRecipe = recipe.filter(r -> r.matches(craftingInventory, mc.level))
-							.map(r -> r.value().assemble(craftingInventory, mc.level.registryAccess()))
+								.getRecipeFor(RecipeType.CRAFTING, craftingInventory.asCraftInput(), mc.level);
+					ItemStack resultFromRecipe = recipe.filter(r -> r.value().matches(craftingInventory.asCraftInput(), mc.level))
+							.map(r -> r.value().assemble(craftingInventory.asCraftInput(), mc.level.registryAccess()))
 							.orElse(ItemStack.EMPTY);
 
 					if (resultFromRecipe.isEmpty()) {
@@ -341,8 +341,7 @@ public class BlueprintOverlayRenderer {
 		int y = guiGraphics.guiHeight() - 100;
 
 		if (shopContext != null) {
-			TooltipRenderUtil.renderTooltipBackground(guiGraphics, x - 2, y + 1, w + 4, 19, 0, 0x55_000000, 0x55_000000, 0,
-				0);
+			TooltipRenderUtil.renderTooltipBackground(guiGraphics, x - 2, y + 1, w + 4, 19, 0);
 
 			AllGuiTextures.TRADE_OVERLAY.render(guiGraphics, guiGraphics.guiWidth() / 2 - 48, y - 19);
 			if (shopContext.purchases() > 0) {

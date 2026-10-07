@@ -23,10 +23,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.LogicalSide;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
 
 public class EdgeInteractionHandler {
 
@@ -42,7 +39,7 @@ public class EdgeInteractionHandler {
 		EdgeInteractionBehaviour behaviour = BlockEntityBehaviour.get(world, pos, EdgeInteractionBehaviour.TYPE);
 		if (behaviour == null)
 			return InteractionResult.PASS;
-		if (!behaviour.requiredPredicate.test(heldItem.getItem()))
+		if (!behaviour.requiredItem.test(heldItem.getItem()))
 			return InteractionResult.PASS;
 		BlockHitResult ray = RaycastHelper.rayTraceRange(world, player, 10);
 		if (ray == null)

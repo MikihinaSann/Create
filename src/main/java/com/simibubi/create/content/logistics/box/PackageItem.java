@@ -213,10 +213,7 @@ public class PackageItem extends Item {
 	}
 
 	public static String getAddress(ItemVariant variant) {
-		String boxAddress = !variant.hasNbt() ? ""
-			: variant.getNbt()
-			.getString("Address");
-		return boxAddress;
+		return variant.toStack().getOrDefault(AllDataComponents.PACKAGE_ADDRESS, "");
 	}
 
 	public static float getWidth(ItemStack box) {

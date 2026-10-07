@@ -13,6 +13,7 @@ import com.simibubi.create.content.processing.burner.BlazeBurnerBlock.HeatLevel;
 import com.simibubi.create.content.processing.recipe.HeatCondition;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
@@ -42,7 +43,7 @@ public class BasinCategory extends CreateRecipeCategory<BasinRecipe> {
 	@Override
 	public void addWidgets(CreateDisplay<BasinRecipe> display, List<Widget> widgets, Point origin) {
 		BasinRecipe recipe = display.getRecipe();
-		NonNullList<FluidIngredient> fluidIngredients = recipe.getFluidIngredients();
+		NonNullList<SizedFluidIngredient> fluidIngredients = recipe.getFluidIngredients();
 		List<Pair<Ingredient, MutableInt>> ingredients = ItemHelper.condenseIngredients(recipe.getIngredients());
 		List<ProcessingOutput> itemOutputs = recipe.getRollableResults();
 		NonNullList<FluidStack> fluidOutputs = recipe.getFluidResults();
@@ -105,7 +106,7 @@ public class BasinCategory extends CreateRecipeCategory<BasinRecipe> {
 
 		}
 
-		addFluidTooltip(widgets, fluidIngredients, fluidOutputs);
+		addFluidTooltip(widgets, fluidIngredients.stream().map(SizedFluidIngredient::ingredient).toList(), fluidOutputs);
 
 		HeatCondition requiredHeat = recipe.getRequiredHeat();
 		if (!requiredHeat.testBlazeBurner(HeatLevel.NONE)) {

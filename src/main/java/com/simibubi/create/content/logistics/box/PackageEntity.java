@@ -1,6 +1,7 @@
 package com.simibubi.create.content.logistics.box;
 
 import java.lang.ref.WeakReference;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.AttackEntityEvent;
 import java.util.Collections;
 import java.util.List;
 
@@ -52,9 +53,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 
-import io.github.fabricators_of_create.porting_lib.entity.IEntityAdditionalSpawnData;
+import io.github.fabricators_of_create.porting_lib.entity.IEntityWithComplexSpawn;
 import io.github.fabricators_of_create.porting_lib.entity.PortingLibEntity;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingAttackEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingAttackEvent;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 public class PackageEntity extends LivingEntity implements IEntityWithComplexSpawn {
@@ -121,11 +122,8 @@ public class PackageEntity extends LivingEntity implements IEntityWithComplexSpa
 			.add(Attributes.MOVEMENT_SPEED, 1f);
 	}
 
-	public static EntityType.Builder<?> build(EntityType.Builder<?> builder) {
-		@SuppressWarnings("unchecked")
-		EntityType.Builder<PackageEntity> boxBuilder = (EntityType.Builder<PackageEntity>) builder;
-		return boxBuilder.sized(1, 1);
-		/*.setCustomClientFactory(PackageEntity::spawn)*/
+	public static FabricEntityTypeBuilder<?> build(FabricEntityTypeBuilder<?> builder) {
+		return builder.dimensions(EntityDimensions.fixed(1, 1));
 	}
 
 	@Override
@@ -302,8 +300,12 @@ public class PackageEntity extends LivingEntity implements IEntityWithComplexSpa
 
 	@Override
 	public boolean hurt(DamageSource source, float amount) {
-		if (source.getEntity() instanceof Player player && !CommonHooks.onPlayerAttackTarget(player, this))
-			return false;
+		if (source.getEntity() instanceof Player player) {
+			AttackEntityEvent event = new AttackEntityEvent(player, this);
+			event.sendEvent();
+			if (event.isCanceled())
+				return false;
+		}
 
 		if (level().isClientSide || !this.isAlive())
 			return false;
@@ -313,7 +315,7 @@ public class PackageEntity extends LivingEntity implements IEntityWithComplexSpa
 			return false;
 		}
 
-		if (!box.getItem().canBeHurtBy(box, source))
+		if (!box.isDamageableItem())
 			return false;
 
 		if (source.equals(damageSources().inWall()) && (isPassenger() || insertionDelay < 20))

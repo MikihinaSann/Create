@@ -25,9 +25,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
+import com.simibubi.create.foundation.item.ItemHelper;
 
 public class DrillBlockEntity extends BlockBreakingKineticBlockEntity {
 

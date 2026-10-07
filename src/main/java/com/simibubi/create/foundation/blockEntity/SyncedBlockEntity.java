@@ -1,6 +1,8 @@
 package com.simibubi.create.foundation.blockEntity;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import io.github.fabricators_of_create.porting_lib.block.CustomUpdateTagHandlingBlockEntity;
+import io.github.fabricators_of_create.porting_lib.block.CustomDataPacketHandlingBlockEntity;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;

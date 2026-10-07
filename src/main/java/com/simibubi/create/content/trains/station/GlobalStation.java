@@ -1,6 +1,7 @@
 package com.simibubi.create.content.trains.station;
 
 import java.lang.ref.WeakReference;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -41,10 +42,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
+import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
+import com.simibubi.create.foundation.item.ItemHelper;
+import io.github.fabricators_of_create.porting_lib.core.util.ServerLifecycleHooks;
 
 public class GlobalStation extends SingleBlockEntityEdgePoint {
 
@@ -182,7 +183,7 @@ public class GlobalStation extends SingleBlockEntityEdgePoint {
 		Level level = server.getLevel(getBlockEntityDimension());
 
 		for (Carriage carriage : train.carriages) {
-			IItemHandlerModifiable carriageInventory = carriage.storage.getAllItems();
+			SlottedStorage<ItemVariant> carriageInventory = carriage.storage.getAllItems();
 			if (carriageInventory == null)
 				continue;
 
@@ -206,7 +207,7 @@ public class GlobalStation extends SingleBlockEntityEdgePoint {
 					if (PackageItem.matchAddress(stack, port.address))
 						continue;
 
-					ItemStack result = ItemHandlerHelper.insertItemStacked(carriageInventory, stack, false);
+					ItemStack result = ItemHelper.insertItemStacked(carriageInventory, stack, false);
 					if (box != null)
 						box.computerBehaviour.prepareComputerEvent(new PackageEvent(stack, "package_sent"));
 					if (!result.isEmpty())
@@ -247,34 +248,24 @@ public class GlobalStation extends SingleBlockEntityEdgePoint {
 						}
 
 						long inserted = postboxInventory.insert(resource, view.getAmount(), t);
-						if (inserted != 0)
+						if (box != null)
+							box.computerBehaviour
+								.prepareComputerEvent(new PackageEvent(resource.toStack(), "package_received"));
+						if (inserted != view.getAmount())
 							continue;
 
-						Create.RAILWAYS.markTracksDirty();
-						view.extract(resource, view.getAmount(), t);
-						if (box != null)
+						view.extract(resource, inserted, t);
+
+						if (box == null) {
+							port.primed = true;
+						} else {
 							box.spawnParticles();
+						}
+
+						Create.RAILWAYS.markTracksDirty();
 
 						break;
 					}
-
-					ItemStack result = ItemHandlerHelper.insertItemStacked(postboxInventory, stack, false);
-					if (box != null)
-						box.computerBehaviour.prepareComputerEvent(new PackageEvent(stack, "package_received"));
-					if (!result.isEmpty())
-						continue;
-
-					carriageInventory.setStackInSlot(slot, ItemStack.EMPTY);
-
-					if (box == null) {
-						port.primed = true;
-					} else {
-						box.spawnParticles();
-					}
-
-					Create.RAILWAYS.markTracksDirty();
-
-					break;
 				}
 				t.commit();
 			}

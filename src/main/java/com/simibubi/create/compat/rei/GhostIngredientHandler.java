@@ -1,6 +1,7 @@
 package com.simibubi.create.compat.rei;
 
 import java.util.ArrayList;
+import net.createmod.catnip.platform.CatnipServices;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -110,7 +111,7 @@ public class GhostIngredientHandler<T extends GhostItemMenu<?>>
 				return;
 
 			// sync new filter contents with server
-			AllPackets.getChannel().sendToServer(new GhostItemSubmitPacket(stack, slotIndex));
+			CatnipServices.NETWORK.sendToServer(new GhostItemSubmitPacket(stack, slotIndex));
 		}
 
 		@Override

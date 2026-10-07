@@ -16,6 +16,7 @@ import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipe;
 import com.simibubi.create.content.processing.sequenced.SequencedRecipe;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.item.ItemHelper;
 
@@ -47,7 +48,7 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 	public CreateEmiRecipe(EmiRecipeCategory category, T recipe, int width, int height) {
 		this.category = category;
 		this.recipe = recipe;
-		this.id = recipe.getId();
+		this.id = null;
 		this.width = width;
 		this.height = height;
 		if (recipe instanceof BasinRecipe basin) {
@@ -56,8 +57,8 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 			for (Pair<Ingredient, MutableInt> pair : ItemHelper.condenseIngredients(recipe.getIngredients())) {
 				input.add(EmiIngredient.of(pair.getFirst(), pair.getSecond().getValue()));
 			}
-			for (FluidIngredient ingredient : basin.getFluidIngredients()) {
-				List<FluidStack> fluids = ingredient.getMatchingFluidStacks();
+			for (SizedFluidIngredient ingredient : basin.getFluidIngredients()) {
+				List<FluidStack> fluids = ingredient.getFluids();
 				if (!fluids.isEmpty()) {
 					input.add(fluidStack(fluids.get(0)));
 				}
@@ -88,7 +89,7 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 			this.input = input.build();
 		} else {
 			this.input = recipe.getIngredients().stream().map(EmiIngredient::of).toList();
-			if (recipe instanceof ProcessingRecipe<?> processing) {
+			if (recipe instanceof ProcessingRecipe<?, ?> processing) {
 				ImmutableList.Builder<EmiStack> builder = ImmutableList.builder();
 				for (ProcessingOutput output : processing.getRollableResults()) {
 					builder.add(EmiStack.of(output.getStack()).setChance(output.getChance()));
@@ -103,10 +104,15 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 	public CreateEmiRecipe(EmiRecipeCategory category, T recipe, int width, int height, Consumer<CreateEmiRecipe<T>> setup) {
 		this.category = category;
 		this.recipe = recipe;
-		this.id = recipe.getId();
+		this.id = null;
 		this.width = width;
 		this.height = height;
 		setup.accept(this);
+	}
+
+	public CreateEmiRecipe<T> withId(ResourceLocation id) {
+		this.id = id;
+		return this;
 	}
 
 	@Override
@@ -149,7 +155,7 @@ public abstract class CreateEmiRecipe<T extends Recipe<?>> implements EmiRecipe 
 	}
 
 	public static EmiStack fluidStack(FluidStack stack) {
-		return EmiStack.of(stack.getFluid(), stack.getTag(), stack.getAmount());
+		return EmiStack.of(stack.getFluid(), stack.getComponentsPatch(), stack.getAmount());
 	}
 
 	public static TextureWidget addTexture(WidgetHolder widgets, AllGuiTextures texture, int x, int y) {

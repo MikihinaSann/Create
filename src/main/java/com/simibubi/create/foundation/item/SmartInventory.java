@@ -1,52 +1,50 @@
 package com.simibubi.create.foundation.item;
 
+import com.simibubi.create.foundation.blockEntity.SyncedBlockEntity;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
+
+import com.simibubi.create.infrastructure.fabric.item.ItemUtils;
+import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
+
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
-import org.jetbrains.annotations.NotNull;
-
-import com.simibubi.create.foundation.blockEntity.ItemHandlerContainer;
-import com.simibubi.create.foundation.blockEntity.SyncedBlockEntity;
-
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.common.util.INBTSerializable;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
-
-public class SmartInventory extends ItemHandlerContainer
-	implements IItemHandlerModifiable, INBTSerializable<CompoundTag> {
+public class SmartInventory extends ItemStackHandler {
 
 	protected boolean extractionAllowed;
 	protected boolean insertionAllowed;
 	protected boolean stackNonStackables;
 	protected int stackSize;
+	protected BiPredicate<Integer, ItemStack> isValid = (slot, stack) -> true;
 
 	public SmartInventory(int slots, SyncedBlockEntity be) {
 		this(slots, be, 64, false);
 	}
 
 	public SmartInventory(int slots, SyncedBlockEntity be, BiPredicate<Integer, ItemStack> isValid) {
-		this(slots, be, 64, false, isValid);
+		this(slots, be, 64, false);
+		this.isValid = isValid;
 	}
 
 	public SmartInventory(int slots, SyncedBlockEntity be, int stackSize, boolean stackNonStackables) {
-		this(new SyncedStackHandler(slots, be, stackNonStackables, stackSize), stackSize, stackNonStackables);
-	}
-
-	public SmartInventory(int slots, SyncedBlockEntity be, int stackSize, boolean stackNonStackables, BiPredicate<Integer, ItemStack> isValid) {
-		this(new SyncedStackHandler(slots, be, stackNonStackables, stackSize, isValid), stackSize, stackNonStackables);
-	}
-
-	public SmartInventory(IItemHandlerModifiable inv, int stackSize, boolean stackNonStackables) {
-		super(inv);
+		super(slots);
 		this.stackNonStackables = stackNonStackables;
 		insertionAllowed = true;
 		extractionAllowed = true;
 		this.stackSize = stackSize;
 		this.blockEntity = be;
+	}
+
+	@Override
+	public boolean isItemValid(int slot, ItemStack stack) {
+		return isValid.test(slot, stack);
 	}
 
 	public SmartInventory withMaxStackSize(int maxStackSize) {
@@ -57,6 +55,15 @@ public class SmartInventory extends ItemHandlerContainer
 	public SmartInventory whenContentsChanged(Consumer<Integer> updateCallback) {
 		this.updateCallback = updateCallback;
 		return this;
+	}
+
+	public SmartInventory whenContentsChanged(Runnable updateCallback) {
+		return whenContentsChanged($ -> updateCallback.run());
+	}
+
+	public void clearContent() {
+		for (int i = 0; i < getSlotCount(); i++)
+			setStackInSlot(i, net.minecraft.world.item.ItemStack.EMPTY);
 	}
 
 	public SmartInventory allowInsertion() {
@@ -91,9 +98,13 @@ public class SmartInventory extends ItemHandlerContainer
 		if (!extractionAllowed)
 			return 0;
 		if (stackNonStackables) {
-			ItemStack extractItem = inv.extractItem(slot, amount, true);
-			if (!extractItem.isEmpty() && extractItem.getMaxStackSize() < extractItem.getCount())
-				amount = extractItem.getMaxStackSize();
+			try (Transaction t = transaction.openNested()) {
+				long extracted = super.extract(resource, maxAmount, t);
+				t.abort();
+				int maxStackSize = ItemUtils.getMaxStackSize(resource);
+				if (extracted != 0 && maxStackSize < extracted)
+					maxAmount = maxStackSize;
+			}
 		}
 		return super.extract(resource, maxAmount, transaction);
 	}
@@ -115,82 +126,4 @@ public class SmartInventory extends ItemHandlerContainer
 	public int getSlotLimit(int slot) {
 		return Math.min(stackNonStackables ? 64 : super.getSlotLimit(slot), stackSize);
 	}
-
-	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
-		return inv.isItemValid(slot, stack);
-	}
-
-	@Override
-	public ItemStack getStackInSlot(int slot) {
-		return inv.getStackInSlot(slot);
-	}
-
-	@Override
-	public void setStackInSlot(int slot, ItemStack stack) {
-		((SyncedStackHandler) inv).setStackInSlot(slot, stack);
-	}
-
-	public int getStackLimit(int slot, @NotNull ItemStack stack) {
-		return Math.min(getSlotLimit(slot), stack.getMaxStackSize());
-	}
-
-	@Override
-	public CompoundTag serializeNBT(HolderLookup.Provider registries) {
-		return getInv().serializeNBT(registries);
-	}
-
-	@Override
-	public void deserializeNBT(HolderLookup.Provider registries, CompoundTag nbt) {
-		getInv().deserializeNBT(registries, nbt);
-	}
-
-	private SyncedStackHandler getInv() {
-		return (SyncedStackHandler) inv;
-	}
-
-	protected static class SyncedStackHandler extends ItemStackHandler {
-
-		private SyncedBlockEntity blockEntity;
-		private boolean stackNonStackables;
-		private int stackSize;
-		private BiPredicate<Integer, ItemStack> isValid = super::isItemValid;
-		private Consumer<Integer> updateCallback;
-
-		public SyncedStackHandler(int slots, SyncedBlockEntity be, boolean stackNonStackables, int stackSize, BiPredicate<Integer, ItemStack> isValid) {
-			this(slots, be, stackNonStackables, stackSize);
-			this.isValid = isValid;
-		}
-
-		public SyncedStackHandler(int slots, SyncedBlockEntity be, boolean stackNonStackables, int stackSize) {
-			super(slots);
-			this.blockEntity = be;
-			this.stackNonStackables = stackNonStackables;
-			this.stackSize = stackSize;
-		}
-
-		@Override
-		protected void onContentsChanged(int slot) {
-			super.onContentsChanged(slot);
-			if (updateCallback != null)
-				updateCallback.accept(slot);
-			blockEntity.notifyUpdate();
-		}
-
-		@Override
-		public int getSlotLimit(int slot) {
-			return Math.min(stackNonStackables ? 64 : super.getSlotLimit(slot), stackSize);
-		}
-
-		@Override
-		public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-			return isValid.test(slot, stack);
-		}
-
-		public void whenContentsChange(Consumer<Integer> updateCallback) {
-			this.updateCallback = updateCallback;
-		}
-
-	}
-
 }

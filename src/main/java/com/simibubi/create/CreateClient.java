@@ -1,7 +1,6 @@
 package com.simibubi.create;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.ftb.FTBIntegration;
@@ -47,7 +46,6 @@ import net.createmod.ponder.foundation.PonderIndex;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GraphicsStatus;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -135,19 +133,17 @@ public class CreateClient implements ClientModInitializer {
 	}
 
 	private static void registerOverlays() {
-		HudRenderCallback.EVENT.register((graphics, partialTicks) -> {
-			Window window = Minecraft.getInstance().getWindow();
-			Gui gui = Minecraft.getInstance().gui;
-
-			RemainingAirOverlay.render(graphics, window.getGuiScaledWidth(), window.getGuiScaledHeight()); // Create's Remaining Air
-			TrainHUD.renderOverlay(graphics, partialTicks, window); // Create's Train Driver HUD
-			GoggleOverlayRenderer.renderOverlay(graphics, partialTicks, window.getGuiScaledWidth(), window.getGuiScaledHeight()); // Create's Goggle Information
-			BlueprintOverlayRenderer.renderOverlay(gui, graphics, partialTicks, window); // Create's Blueprints
-			LinkedControllerClientHandler.renderOverlay(graphics, partialTicks, window); // Create's Linked Controller
-			SCHEMATIC_HANDLER.renderOverlay(graphics, partialTicks, window); // Create's Schematics
-			ToolboxHandlerClient.renderOverlay(graphics, partialTicks, window); // Create's Toolboxes
-			VALUE_SETTINGS_HANDLER.render(graphics, window.getGuiScaledWidth(), window.getGuiScaledHeight()); // Create's Value Settings
-			TrackPlacementOverlay.renderOverlay(gui, graphics); // Create's Track Placement
+		// fabric: no HUD-layer injection API, draw all overlays at end of HUD render
+		HudRenderCallback.EVENT.register((graphics, deltaTracker) -> {
+			RemainingAirOverlay.INSTANCE.render(graphics, deltaTracker); // Create's Remaining Air
+			TrainHUD.OVERLAY.render(graphics, deltaTracker); // Create's Train Driver HUD
+			VALUE_SETTINGS_HANDLER.render(graphics, deltaTracker); // Create's Value Settings
+			TrackPlacementOverlay.INSTANCE.render(graphics, deltaTracker); // Create's Track Placement
+			GoggleOverlayRenderer.OVERLAY.render(graphics, deltaTracker); // Create's Goggle Information
+			BlueprintOverlayRenderer.OVERLAY.render(graphics, deltaTracker); // Create's Blueprints
+			LinkedControllerClientHandler.OVERLAY.render(graphics, deltaTracker); // Create's Linked Controller
+			SCHEMATIC_HANDLER.render(graphics, deltaTracker); // Create's Schematics
+			ToolboxHandlerClient.OVERLAY.render(graphics, deltaTracker); // Create's Toolboxes
 		});
 	}
 

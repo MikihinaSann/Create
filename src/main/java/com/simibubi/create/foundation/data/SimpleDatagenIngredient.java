@@ -39,6 +39,6 @@ public record SimpleDatagenIngredient(DatagenMod mod, String id) implements Ingr
 
 	public static Ingredient of(DatagenMod mod, String id) {
 		Ingredient.Value[] values = new Value[] { new SimpleDatagenIngredient(mod, id) };
-		return new Ingredient(values);
+		return new Ingredient(java.util.stream.Stream.of(values));
 	}
 }

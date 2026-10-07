@@ -1,6 +1,8 @@
 package com.simibubi.create.foundation.recipe.trie;
 
 import java.util.Arrays;
+
+import com.simibubi.create.foundation.recipe.RecipeHelper;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,10 +30,13 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.material.Fluid;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
-import net.neoforged.neoforge.items.IItemHandler;
+import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 
 public class RecipeTrie<R extends Recipe<?>> {
 	private static final int MAX_CACHE_SIZE = Integer.getInteger("create.recipe_trie.max_cache_size", 512);
@@ -52,24 +57,18 @@ public class RecipeTrie<R extends Recipe<?>> {
 		this.universalIngredientId = universalIngredientId;
 	}
 
-	public static @NotNull Set<AbstractVariant> getVariants(@Nullable IItemHandler itemStorage, @Nullable IFluidHandler fluidStorage) {
+	public static @NotNull Set<AbstractVariant> getVariants(@Nullable Storage<ItemVariant> itemStorage, @Nullable Storage<FluidVariant> fluidStorage) {
 		Set<AbstractVariant> variants = new HashSet<>();
 
 		if (itemStorage != null) {
-			for (int slot = 0; slot < itemStorage.getSlots(); slot++) {
-				ItemStack item = itemStorage.getStackInSlot(slot);
-				if (item.isEmpty()) continue;
-
-				variants.add(new AbstractVariant.AbstractItem(item.getItem()));
+			for (StorageView<ItemVariant> view : itemStorage.nonEmptyViews()) {
+				variants.add(new AbstractVariant.AbstractItem(view.getResource().getItem()));
 			}
 		}
 
 		if (fluidStorage != null) {
-			for (int tank = 0; tank < fluidStorage.getTanks(); tank++) {
-				FluidStack fluid = fluidStorage.getFluidInTank(tank);
-				if (fluid.isEmpty()) continue;
-
-				variants.add(new AbstractVariant.AbstractFluid(fluid.getFluid()));
+			for (StorageView<FluidVariant> view : fluidStorage.nonEmptyViews()) {
+				variants.add(new AbstractVariant.AbstractFluid(view.getResource().getFluid()));
 			}
 		}
 
@@ -183,12 +182,12 @@ public class RecipeTrie<R extends Recipe<?>> {
 		private <R1 extends R> AbstractRecipe<R1> createRecipe(R1 recipe) {
 			Set<AbstractIngredient> ingredients = new HashSet<>();
 
-			for (Ingredient ingredient : recipe.getIngredients()) {
+			for (Ingredient ingredient : RecipeHelper.getIngredients(recipe)) {
 				if (ingredient.isEmpty()) {
 					ingredients.add(AbstractIngredient.Universal.INSTANCE);
 					continue;
 				}
-				if (!ingredient.isSimple()) {
+				if (ingredient.getCustomIngredient() != null) {
 					ingredients.add(AbstractIngredient.Universal.INSTANCE);
 					continue;
 				}

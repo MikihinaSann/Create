@@ -1,6 +1,7 @@
 package com.simibubi.create.content.contraptions;
 
 import java.util.Collection;
+import io.github.fabricators_of_create.porting_lib.entity.IEntityWithComplexSpawn;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;

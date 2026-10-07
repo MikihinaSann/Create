@@ -182,7 +182,7 @@ public class CreateRegistrateTags {
 		CreateTagsProvider<Item> prov = new CreateTagsProvider<>(provIn, Item::builtInRegistryHolder);
 
 		prov.tag(AllItemTags.CHAIN_RIDEABLE.tag)
-			.addTag(Tags.Items.TOOLS_WRENCH);
+			.addTag(AllItemTags.WRENCH.tag);
 
 		prov.tag(AllItemTags.PULPIFIABLE.tag)
 			.add(Items.BAMBOO, Items.SUGAR_CANE)
@@ -211,16 +211,6 @@ public class CreateRegistrateTags {
 		prov.tag(AllItemTags.OBSIDIAN_DUST.tag).add(AllItems.POWDERED_OBSIDIAN.get());
 
 		prov.tag(Tags.Items.ENCHANTABLES).addTag(AllItemTags.PRESSURIZED_AIR_SOURCES.tag);
-
-		prov.tag(ItemTags.TRIMMABLE_ARMOR)
-			.remove(
-				AllItems.COPPER_DIVING_BOOTS.getId(),
-				AllItems.COPPER_BACKTANK.getId(),
-				AllItems.COPPER_DIVING_HELMET.getId(),
-				AllItems.NETHERITE_DIVING_BOOTS.getId(),
-				AllItems.NETHERITE_BACKTANK.getId(),
-				AllItems.NETHERITE_DIVING_HELMET.getId()
-			);
 
 		prov.tag(ItemTags.DURABILITY_ENCHANTABLE)
 			.addTag(AllItemTags.SANDPAPER.tag);
@@ -302,14 +292,5 @@ public class CreateRegistrateTags {
 
 		prov.tag(AllEntityTags.IGNORE_SEAT.tag)
 			.addTag(Tags.EntityTypes.CAPTURING_NOT_SUPPORTED);
-
-		// VALIDATE
-
-		for (AllEntityTags tag : AllEntityTags.values()) {
-			if (tag.alwaysDatagen) {
-				prov.getOrCreateRawBuilder(tag.tag);
-			}
-		}
-
 	}
 }

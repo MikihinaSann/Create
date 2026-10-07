@@ -2,7 +2,6 @@ package com.simibubi.create.compat.computercraft;
 
 import java.util.function.Supplier;
 
-import javax.annotation.Nullable;
 
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.foundation.gui.AllGuiTextures;

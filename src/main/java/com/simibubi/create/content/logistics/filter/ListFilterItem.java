@@ -18,7 +18,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
-import net.neoforged.neoforge.items.ItemStackHandler;
+import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 public class ListFilterItem extends FilterItem {
 	protected ListFilterItem(Properties properties) {
@@ -35,7 +35,7 @@ public class ListFilterItem extends FilterItem {
 		list.add((blacklist ? CreateLang.translateDirect("gui.filter.deny_list")
 			: CreateLang.translateDirect("gui.filter.allow_list")).withStyle(ChatFormatting.GOLD));
 		int count = 0;
-		for (int i = 0; i < filterItems.getSlots(); i++) {
+		for (int i = 0; i < filterItems.getSlotCount(); i++) {
 			if (count > 3) {
 				list.add(Component.literal("- ...")
 					.withStyle(ChatFormatting.DARK_GRAY));

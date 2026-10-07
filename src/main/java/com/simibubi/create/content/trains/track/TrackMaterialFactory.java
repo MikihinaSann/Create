@@ -19,16 +19,17 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.common.Tags.Items;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import io.github.fabricators_of_create.porting_lib.tags.Tags.Items;
+import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.TagValueAccessor;
 
 public class TrackMaterialFactory {
 	private final ResourceLocation id;
 	private String langName;
 	private NonNullSupplier<NonNullSupplier<? extends TrackBlock>> trackBlock;
 	private Ingredient sleeperIngredient = Ingredient.EMPTY;
-	private Ingredient railsIngredient = Ingredient.fromValues(Stream.of(new Ingredient.TagValue(Items.NUGGETS_IRON), new Ingredient.TagValue(CommonMetal.ZINC.nuggets)));
+	private Ingredient railsIngredient = Ingredient.fromValues(Stream.of(TagValueAccessor.createTagValue(Items.NUGGETS_IRON), TagValueAccessor.createTagValue(CommonMetal.ZINC.nuggets)));
 	private ResourceLocation particle;
 	private TrackMaterial.TrackType trackType = TrackMaterial.TrackType.STANDARD;
 

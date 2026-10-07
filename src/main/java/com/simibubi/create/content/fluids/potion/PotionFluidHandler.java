@@ -43,12 +43,16 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
+
+import com.simibubi.create.foundation.fluid.DataComponentFluidIngredient;
+
 public class PotionFluidHandler {
 	private static final Component NO_EFFECT = Component.translatable("effect.none").withStyle(ChatFormatting.GRAY);
 
 	public static boolean isPotionItem(ItemStack stack) {
 		return stack.getItem() instanceof PotionItem
-			&& !(stack.getCraftingRemainingItem().getItem() instanceof BucketItem)
+			&& !(stack.getItem().getCraftingRemainingItem().getDefaultInstance().getItem() instanceof BucketItem)
 			&& !AllItemTags.NOT_POTION.matches(stack);
 	}
 
@@ -115,7 +119,9 @@ public class PotionFluidHandler {
 	// Modified version of PotionContents#addPotionTooltip
 	@Environment(EnvType.CLIENT)
 	public static void addPotionTooltip(FluidVariant fs, Consumer<Component> tooltipAdder, float durationFactor) {
-		PotionContents contents = fs.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+		PotionContents contents = fs.getComponents().get(DataComponents.POTION_CONTENTS).orElse(null);
+		if (contents == null)
+			contents = PotionContents.EMPTY;
 		Iterable<MobEffectInstance> effects = contents.getAllEffects();
 
 		List<Pair<Holder<Attribute>, AttributeModifier>> list = Lists.newArrayList();

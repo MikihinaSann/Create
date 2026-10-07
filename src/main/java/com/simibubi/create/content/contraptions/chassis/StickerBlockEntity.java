@@ -14,7 +14,6 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.tterrag.registrate.fabric.EnvExecutor;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import dev.engine_room.flywheel.lib.visualization.VisualizationHelper;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
@@ -43,14 +42,8 @@ public class StickerBlockEntity extends SmartBlockEntity {
 		update = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-				PeripheralCapability.get(),
-				AllBlockEntityTypes.STICKER.get(),
-				(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
-		}
+	public static void registerCapabilities() {
+		
 	}
 
 	@Override

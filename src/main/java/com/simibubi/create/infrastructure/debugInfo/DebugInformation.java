@@ -28,14 +28,12 @@ import net.minecraft.SystemReport;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforgespi.language.IModInfo;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import io.github.fabricators_of_create.porting_lib.common.util.EnvExecutor;
 
 /**
  * Allows for providing easily accessible debugging information.

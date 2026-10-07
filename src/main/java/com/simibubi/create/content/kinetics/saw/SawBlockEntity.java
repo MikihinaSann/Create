@@ -1,5 +1,6 @@
 package com.simibubi.create.content.kinetics.saw;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -79,16 +80,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
-import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 
 @ParametersAreNonnullByDefault
@@ -113,16 +106,12 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 		playEvent = ItemStack.EMPTY;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.SAW.get(),
-				(be, context) -> {
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> {
 					if (context != Direction.DOWN)
 						return be.inventory;
 					return null;
-				}
-		);
+				}, AllBlockEntityTypes.SAW.get());
 	}
 
 	@Override
@@ -172,7 +161,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 			Item item = playEvent.getItem();
 			if (item instanceof BlockItem) {
 				Block block = ((BlockItem) item).getBlock();
-				isWood = block.getSoundType(block.defaultBlockState()) == SoundType.WOOD;
+				isWood = block.defaultBlockState().getSoundType() == SoundType.WOOD;
 			}
 			spawnEventParticles(playEvent);
 			playEvent = ItemStack.EMPTY;
@@ -399,8 +388,8 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 			for (ItemStack stack : results) {
 				ItemHelper.addToList(stack, list);
 			}
-			if (input.hasCraftingRemainingItem())
-				ItemHelper.addToList(input.getCraftingRemainingItem(), list);
+			if (input.getItem().hasCraftingRemainingItem())
+				ItemHelper.addToList(input.getItem().getCraftingRemainingItem().getDefaultInstance(), list);
 		}
 
 		for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlotCount(); slot++)
@@ -444,7 +433,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 			if (contained.getCount() == inserted)
 				entity.discard();
 			else
-				entity.setItem(ItemHandlerHelper.copyStackWithSize(contained, (int) (contained.getCount() - inserted)));
+				entity.setItem(ItemHelper.copyStackWithSize(contained, (int) (contained.getCount() - inserted)));
 			t.commit();
 		}
 	}

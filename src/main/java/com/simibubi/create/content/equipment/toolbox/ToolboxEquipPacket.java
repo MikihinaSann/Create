@@ -15,7 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import com.simibubi.create.foundation.item.ItemHelper;
 
 public record ToolboxEquipPacket(BlockPos toolboxPos, int slot, int hotbarSlot) implements ServerboundPacketPayload {
 	public static final StreamCodec<ByteBuf, ToolboxEquipPacket> STREAM_CODEC = StreamCodec.composite(
@@ -60,16 +60,16 @@ public record ToolboxEquipPacket(BlockPos toolboxPos, int slot, int hotbarSlot) 
 		if (!playerStack.isEmpty() && !ToolboxInventory.canItemsShareCompartment(playerStack,
 				toolboxBlockEntity.inventory.filters.get(slot))) {
 			toolboxBlockEntity.inventory.inLimitedMode(inventory -> {
-				ItemStack remainder = ItemHandlerHelper.insertItemStacked(inventory, playerStack, false);
+				ItemStack remainder = ItemHelper.insertItemStacked(inventory, playerStack, false);
 				if (!remainder.isEmpty())
-					remainder = ItemHandlerHelper.insertItemStacked(new ItemReturnInvWrapper(player.getInventory()),
+					remainder = ItemHelper.insertItemStacked(new ItemReturnInvWrapper(player.getInventory()),
 							remainder, false);
 				if (remainder.getCount() != playerStack.getCount())
 					player.getInventory().setItem(hotbarSlot, remainder);
 			});
 		}
 
-		CompoundTag compound = player.getPersistentData()
+		CompoundTag compound = player.getCustomData()
 				.getCompound("CreateToolboxData");
 		String key = String.valueOf(hotbarSlot);
 
@@ -78,7 +78,7 @@ public record ToolboxEquipPacket(BlockPos toolboxPos, int slot, int hotbarSlot) 
 		data.put("Pos", NbtUtils.writeBlockPos(toolboxPos));
 		compound.put(key, data);
 
-		player.getPersistentData()
+		player.getCustomData()
 				.put("CreateToolboxData", compound);
 
 		toolboxBlockEntity.connectPlayer(slot, player, hotbarSlot);

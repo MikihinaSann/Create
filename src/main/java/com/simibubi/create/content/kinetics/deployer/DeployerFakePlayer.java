@@ -40,8 +40,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
-import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingEntityEvents;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingChangeTargetEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingDropsEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingExperienceDropEvent;
 import io.github.fabricators_of_create.porting_lib.util.UsernameCache;
 
 public class DeployerFakePlayer extends FakePlayer {
@@ -105,20 +107,20 @@ public class DeployerFakePlayer extends FakePlayer {
 		return owner == null ? super.getUUID() : owner;
 	}
 
-	public static void deployerHasEyesOnHisFeet(EntityEvents.Size event) {
+	public static void deployerHasEyesOnHisFeet(EntityEvent.Size event) {
 		if (event.getEntity() instanceof DeployerFakePlayer)
 			event.setNewSize(event.getNewSize().withEyeHeight(0));
 	}
 
-	public static boolean deployerCollectsDropsFromKilledEntities(LivingEntity target, DamageSource source, Collection<ItemEntity> drops, int lootingLevel, boolean recentlyHit) {
+	public static void deployerCollectsDropsFromKilledEntities(LivingDropsEvent event) {
+		DamageSource source = event.getSource();
 		Entity trueSource = source.getEntity();
 		if (trueSource != null && trueSource instanceof DeployerFakePlayer fakePlayer) {
-			drops
+			event.getDrops()
 				.forEach(stack -> fakePlayer.getInventory()
 					.placeItemBackInInventory(stack.getItem()));
-			return true;
+			event.setCanceled(true);
 		}
-		return false;
 	}
 
 	@Override
@@ -133,13 +135,12 @@ public class DeployerFakePlayer extends FakePlayer {
 		super.remove(p_150097_);
 	}
 
-	public static int deployerKillsDoNotSpawnXP(int i, Player player, LivingEntity entity) {
-		if (player instanceof DeployerFakePlayer)
-			return 0;
-		return i;
+	public static void deployerKillsDoNotSpawnXP(LivingExperienceDropEvent event) {
+		if (event.getAttackingPlayer() instanceof DeployerFakePlayer)
+			event.setCanceled(true);
 	}
 
-	public static void entitiesDontRetaliate(LivingEntityEvents.ChangeTarget.ChangeTargetEvent event) {
+	public static void entitiesDontRetaliate(LivingChangeTargetEvent event) {
 		if (!(event.getOriginalTarget() instanceof DeployerFakePlayer))
 			return;
 		LivingEntity entityLiving = (LivingEntity) event.getEntity();

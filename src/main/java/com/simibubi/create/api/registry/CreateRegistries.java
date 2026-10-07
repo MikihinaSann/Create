@@ -18,6 +18,7 @@ import com.simibubi.create.content.logistics.packagePort.PackagePortTargetType;
 
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Keys for registries added by Create.
@@ -40,7 +41,9 @@ public class CreateRegistries {
 	public static final ResourceKey<Registry<MapCodec<? extends PotatoProjectileBlockHitAction>>> POTATO_PROJECTILE_BLOCK_HIT_ACTION = key("potato_projectile/block_hit_action");
 
 	private static <T> ResourceKey<Registry<T>> key(String name) {
-		return ResourceKey.createRegistryKey(Create.asResource(name));
+		// do not use Create.asResource here - it would initialize the Create class
+		// and its Registrate while BuiltInRegistries is still bootstrapping
+		return ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(Create.ID, name));
 	}
 
 	private CreateRegistries() {

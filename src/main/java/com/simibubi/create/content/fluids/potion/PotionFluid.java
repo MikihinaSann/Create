@@ -1,5 +1,6 @@
 package com.simibubi.create.content.fluids.potion;
 
+import net.minecraft.world.item.alchemy.PotionContents;
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.lang.Lang;
 
@@ -51,7 +52,7 @@ public class PotionFluid extends VirtualFluid {
 			return fs;
 		}
 		fs.set(DataComponents.POTION_CONTENTS, potionContents);
-		return new FluidStack(fs.getFluid(), fs.getAmount(), fs.getTag());
+		return new FluidStack(fs.getFluid(), fs.getAmount(), fs.getComponentsPatch());
 	}
 
 	public enum BottleType implements StringRepresentable {

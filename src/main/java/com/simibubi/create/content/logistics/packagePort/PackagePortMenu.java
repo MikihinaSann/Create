@@ -60,9 +60,7 @@ public class PackagePortMenu extends MenuBase<PackagePortBlockEntity> {
 		// we return the stack that was moved out of the slot, so make a copy of that now too.
 		ItemStack moved = stack.copy();
 
-		ItemStack stack = clickedSlot.getItem();
 		int size = contentHolder.inventory.getSlotCount();
-		boolean success = false;
 		if (index < size) {
 			// move into player inventory
 			if (!this.moveItemStackTo(stack, size, this.slots.size(), true)) {

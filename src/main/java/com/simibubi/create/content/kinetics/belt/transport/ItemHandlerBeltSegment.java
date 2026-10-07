@@ -1,8 +1,9 @@
 package com.simibubi.create.content.kinetics.belt.transport;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.component.DataComponents;
 
-import net.neoforged.neoforge.items.IItemHandler;
+import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
@@ -20,7 +21,7 @@ public class ItemHandlerBeltSegment implements SingleSlotStorage<ItemVariant> {
 	@Override
 	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		if (this.beltInventory.canInsertAt(offset)) {
-			int toInsert = Math.min((int) maxAmount, resource.getItem().getMaxStackSize());
+			int toInsert = Math.min((int) maxAmount, resource.getItem().getDefaultMaxStackSize());
 			TransportedItemStack newStack = new TransportedItemStack(resource.toStack(toInsert));
 			newStack.insertedAt = offset;
 			newStack.beltPosition = offset + .5f + (beltInventory.beltMovementPositive ? -1 : 1) / 16f;
@@ -71,16 +72,6 @@ public class ItemHandlerBeltSegment implements SingleSlotStorage<ItemVariant> {
 		if (transported == null)
 			return ItemStack.EMPTY;
 		return transported.stack.isEmpty() ? ItemStack.EMPTY : transported.stack;
-	}
-
-	@Override
-	public int getSlotLimit(int slot) {
-		return getStackInSlot(slot).getOrDefault(DataComponents.MAX_STACK_SIZE, 64);
-	}
-
-	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
-		return true;
 	}
 
 }

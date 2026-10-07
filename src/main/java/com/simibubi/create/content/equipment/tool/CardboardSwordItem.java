@@ -1,12 +1,12 @@
 package com.simibubi.create.content.equipment.tool;
 
-import java.util.function.Consumer;
-
 import com.simibubi.create.AllItems;
+import com.simibubi.create.foundation.item.CustomEnchantableItem;
 import com.simibubi.create.AllSoundEvents;
-import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 
 import net.createmod.catnip.platform.CatnipServices;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
@@ -17,6 +17,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -28,13 +29,11 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.core.component.DataComponents;
-
 
 import io.github.fabricators_of_create.porting_lib.enchant.CustomEnchantingBehaviorItem;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingAttackEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.AttackEntityEvent;
 
-public class CardboardSwordItem extends SwordItem implements CustomEnchantingBehaviorItem {
+public class CardboardSwordItem extends SwordItem implements CustomEnchantingBehaviorItem, CustomEnchantableItem {
 
 	public CardboardSwordItem(Properties pProperties) {
 		super(AllToolMaterials.CARDBOARD, pProperties);
@@ -42,37 +41,34 @@ public class CardboardSwordItem extends SwordItem implements CustomEnchantingBeh
 
 	@Override
 	public boolean supportsEnchantment(ItemStack stack, Holder<Enchantment> enchantment) {
-		return enchantment.getKey() == Enchantments.KNOCKBACK;
+		return enchantment.is(Enchantments.KNOCKBACK);
 	}
 
 	@Override
 	public boolean isBookEnchantable(ItemStack stack, ItemStack book) {
 		ItemEnchantments enchants = book.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
 		for (Holder<Enchantment> enchantment : enchants.keySet()) {
-			if (enchantment.getKey() != Enchantments.KNOCKBACK)
+			if (!enchantment.is(Enchantments.KNOCKBACK))
 				return false;
 		}
 		return true;
 	}
 
 	public static InteractionResult cardboardSwordsMakeNoiseOnClick(Player player, Level level, InteractionHand hand, BlockPos pos, Direction direction) {
+		ItemStack itemStack = player.getItemInHand(hand);
 		if (!AllItems.CARDBOARD_SWORD.isIn(itemStack))
-			return;
-		if (event.getAction() != PlayerInteractEvent.LeftClickBlock.Action.START)
-			return;
-		if (event.getSide() == LogicalSide.CLIENT)
-			AllSoundEvents.CARDBOARD_SWORD.playAt(event.getLevel(), event.getPos(), 0.5f, 1.85f, false);
+			return InteractionResult.PASS;
+		if (level.isClientSide)
+			AllSoundEvents.CARDBOARD_SWORD.playAt(level, pos, 0.5f, 1.85f, false);
 		else
 			AllSoundEvents.CARDBOARD_SWORD.play(level, player, pos, 0.5f, 1.85f);
 
 		return InteractionResult.SUCCESS;
 	}
 
-	public static void cardboardSwordsCannotHurtYou(io.github.fabricators_of_create.porting_lib.entity.events.LivingAttackEvent event) {
-		Entity attacker = event.getSource()
-			.getEntity();
-		LivingEntity target = event.getEntity();
-		if (target == null || target.getType().is(EntityTypeTags.ARTHROPOD))
+	public static void cardboardSwordsCannotHurtYou(AttackEntityEvent event) {
+		Player attacker = event.getEntity();
+		if (!(event.getTarget() instanceof LivingEntity target) || target.getType().is(EntityTypeTags.ARTHROPOD))
 			return;
 		ItemStack stack = attacker.getItemInHand(InteractionHand.MAIN_HAND);
 		if (!(AllItems.CARDBOARD_SWORD.isIn(stack)))

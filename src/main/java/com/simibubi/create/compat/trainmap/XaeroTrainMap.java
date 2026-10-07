@@ -21,7 +21,6 @@ import net.minecraft.world.level.Level;
 import xaero.lib.client.gui.ScreenBase;
 import xaero.map.gui.GuiMap;
 
-import net.neoforged.neoforge.client.event.InputEvent;
 
 public class XaeroTrainMap {
 	private static boolean requesting;

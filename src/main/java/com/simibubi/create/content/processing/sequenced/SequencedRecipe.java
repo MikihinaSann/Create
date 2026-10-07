@@ -10,7 +10,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 
-import net.neoforged.neoforge.common.crafting.CompoundIngredient;
+import net.fabricmc.fabric.api.recipe.v1.ingredient.DefaultCustomIngredients;
 
 public class SequencedRecipe<T extends ProcessingRecipe<?, ?>> {
 	public static final Codec<SequencedRecipe<?>> CODEC = Recipe.CODEC
@@ -46,7 +46,7 @@ public class SequencedRecipe<T extends ProcessingRecipe<?, ?>> {
 		if (getAsAssemblyRecipe().supportsAssembly()) {
 			Ingredient transit = Ingredient.of(parent.getTransitionalItem());
 			wrapped.getIngredients()
-					.set(0, isFirst ? CompoundIngredient.of(transit, parent.getIngredient()) : transit);
+					.set(0, isFirst ? DefaultCustomIngredients.any(transit, parent.getIngredient()) : transit);
 		}
 	}
 }

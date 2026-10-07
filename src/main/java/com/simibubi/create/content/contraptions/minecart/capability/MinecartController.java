@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -51,7 +52,21 @@ import io.github.fabricators_of_create.porting_lib.util.MinecartAndRailUtil;
 public class MinecartController implements INBTSerializable<CompoundTag> {
 	public static final MinecartController EMPTY = new MinecartController.Empty();
 
-	public static final IAttachmentSerializer<CompoundTag, MinecartController> SERIALIZER = Type.SERIALIZER;
+	// fabric: persistent attachment serialization is codec-based; the provider is unused by
+	// (de)serializeNBT here
+	public static final Codec<MinecartController> SERIALIZER = CompoundTag.CODEC.xmap(
+		tag -> {
+			MinecartController controller = Type.valueOf(tag.getString("Type")) == Type.NORMAL
+				? new MinecartController(null) : MinecartController.EMPTY;
+			if (controller != EMPTY)
+				controller.deserializeNBT(HolderLookup.Provider.create(Stream.of()), tag);
+			return controller;
+		},
+		controller -> {
+			CompoundTag tag = controller.serializeNBT(HolderLookup.Provider.create(Stream.of()));
+			tag.putString("Type", controller.getType().name());
+			return tag;
+		});
 
 	private boolean needsEntryRefresh;
 	private WeakReference<AbstractMinecart> weakRef;
@@ -454,6 +469,143 @@ public class MinecartController implements INBTSerializable<CompoundTag> {
 			stallData.yaw = nbt.getFloat("Yaw");
 			stallData.pitch = nbt.getFloat("Pitch");
 			return stallData;
+		}
+	}
+
+	private static class Empty extends MinecartController {
+
+		private Empty() {
+			super(null);
+		}
+
+		public Empty(AbstractMinecart minecart) {
+			super(minecart);
+		}
+
+		@Override
+		@NotNull
+		protected Type getType() {
+			return Type.EMPTY;
+		}
+
+		private static void warn() {
+			Create.LOGGER.warn("Method called on EMPTY MinecartController", new Exception());
+		}
+
+		@Override
+		public void tick() {
+			warn();
+		}
+
+		@Override
+		public boolean isFullyCoupled() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public boolean isLeadingCoupling() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public boolean isConnectedToCoupling() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public boolean isCoupledThroughContraption() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public boolean hasContraptionCoupling(boolean current) {
+			warn();
+			return false;
+		}
+
+		@Override
+		public float getCouplingLength(boolean leading) {
+			warn();
+			return 0.0f;
+		}
+
+		@Override
+		public void decouple() {
+			warn();
+		}
+
+		@Override
+		public void removeConnection(boolean main) {
+			warn();
+		}
+
+		@Override
+		public void prepareForCoupling(boolean isLeading) {
+			warn();
+		}
+
+		@Override
+		public void coupleWith(boolean isLeading, UUID coupled, float length, boolean contraption) {
+			warn();
+		}
+
+		@Nullable
+		@Override
+		public UUID getCoupledCart(boolean asMain) {
+			warn();
+			return null;
+		}
+
+		@Override
+		public boolean isStalled() {
+			warn();
+			return false;
+		}
+
+		@Override
+		public void setStalledExternally(boolean stall) {
+			warn();
+		}
+
+		@Override
+		public void sendData() {
+			super.sendData();
+		}
+
+		@Override
+		public CompoundTag serializeNBT(@NotNull HolderLookup.Provider provider) {
+			return super.serializeNBT(provider);
+		}
+
+		@Override
+		public void deserializeNBT(@NotNull HolderLookup.Provider provider, CompoundTag nbt) {
+			super.deserializeNBT(provider, nbt);
+		}
+
+		@Override
+		public boolean isPresent() {
+			return super.isPresent();
+		}
+
+		@Override
+		public AbstractMinecart cart() {
+			return super.cart();
+		}
+	}
+
+	protected enum Type implements StringRepresentable {
+		EMPTY,
+		NORMAL;
+
+		public static final Codec<Type> CODEC = StringRepresentable.fromValues(Type::values);
+
+		@Override
+		public @NotNull String getSerializedName() {
+			return Lang.asId(name());
 		}
 	}
 }

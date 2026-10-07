@@ -1,9 +1,10 @@
 package com.simibubi.create.content.fluids.spout;
 
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.HOLD;
+import java.util.ArrayList;
 import static com.simibubi.create.content.kinetics.belt.behaviour.BeltProcessingBehaviour.ProcessingResult.PASS;
 
-import java.util.ArrayList;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
@@ -71,16 +72,12 @@ public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		processingTicks = -1;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.SPOUT.get(),
-				(be, context) -> {
+	public static void registerCapabilities() {
+		FluidStorage.SIDED.registerForBlockEntity((be, context) -> {
 					if (context != Direction.DOWN)
 						return be.tank.getCapability();
 					return null;
-				}
-		);
+				}, AllBlockEntityTypes.SPOUT.get());
 	}
 
 	@Override

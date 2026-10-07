@@ -1,6 +1,7 @@
 package com.simibubi.create.content.trains.station;
 
 import java.lang.ref.WeakReference;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlockEntityTypes;
+import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllSoundEvents;
@@ -59,7 +61,6 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.data.Iterate;
@@ -134,20 +135,8 @@ public class StationBlockEntity extends SmartBlockEntity implements Transformabl
 			.startWithValue(0);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.TRACK_STATION.get(),
-			(be, context) -> be.depotBehaviour.itemHandler
-		);
-
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-				PeripheralCapability.get(),
-				AllBlockEntityTypes.TRACK_STATION.get(),
-				(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
-		}
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.depotBehaviour.itemHandler, AllBlockEntityTypes.TRACK_STATION.get());
 	}
 
 	@Override
@@ -920,7 +909,7 @@ public class StationBlockEntity extends SmartBlockEntity implements Transformabl
 	@Environment(EnvType.CLIENT)
 	public AABB getRenderBoundingBox() {
 		if (isAssembling())
-			return AABB.INFINITE;
+			return BlockHelper.INFINITE_AABB;
 		return super.getRenderBoundingBox();
 	}
 

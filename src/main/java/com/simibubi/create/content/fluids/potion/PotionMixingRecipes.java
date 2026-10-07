@@ -1,6 +1,8 @@
 package com.simibubi.create.content.fluids.potion;
 
+import net.minecraft.world.level.Level;
 import java.util.ArrayList;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,8 +35,10 @@ import io.github.fabricators_of_create.porting_lib.brewing.BrewingRecipe;
 import io.github.fabricators_of_create.porting_lib.brewing.BrewingRecipeRegistry;
 import io.github.fabricators_of_create.porting_lib.brewing.IBrewingRecipe;
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
-import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.PotionBrewing$MixAccessor;
-import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.PotionBrewingAccessor;
+
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
+
+import com.simibubi.create.foundation.fluid.DataComponentFluidIngredient;
 
 public class PotionMixingRecipes {
 

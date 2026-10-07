@@ -1,5 +1,7 @@
 package com.simibubi.create.content.kinetics.mechanicalArm;
 
+import net.minecraft.world.level.block.ComposterBlock;
+import net.minecraft.world.WorldlyContainer;
 import java.util.Optional;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -57,13 +59,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
 public class AllArmInteractionPointTypes {
 	static {
@@ -363,15 +368,17 @@ public class AllArmInteractionPointTypes {
 		@Override
 		public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
 			ItemStack input = stack.copy();
-			InteractionResultHolder<ItemStack> res =
-				BlazeBurnerBlock.tryInsert(cachedState, level, pos, input, false, false, ctx);
-			ItemStack remainder = res.getObject();
-			if (input.isEmpty()) {
-				return remainder;
-			} else {
-				TransactionSuccessCallback.register(ctx, () ->
-						Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder));
-				return input;
+			try (Transaction t = Transaction.openOuter()) {
+				InteractionResultHolder<ItemStack> res =
+					BlazeBurnerBlock.tryInsert(cachedState, level, pos, input, false, false, t);
+				ItemStack remainder = res.getObject();
+				if (!simulate) {
+					if (!input.isEmpty())
+						TransactionSuccessCallback.register(t, () ->
+							Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), remainder));
+					t.commit();
+				}
+				return input.isEmpty() ? remainder : input;
 			}
 		}
 	}
@@ -494,16 +501,15 @@ public class AllArmInteractionPointTypes {
 			if (filtering != null && !filtering.test(stack))
 				return stack;
 
-			// fabric: this is already wrapped in a transaction, no need to simulate
+			if (simulate)
+				inserter.simulate();
 			ItemStack insert = inserter.insert(stack);
-			if (insert.getCount() != stack.getCount()) {
+			if (!simulate && insert.getCount() != stack.getCount()) {
 				BlockEntity blockEntity = level.getBlockEntity(pos);
 				if (blockEntity instanceof FunnelBlockEntity funnelBlockEntity) {
-					TransactionSuccessCallback.register(ctx, () -> {
-						funnelBlockEntity.onTransfer(stack);
-						if (funnelBlockEntity.hasFlap())
-							funnelBlockEntity.flap(true);
-					});
+					funnelBlockEntity.onTransfer(stack);
+					if (funnelBlockEntity.hasFlap())
+						funnelBlockEntity.flap(true);
 				}
 			}
 			return insert;
@@ -523,19 +529,23 @@ public class AllArmInteractionPointTypes {
 			Optional<RecipeHolder<CampfireCookingRecipe>> recipe = campfireBE.getCookableRecipe(stack);
 			if (recipe.isEmpty())
 				return stack;
-			boolean hasSpace = false;
-			for (ItemStack campfireStack : campfireBE.getItems()) {
-				if (campfireStack.isEmpty()) {
-					hasSpace = true;
-					break;
+			if (simulate) {
+				boolean hasSpace = false;
+				for (ItemStack campfireStack : campfireBE.getItems()) {
+					if (campfireStack.isEmpty()) {
+						hasSpace = true;
+						break;
+					}
 				}
+				if (!hasSpace)
+					return stack;
+				ItemStack remainder = stack.copy();
+				remainder.shrink(1);
+				return remainder;
 			}
-			if (!hasSpace)
-				return stack;
-			ItemStack inserted = stack.copyWithCount(1);
-			TransactionSuccessCallback.register(ctx, () -> campfireBE.placeFood(null, inserted, recipe.get().value().getCookingTime()));
 			ItemStack remainder = stack.copy();
-			remainder.shrink(1);
+			campfireBE.placeFood(null, remainder, recipe.get().value()
+				.getCookingTime());
 			return remainder;
 		}
 	}
@@ -551,20 +561,6 @@ public class AllArmInteractionPointTypes {
 				.add(.5f, 13 / 16f, .5f);
 		}
 
-		@Override
-		public void updateCachedState() {
-			BlockState oldState = cachedState;
-			super.updateCachedState();
-			if (cachedHandler != null && oldState != cachedState)
-				level.invalidateCapabilities(cachedHandler.pos());
-		}
-
-		@Nullable
-		@Override
-		protected IItemHandler getHandler(ArmBlockEntity armBlockEntity) {
-			return null;
-		}
-
 		protected WorldlyContainer getContainer() {
 			ComposterBlock composterBlock = (ComposterBlock) Blocks.COMPOSTER;
 			return composterBlock.getContainer(cachedState, level, pos);
@@ -572,14 +568,30 @@ public class AllArmInteractionPointTypes {
 
 		@Override
 		public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
-			IItemHandler handler = new SidedInvWrapper(getContainer(), Direction.UP);
-			return ItemHandlerHelper.insertItem(handler, stack, simulate);
+			Storage<ItemVariant> handler = InventoryStorage.of(getContainer(), Direction.UP);
+			try (Transaction t = Transaction.openOuter()) {
+				long inserted = handler.insert(ItemVariant.of(stack), stack.getCount(), t);
+				if (!simulate)
+					t.commit();
+				return stack.copyWithCount(stack.getCount() - (int) inserted);
+			}
 		}
 
 		@Override
 		public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
-			IItemHandler handler = new SidedInvWrapper(getContainer(), Direction.DOWN);
-			return handler.extractItem(slot, amount, simulate);
+			Storage<ItemVariant> handler = InventoryStorage.of(getContainer(), Direction.DOWN);
+			if (!(handler instanceof SlottedStorage<ItemVariant> slotted) || slot >= slotted.getSlotCount())
+				return ItemStack.EMPTY;
+			SingleSlotStorage<ItemVariant> slotStorage = slotted.getSlot(slot);
+			ItemVariant resource = slotStorage.getResource();
+			if (resource.isBlank())
+				return ItemStack.EMPTY;
+			try (Transaction t = Transaction.openOuter()) {
+				long extracted = slotStorage.extract(resource, amount, t);
+				if (!simulate)
+					t.commit();
+				return resource.toStack((int) extracted);
+			}
 		}
 
 		@Override
@@ -608,17 +620,11 @@ public class AllArmInteractionPointTypes {
 				return stack;
 			if (!jukeboxBE.getTheItem().isEmpty())
 				return stack;
-			Storage<ItemVariant> storage = ItemStorage.SIDED.find(level, pos, Direction.UP);
-			if (storage == null)
-				return stack;
-			try (Transaction transaction = ctx.openNested()) {
-				long inserted = storage.insert(ItemVariant.of(stack), 1, ctx);
-				if (inserted != 1)
-					return stack;
-				transaction.commit();
-			}
-
-			return stack.copyWithCount(stack.getCount() - 1);
+			ItemStack remainder = stack.copy();
+			ItemStack toInsert = remainder.split(1);
+			if (!simulate)
+				jukeboxBE.setTheItem(toInsert);
+			return remainder;
 		}
 
 		@Override
@@ -627,16 +633,9 @@ public class AllArmInteractionPointTypes {
 				return ItemStack.EMPTY;
 			if (!(level.getBlockEntity(pos) instanceof JukeboxBlockEntity jukeboxBE))
 				return ItemStack.EMPTY;
-			ItemStack record = jukeboxBE.getFirstItem();
-			if (record.isEmpty())
-				return ItemStack.EMPTY;
-			level.updateSnapshots(ctx);
-			level.setBlock(pos, cachedState.setValue(JukeboxBlock.HAS_RECORD, false), 2);
-			TransactionSuccessCallback.register(ctx, () -> {
-				level.levelEvent(1010, pos, 0);
-				jukeboxBE.clearContent();
-			});
-			return record;
+			if (!simulate)
+				return jukeboxBE.removeItem(slot, amount);
+			return jukeboxBE.getTheItem();
 		}
 	}
 
@@ -658,7 +657,8 @@ public class AllArmInteractionPointTypes {
 			if (cachedState.getOptionalValue(RespawnAnchorBlock.CHARGE)
 				.orElse(4) == 4)
 				return stack;
-			TransactionSuccessCallback.register(ctx, () -> RespawnAnchorBlock.charge(null, level, pos, cachedState));
+			if (!simulate)
+				RespawnAnchorBlock.charge(null, level, pos, cachedState);
 			ItemStack remainder = stack.copy();
 			remainder.shrink(1);
 			return remainder;

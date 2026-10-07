@@ -1,24 +1,22 @@
 package com.simibubi.create.content.equipment.armor;
 
 import java.util.List;
-import java.util.Map;
 
-import com.simibubi.create.AllTags.AllFluidTags;
 import com.simibubi.create.AllTags.AllFluidTags;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
-
-
-import io.github.fabricators_of_create.porting_lib.enchant.CustomEnchantingBehaviorItem;
-import io.github.fabricators_of_create.porting_lib.item.CustomEnchantmentLevelItem;
-import io.github.fabricators_of_create.porting_lib.item.CustomEnchantmentsItem;
+import com.simibubi.create.foundation.item.CustomEnchantableItem;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.HolderLookup.RegistryLookup;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
@@ -27,11 +25,7 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 
-import io.github.fabricators_of_create.porting_lib.enchant.CustomEnchantingBehaviorItem;
-import io.github.fabricators_of_create.porting_lib.item.CustomEnchantmentLevelItem;
-import io.github.fabricators_of_create.porting_lib.item.CustomEnchantmentsItem;
-
-public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingBehaviorItem, CustomEnchantmentLevelItem, CustomEnchantmentsItem {
+public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantableItem {
 	public static final EquipmentSlot SLOT = EquipmentSlot.HEAD;
 	public static final ArmorItem.Type TYPE = ArmorItem.Type.HELMET;
 
@@ -43,19 +37,20 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 	public boolean supportsEnchantment(ItemStack stack, Holder<Enchantment> enchantment) {
 		if (enchantment.is(Enchantments.AQUA_AFFINITY))
 			return false;
-		return super.supportsEnchantment(stack, enchantment);
+		return enchantment.value().getSupportedItems().contains(stack.getItemHolder());
 	}
 
 	@Override
 	public int getEnchantmentLevel(ItemStack stack, Holder<Enchantment> enchantment) {
 		if (enchantment.is(Enchantments.AQUA_AFFINITY))
 			return 1;
-		return super.getEnchantmentLevel(stack, enchantment);
+		return 0;
 	}
 
 	@Override
-	public ItemEnchantments getAllEnchantments(ItemStack stack, RegistryLookup<Enchantment> lookup) {
-		ItemEnchantments.Mutable enchants = new ItemEnchantments.Mutable(super.getAllEnchantments(stack, lookup));
+	public ItemEnchantments getAllEnchantments(ItemStack stack, HolderLookup<Enchantment> lookup,
+			ItemEnchantments base) {
+		ItemEnchantments.Mutable enchants = new ItemEnchantments.Mutable(base);
 		enchants.set(lookup.getOrThrow(Enchantments.AQUA_AFFINITY), 1);
 		return enchants.toImmutable();
 	}
@@ -108,9 +103,8 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 				return;
 		}
 
-		float visualBacktankAir = 0f;
-		for (ItemStack stack : backtanks)
-			visualBacktankAir += BacktankUtil.getAir(stack);
+		if (drowning)
+			entity.setAirSupply(10);
 
 		if (world.isClientSide)
 			entity.getCustomData()
@@ -118,8 +112,10 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 					.map(BacktankUtil::getAir)
 					.reduce(0, Integer::sum)));
 
-		if (level.getGameTime() % 20 == 0)
-			BacktankUtil.consumeAir(entity, backtanks.get(0), 1);
+		if (!second)
+			return;
+
+		BacktankUtil.consumeAir(entity, backtanks.get(0), 1);
 
 		if (lavaDiving)
 			return;
@@ -127,7 +123,7 @@ public class DivingHelmetItem extends BaseArmorItem implements CustomEnchantingB
 		if (entity instanceof ServerPlayer sp)
 			AllAdvancements.DIVING_SUIT.awardTo(sp);
 
-		event.setCanBreathe(true);
-		event.setRefillAirAmount(entity.getMaxAirSupply());
+		entity.setAirSupply(Math.min(entity.getMaxAirSupply(), entity.getAirSupply() + 10));
+		entity.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 30, 0, true, false, true));
 	}
 }

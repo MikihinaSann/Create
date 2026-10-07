@@ -1,6 +1,12 @@
 package com.simibubi.create.compat.emi;
 
 import java.util.LinkedHashMap;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.core.component.DataComponents;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -40,7 +46,6 @@ import com.simibubi.create.compat.emi.recipes.fan.FanEmiRecipe;
 import com.simibubi.create.compat.emi.recipes.fan.FanHauntingEmiRecipe;
 import com.simibubi.create.compat.emi.recipes.fan.FanSmokingEmiRecipe;
 import com.simibubi.create.compat.emi.recipes.fan.FanWashingEmiRecipe;
-import com.simibubi.create.compat.recipeViewerCommon.HiddenItems;
 import com.simibubi.create.compat.rei.ConversionRecipe;
 import com.simibubi.create.compat.rei.ToolboxColoringRecipeMaker;
 import com.simibubi.create.content.decoration.palettes.AllPaletteStoneTypes;
@@ -81,6 +86,7 @@ import dev.emi.emi.api.stack.Comparison;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.Bounds;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
@@ -89,15 +95,16 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PotionItem;
-import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.BlastingRecipe;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
+import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -173,7 +180,7 @@ public class CreateEmiPlugin implements EmiPlugin {
 
 		registerGeneratedRecipes(registry);
 
-		registry.setDefaultComparison(AllFluids.POTION.get().getSource(), c -> Comparison.compareNbt());
+		registry.setDefaultComparison(AllFluids.POTION.get().getSource(), c -> Comparison.compareComponents());
 
 		ALL.forEach((id, category) -> registry.addCategory(category));
 
@@ -207,18 +214,18 @@ public class CreateEmiPlugin implements EmiPlugin {
 
 		RecipeManager manager = registry.getRecipeManager();
 
-		List<MillingRecipe> millingRecipes = (List<MillingRecipe>) (List) manager.getAllRecipesFor(AllRecipeTypes.MILLING.getType());
-		List<CrushingRecipe> crushingRecipes = (List<CrushingRecipe>) (List) manager.getAllRecipesFor(AllRecipeTypes.CRUSHING.getType());
-		List<SmokingRecipe> smokingRecipes = manager.getAllRecipesFor(RecipeType.SMOKING);
-		List<BlastingRecipe> blastingRecipes = manager.getAllRecipesFor(RecipeType.BLASTING);
-		for (CrushingRecipe recipe : crushingRecipes) {
+		List<RecipeHolder<MillingRecipe>> millingRecipes = (List<RecipeHolder<MillingRecipe>>) (List) manager.getAllRecipesFor(AllRecipeTypes.MILLING.getType());
+		List<RecipeHolder<CrushingRecipe>> crushingRecipes = (List<RecipeHolder<CrushingRecipe>>) (List) manager.getAllRecipesFor(AllRecipeTypes.CRUSHING.getType());
+		List<RecipeHolder<SmokingRecipe>> smokingRecipes = manager.getAllRecipesFor(RecipeType.SMOKING);
+		List<RecipeHolder<BlastingRecipe>> blastingRecipes = manager.getAllRecipesFor(RecipeType.BLASTING);
+		for (RecipeHolder<CrushingRecipe> recipe : crushingRecipes) {
 			registry.addRecipe(new CrushingEmiRecipe(recipe));
 		}
 		outer:
-		for (MillingRecipe recipe : millingRecipes) {
-			registry.addRecipe(new MillingEmiRecipe(recipe));
-			for (CrushingRecipe crush : crushingRecipes) {
-				if (doInputsMatch(recipe, crush)) {
+		for (RecipeHolder<MillingRecipe> recipe : millingRecipes) {
+			registry.addRecipe(new MillingEmiRecipe(recipe.value()).withId(recipe.id()));
+			for (RecipeHolder<CrushingRecipe> crush : crushingRecipes) {
+				if (doInputsMatch(recipe.value(), crush.value())) {
 					continue outer;
 				}
 			}
@@ -226,58 +233,63 @@ public class CreateEmiPlugin implements EmiPlugin {
 		}
 		addAll(registry, AllRecipeTypes.SANDPAPER_POLISHING, PolishingEmiRecipe::new);
 		addAll(registry, AllRecipeTypes.PRESSING, PressingEmiRecipe::new);
-		for (SmokingRecipe recipe : smokingRecipes) {
-			registry.addRecipe(new FanSmokingEmiRecipe(recipe));
+		for (RecipeHolder<SmokingRecipe> recipe : smokingRecipes) {
+			registry.addRecipe(new FanSmokingEmiRecipe(recipe.value()).withId(recipe.id()));
 		}
 		outer:
-		for (AbstractCookingRecipe recipe : manager.getAllRecipesFor(RecipeType.SMELTING)) {
-			for (AbstractCookingRecipe smoking : smokingRecipes) {
-				if (doInputsMatch(recipe, smoking)) {
+		for (RecipeHolder<SmeltingRecipe> holder : manager.getAllRecipesFor(RecipeType.SMELTING)) {
+			AbstractCookingRecipe recipe = holder.value();
+			for (RecipeHolder<SmokingRecipe> smoking : smokingRecipes) {
+				if (doInputsMatch(recipe, smoking.value())) {
 					continue outer;
 				}
 			}
-			for (AbstractCookingRecipe blasting : blastingRecipes) {
-				if (doInputsMatch(recipe, blasting)) {
+			for (RecipeHolder<BlastingRecipe> blasting : blastingRecipes) {
+				if (doInputsMatch(recipe, blasting.value())) {
 					continue outer;
 				}
 			}
-			registry.addRecipe(new FanBlastingEmiRecipe(recipe));
+			registry.addRecipe(new FanBlastingEmiRecipe(recipe).withId(holder.id()));
 		}
-		for (AbstractCookingRecipe recipe : blastingRecipes) {
-			registry.addRecipe(new FanBlastingEmiRecipe(recipe));
+		for (RecipeHolder<BlastingRecipe> recipe : blastingRecipes) {
+			registry.addRecipe(new FanBlastingEmiRecipe(recipe.value()).withId(recipe.id()));
 		}
 		addAll(registry, AllRecipeTypes.SPLASHING, FanWashingEmiRecipe::new);
 		addAll(registry, AllRecipeTypes.HAUNTING, FanHauntingEmiRecipe::new);
 		addAll(registry, AllRecipeTypes.MIXING, MIXING, MixingEmiRecipe::new);
-		for (CraftingRecipe recipe : manager.getAllRecipesFor(RecipeType.CRAFTING)) {
+		for (RecipeHolder<CraftingRecipe> holder : manager.getAllRecipesFor(RecipeType.CRAFTING)) {
+			CraftingRecipe recipe = holder.value();
 			if (recipe instanceof ShapelessRecipe && !MechanicalPressBlockEntity.canCompress(recipe)
-					&& !AllRecipeTypes.shouldIgnoreInAutomation(recipe) && recipe.getIngredients().size() > 1) {
-				registry.addRecipe(new ShapelessEmiRecipe(AUTOMATIC_SHAPELESS, BasinRecipe.convertShapeless(recipe)));
+					&& !AllRecipeTypes.shouldIgnoreInAutomation(holder) && recipe.getIngredients().size() > 1) {
+				RecipeHolder<BasinRecipe> converted = BasinRecipe.convertShapeless(holder);
+				registry.addRecipe(new ShapelessEmiRecipe(AUTOMATIC_SHAPELESS, converted.value()).withId(converted.id()));
 			}
 		}
-		for (MixingRecipe recipe : PotionMixingRecipes.ALL) {
-			registry.addRecipe(new MixingEmiRecipe(AUTOMATIC_BREWING, recipe));
+		for (RecipeHolder<MixingRecipe> recipe : PotionMixingRecipes.createRecipes(Minecraft.getInstance().level)) {
+			registry.addRecipe(new MixingEmiRecipe(AUTOMATIC_BREWING, recipe.value()).withId(recipe.id()));
 		}
 		addAll(registry, AllRecipeTypes.CUTTING, SawingEmiRecipe::new);
 		for (CondensedBlockCuttingRecipe recipe : CondensedBlockCuttingRecipe
 				.condenseRecipes(manager.getAllRecipesFor(RecipeType.STONECUTTING).stream()
-				.filter(r -> !AllRecipeTypes.shouldIgnoreInAutomation(r)).toList(), "block_cutting")) {
+				.filter(r -> !AllRecipeTypes.shouldIgnoreInAutomation(r))
+				.map(RecipeHolder::value).toList(), "block_cutting")) {
 			registry.addRecipe(new BlockCuttingEmiRecipe(BLOCK_CUTTING, recipe));
 		}
 		addAll(registry, AllRecipeTypes.COMPACTING, PackingEmiRecipe::new);
-		for (CraftingRecipe recipe : manager.getAllRecipesFor(RecipeType.CRAFTING)) {
+		for (RecipeHolder<CraftingRecipe> holder : manager.getAllRecipesFor(RecipeType.CRAFTING)) {
+			CraftingRecipe recipe = holder.value();
 			if (!(recipe instanceof MechanicalCraftingRecipe)
 					&& MechanicalPressBlockEntity.canCompress(recipe)
-					&& !AllRecipeTypes.shouldIgnoreInAutomation(recipe)) {
-				registry.addRecipe(new AutomaticPackingEmiRecipe(BasinRecipe.convertShapeless(recipe)));
+					&& !AllRecipeTypes.shouldIgnoreInAutomation(holder)) {
+				registry.addRecipe(new AutomaticPackingEmiRecipe(BasinRecipe.convertShapeless(holder)));
 			}
 		}
 		addAll(registry, AllRecipeTypes.DEPLOYING, DeployingEmiRecipe::new);
-		addAll(registry, AllRecipeTypes.SANDPAPER_POLISHING, DeployingEmiRecipe::fromSandpaper);
-		addAll(registry, AllRecipeTypes.ITEM_APPLICATION, DeployingEmiRecipe::fromItemApplication);
+		addAllHolders(registry, AllRecipeTypes.SANDPAPER_POLISHING, DeployingEmiRecipe::fromSandpaper);
+		addAllHolders(registry, AllRecipeTypes.ITEM_APPLICATION, DeployingEmiRecipe::fromItemApplication);
 
-		for (ConversionRecipe recipe : MysteriousConversionEmiRecipe.RECIPES) {
-			registry.addRecipe(new MysteriousConversionEmiRecipe(recipe));
+		for (RecipeHolder<ConversionRecipe> recipe : MysteriousConversionEmiRecipe.RECIPES) {
+			registry.addRecipe(new MysteriousConversionEmiRecipe(recipe.value()).withId(recipe.id()));
 		}
 		addAll(registry, AllRecipeTypes.FILLING, SpoutEmiRecipe::new);
 		addAll(registry, AllRecipeTypes.EMPTYING, DrainEmiRecipe::new);
@@ -295,17 +307,23 @@ public class CreateEmiPlugin implements EmiPlugin {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends Recipe<?>> void addAll(EmiRegistry registry, AllRecipeTypes type, Function<T, EmiRecipe> constructor) {
-		for (T recipe : (List<T>) registry.getRecipeManager().getAllRecipesFor(type.getType())) {
-			registry.addRecipe(constructor.apply(recipe));
+	private <T extends Recipe<?>> void addAll(EmiRegistry registry, AllRecipeTypes type, Function<T, ? extends CreateEmiRecipe<?>> constructor) {
+		for (RecipeHolder<T> holder : (List<RecipeHolder<T>>) (List) registry.getRecipeManager().getAllRecipesFor(type.getType())) {
+			registry.addRecipe(constructor.apply(holder.value()).withId(holder.id()));
+		}
+	}
+
+	private void addAllHolders(EmiRegistry registry, AllRecipeTypes type, Function<RecipeHolder<?>, ? extends CreateEmiRecipe<?>> constructor) {
+		for (RecipeHolder<?> holder : registry.getRecipeManager().getAllRecipesFor(type.getType())) {
+			registry.addRecipe(constructor.apply(holder));
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	private <T extends Recipe<?>> void addAll(EmiRegistry registry, AllRecipeTypes type, EmiRecipeCategory category,
-			BiFunction<EmiRecipeCategory, T, EmiRecipe> constructor) {
-		for (T recipe : (List<T>) registry.getRecipeManager().getAllRecipesFor(type.getType())) {
-			registry.addRecipe(constructor.apply(category, recipe));
+			BiFunction<EmiRecipeCategory, T, ? extends CreateEmiRecipe<?>> constructor) {
+		for (RecipeHolder<T> holder : (List<RecipeHolder<T>>) (List) registry.getRecipeManager().getAllRecipesFor(type.getType())) {
+			registry.addRecipe(constructor.apply(category, holder.value()).withId(holder.id()));
 		}
 	}
 
@@ -353,21 +371,23 @@ public class CreateEmiPlugin implements EmiPlugin {
 					FluidStack potion = PotionFluidHandler.getFluidFromPotionItem(is);
 					Ingredient bottle = Ingredient.of(Items.GLASS_BOTTLE);
 					ResourceLocation iid = BuiltInRegistries.ITEM.getKey(i);
-					ResourceLocation pid = BuiltInRegistries.POTION.getKey(PotionUtils.getPotion(is));
-					consumer.accept(new SpoutEmiRecipe(new ProcessingRecipeBuilder<>(FillingRecipe::new,
-						new ResourceLocation("emi", "create/potion_filling/" + pid.getNamespace() + "/" + pid.getPath()
-							+ "/from/" + iid.getNamespace() + "/" + iid.getPath()))
+					ResourceLocation pid = is.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY)
+						.potion().flatMap(Holder::unwrapKey).map(ResourceKey::location)
+						.orElse(ResourceLocation.withDefaultNamespace("empty"));
+					ResourceLocation fillingId = ResourceLocation.fromNamespaceAndPath("emi", "create/potion_filling/" + pid.getNamespace() + "/" + pid.getPath()
+							+ "/from/" + iid.getNamespace() + "/" + iid.getPath());
+					consumer.accept(new SpoutEmiRecipe(new StandardProcessingRecipe.Builder<>(FillingRecipe::new, fillingId)
 								.withItemIngredients(bottle)
-								.withFluidIngredients(FluidIngredient.fromFluidStack(potion))
+								.withFluidIngredients(SizedFluidIngredient.of(potion))
 								.withSingleItemOutput(is.copy())
-								.build()));
-					consumer.accept(new DrainEmiRecipe(new ProcessingRecipeBuilder<>(EmptyingRecipe::new,
-						new ResourceLocation("emi", "create/potion_draining/" + pid.getNamespace() + "/" + pid.getPath()
-							+ "/from/" + iid.getNamespace() + "/" + iid.getPath()))
+								.build()).withId(fillingId));
+					ResourceLocation drainingId = ResourceLocation.fromNamespaceAndPath("emi", "create/potion_draining/" + pid.getNamespace() + "/" + pid.getPath()
+							+ "/from/" + iid.getNamespace() + "/" + iid.getPath());
+					consumer.accept(new DrainEmiRecipe(new StandardProcessingRecipe.Builder<>(EmptyingRecipe::new, drainingId)
 								.withItemIngredients(Ingredient.of(is))
 								.withFluidOutputs(potion)
 								.withSingleItemOutput(new ItemStack(Items.GLASS_BOTTLE))
-								.build()));
+								.build()).withId(drainingId));
 					continue;
 				}
 				for (Fluid fluid : fluids) {
@@ -387,17 +407,17 @@ public class CreateEmiPlugin implements EmiPlugin {
 						}
 						fs.setAmount(inserted);
 						ItemStack container = ctx.getItemVariant().toStack(ItemHelper.truncateLong(ctx.getAmount()));
-						if (inserted != 0 && !ItemStack.isSameItemSameTags(container, copy) && !container.isEmpty()) {
+						if (inserted != 0 && !ItemStack.isSameItemSameComponents(container, copy) && !container.isEmpty()) {
 							Ingredient bucket = Ingredient.of(is);
 							ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(is.getItem());
 							ResourceLocation fluidId = BuiltInRegistries.FLUID.getKey(fs.getFluid());
-							consumer.accept(new SpoutEmiRecipe(new ProcessingRecipeBuilder<>(FillingRecipe::new,
-							new ResourceLocation("emi", "create/filling/" + itemId.getNamespace() + "/" + itemId.getPath()
-									+ "/with/" + fluidId.getNamespace() + "/" + fluidId.getPath()))
+							ResourceLocation fillId = ResourceLocation.fromNamespaceAndPath("emi", "create/filling/" + itemId.getNamespace() + "/" + itemId.getPath()
+									+ "/with/" + fluidId.getNamespace() + "/" + fluidId.getPath());
+							consumer.accept(new SpoutEmiRecipe(new StandardProcessingRecipe.Builder<>(FillingRecipe::new, fillId)
 								.withItemIngredients(bucket)
-								.withFluidIngredients(FluidIngredient.fromFluidStack(fs))
+								.withFluidIngredients(SizedFluidIngredient.of(fs))
 								.withSingleItemOutput(container)
-								.build()));
+								.build()).withId(fillId));
 						}
 					}
 				}
@@ -410,13 +430,13 @@ public class CreateEmiPlugin implements EmiPlugin {
 					if (!extracted.isEmpty() && !result.isEmpty()) {
 						ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(is.getItem());
 						ResourceLocation fluidId = BuiltInRegistries.FLUID.getKey(extracted.getFluid());
-						consumer.accept(new DrainEmiRecipe(new ProcessingRecipeBuilder<>(EmptyingRecipe::new,
-							new ResourceLocation("emi", "create/draining/" + itemId.getNamespace() + "/" + itemId.getPath()
-								+ "/from/" + fluidId.getNamespace() + "/" + fluidId.getPath()))
+						ResourceLocation drainId = ResourceLocation.fromNamespaceAndPath("emi", "create/draining/" + itemId.getNamespace() + "/" + itemId.getPath()
+								+ "/from/" + fluidId.getNamespace() + "/" + fluidId.getPath());
+						consumer.accept(new DrainEmiRecipe(new StandardProcessingRecipe.Builder<>(EmptyingRecipe::new, drainId)
 							.withItemIngredients(Ingredient.of(is))
 							.withFluidOutputs(extracted)
 							.withSingleItemOutput(result)
-							.build()));
+							.build()).withId(drainId));
 					}
 				}
 			}
@@ -444,7 +464,7 @@ public class CreateEmiPlugin implements EmiPlugin {
 					.formatted(toolboxId.getNamespace(), toolboxId.getPath(), dyeId.getNamespace(), dyeId.getPath());
 			registry.addRecipe(new EmiCraftingRecipe(
 					r.getIngredients().stream().map(EmiIngredient::of).toList(),
-					CreateEmiRecipe.getResultEmi(r), new ResourceLocation("emi", recipeName)));
+					CreateEmiRecipe.getResultEmi(r), ResourceLocation.fromNamespaceAndPath("emi", recipeName)));
 		});
 		// for EMI we don't do this since it already has a category, World Interaction
 //		LogStrippingFakeRecipes.createRecipes().forEach(r -> {

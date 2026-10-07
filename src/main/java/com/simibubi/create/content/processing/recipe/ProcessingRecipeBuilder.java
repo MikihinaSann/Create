@@ -1,6 +1,7 @@
 package com.simibubi.create.content.processing.recipe;
 
 import java.util.ArrayList;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import java.util.List;
 
 import com.google.common.base.Joiner;
@@ -8,15 +9,16 @@ import com.simibubi.create.Create;
 import com.simibubi.create.api.data.recipe.DatagenMod;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe.Factory;
 import com.simibubi.create.foundation.data.SimpleDatagenIngredient;
+import com.simibubi.create.foundation.data.recipe.ConditionalRecipeOutput;
 import com.simibubi.create.foundation.fluid.FluidHelper;
+import com.simibubi.create.foundation.fluid.FluidIngredient;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 
 import net.createmod.catnip.data.Pair;
 
 import net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredient;
-import net.fabricmc.fabric.api.resource.conditions.v1.ConditionJsonProvider;
-
-import net.fabricmc.fabric.api.resource.conditions.v1.DefaultResourceConditions;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceCondition;
 
 import net.minecraft.core.NonNullList;
 import net.minecraft.data.recipes.RecipeOutput;
@@ -29,18 +31,13 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
 
-import net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredient;
-import net.fabricmc.fabric.api.resource.conditions.v1.ConditionJsonProvider;
-import net.fabricmc.fabric.api.resource.conditions.v1.DefaultResourceConditions;
-import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
-
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 
 public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, R extends ProcessingRecipe<?, P>, S extends ProcessingRecipeBuilder<P, R, S>> {
 	protected ResourceLocation recipeId;
 	protected Factory<P, R> factory;
 	protected P params;
-	protected List<ICondition> recipeConditions;
+	protected List<ResourceCondition> recipeConditions;
 
 	public ProcessingRecipeBuilder(Factory<P, R> factory, ResourceLocation recipeId) {
 		this.recipeId = recipeId;
@@ -76,7 +73,7 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 	}
 
 	public S withFluidIngredients(SizedFluidIngredient... ingredients) {
-		return withFluidIngredients(NonNullList.of(new SizedFluidIngredient(FluidIngredient.empty(), 1000), ingredients));
+		return withFluidIngredients(NonNullList.of(new SizedFluidIngredient(FluidIngredient.EMPTY, 1000), ingredients));
 	}
 
 	public S withFluidIngredients(NonNullList<SizedFluidIngredient> ingredients) {
@@ -121,16 +118,18 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 			errors.add(recipe.getClass().getSimpleName() + "with id " + id + " failed validation:");
 			Create.LOGGER.warn(Joiner.on('\n').join(errors));
 		}
-		consumer.accept(id, recipe, null, recipeConditions.toArray(new ICondition[0]));
+		RecipeOutput conditionalOutput = recipeConditions.isEmpty() ? consumer
+			: ConditionalRecipeOutput.wrap(consumer, recipeConditions.toArray(new ResourceCondition[0]));
+		conditionalOutput.accept(id, recipe, null);
 	}
 
 	public static final long[] SUS_AMOUNTS = { 10, 250, 500, 1000 };
 
 	private void validateFluidAmounts() {
-		for (FluidIngredient ingredient : params.fluidIngredients) {
+		for (SizedFluidIngredient ingredient : params.fluidIngredients) {
 			for (long amount : SUS_AMOUNTS) {
-				if (ingredient.getRequiredAmount() == amount) {
-					Create.LOGGER.warn("Suspicious fluid amount in recipe [{}]: {}", params.id, amount);
+				if (ingredient.amount() == amount) {
+					Create.LOGGER.warn("Suspicious fluid amount in recipe [{}]: {}", recipeId, amount);
 				}
 			}
 		}
@@ -152,7 +151,7 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 	}
 
 	// TODO
-	public S require(ICustomIngredient ingredient) {
+	public S require(CustomIngredient ingredient) {
 		params.ingredients.add(ingredient.toVanilla());
 		return self();
 	}
@@ -233,14 +232,14 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 	//
 
 	public S whenModLoaded(String modid) {
-		return withCondition(new ModLoadedCondition(modid));
+		return withCondition(ResourceConditions.allModsLoaded(modid));
 	}
 
 	public S whenModMissing(String modid) {
-		return withCondition(new NotCondition(new ModLoadedCondition(modid)));
+		return withCondition(ResourceConditions.not(ResourceConditions.allModsLoaded(modid)));
 	}
 
-	public S withCondition(ICondition condition) {
+	public S withCondition(ResourceCondition condition) {
 		recipeConditions.add(condition);
 		return self();
 	}

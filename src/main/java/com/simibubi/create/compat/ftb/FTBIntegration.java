@@ -1,6 +1,7 @@
 package com.simibubi.create.compat.ftb;
 
 import com.simibubi.create.Create;
+import dev.ftb.mods.ftblibrary.FTBLibraryClient;
 import com.simibubi.create.foundation.gui.menu.AbstractSimiContainerScreen;
 
 import net.createmod.catnip.gui.AbstractSimiScreen;

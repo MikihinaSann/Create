@@ -1,6 +1,7 @@
 package com.simibubi.create.content.equipment.toolbox;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
+import com.simibubi.create.foundation.gui.menu.OpenMenuHelper;
 
 import java.util.Optional;
 
@@ -45,7 +46,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
-import io.github.fabricators_of_create.porting_lib.util.NetworkHooks;
 import io.github.fabricators_of_create.porting_lib.util.TagUtil;
 
 public class ToolboxBlock extends HorizontalDirectionalBlock implements SimpleWaterloggedBlock, IBE<ToolboxBlockEntity> {
@@ -160,7 +160,7 @@ public class ToolboxBlock extends HorizontalDirectionalBlock implements SimpleWa
 			return ItemInteractionResult.SUCCESS;
 
 		withBlockEntityDo(level, pos,
-			toolbox -> player.openMenu(toolbox, toolbox::sendToMenu));
+			toolbox -> player.openMenu(OpenMenuHelper.create(toolbox, toolbox::sendToMenu)));
 		return ItemInteractionResult.SUCCESS;
 	}
 

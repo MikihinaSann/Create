@@ -128,7 +128,7 @@ public class DeployerHandler {
 				return false;
 
 		if (held.getItem() instanceof BucketItem bucketItem) {
-			Fluid fluid = bucketItem.content;
+			Fluid fluid = ((BucketItemAccessor) bucketItem).port_lib$getContent();
 			if (fluid != Fluids.EMPTY && world.getFluidState(targetPos)
 				.getType() == fluid)
 				return false;
@@ -144,10 +144,7 @@ public class DeployerHandler {
 	static void activate(DeployerFakePlayer player, Vec3 vec, BlockPos clickedPos, Vec3 extensionVector, Mode mode) {
 		HashMultimap<Holder<Attribute>, AttributeModifier> attributeModifiers = HashMultimap.create();
 		ItemStack mainHandItem = player.getMainHandItem();
-		mainHandItem
-			.getAttributeModifiers()
-			.modifiers()
-			.forEach(e -> attributeModifiers.put(e.attribute(), e.modifier()));
+		mainHandItem.forEachModifier(EquipmentSlot.MAINHAND, attributeModifiers::put);
 		EnchantmentHelper.forEachModifier(mainHandItem, EquipmentSlot.MAINHAND, attributeModifiers::put);
 
 		player.getAttributes()
@@ -181,7 +178,7 @@ public class DeployerHandler {
 
 			// Use on entity
 			if (mode == Mode.USE) {
-				InteractionResult cancelResult = UseEntityCallback.EVENT.invoker().interact(player, world, hand, entity, new EntityHitResult(entity));
+				InteractionResult cancelResult = UseEntityCallback.EVENT.invoker().interact(player, level, hand, entity, new EntityHitResult(entity));
 				if (cancelResult == InteractionResult.FAIL) {
 					entity.captureDrops(null);
 					return;
@@ -200,7 +197,7 @@ public class DeployerHandler {
 				}
 				if (!success && entity instanceof Player playerEntity) {
 					if (stack.has(DataComponents.FOOD)) {
-						FoodProperties foodProperties = item.getFoodProperties(stack, player);
+						FoodProperties foodProperties = stack.get(DataComponents.FOOD);
 						if (foodProperties != null && playerEntity.canEat(foodProperties.canAlwaysEat())) {
 							ItemStack copy = stack.copy();
 							player.setItemInHand(hand, stack.finishUsingItem(level, playerEntity));
@@ -257,7 +254,7 @@ public class DeployerHandler {
 			if (BlockHelper.extinguishFire(level, player, clickedPos, face))
 				return;
 //			if (actionResult != InteractionResult.FAIL) // fabric: checked above
-			clickedState.attack(world, clickedPos, player);
+			clickedState.attack(level, clickedPos, player);
 			if (stack.isEmpty())
 				return;
 
@@ -291,7 +288,7 @@ public class DeployerHandler {
 		UseOnContext itemusecontext = new UseOnContext(player, hand, result);
 		InteractionResult useBlock = InteractionResult.PASS;
 		InteractionResult useItem = InteractionResult.PASS;
-		if (!clickedState.getShape(world, clickedPos)
+		if (!clickedState.getShape(level, clickedPos)
 			.isEmpty()) {
 			useBlock = UseBlockCallback.EVENT.invoker().interact(player, player.level(), hand, result);
 			useItem = useBlock;
@@ -311,7 +308,7 @@ public class DeployerHandler {
 
 		// Use on block
 		if (useBlock != InteractionResult.FAIL && flag1
-			&& safeOnUse(clickedState, world, clickedPos, player, hand, result).consumesAction())
+			&& safeOnUse(clickedState, level, clickedPos, player, hand, result).consumesAction())
 			return;
 		if (stack.isEmpty())
 			return;

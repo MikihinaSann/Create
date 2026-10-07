@@ -5,8 +5,8 @@ import java.util.function.BiConsumer;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.createmod.catnip.client.ConflictSafeKeyMapping;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 
@@ -55,14 +55,9 @@ public enum AllKeys {
 
 	public static void register() {
 		for (AllKeys key : values()) {
-			if (key.conflictSafe) {
-				key.keybind = new ConflictSafeKeyMapping(key.description, key.key, Create.NAME);
-			} else {
-				key.keybind = new KeyMapping(key.description, key.key, Create.NAME);
-			}
+			key.keybind = new KeyMapping(key.description, key.key, Create.NAME);
 			if (!key.modifiable)
 				continue;
-			key.keybind = new KeyMapping(key.description, key.key, Create.NAME);
 			KeyBindingHelper.registerKeyBinding(key.keybind);
 		}
 	}
@@ -100,43 +95,38 @@ public enum AllKeys {
 	}
 
 	public boolean doesModifierAndCodeMatch(int code) {
-		boolean codeMatches = code == keybind.getKey().getValue();
-
-		boolean modifierMatches;
-		KeyModifier modifier = keybind.getKeyModifier();
-		if (modifier == KeyModifier.NONE) {
-			modifierMatches = true;
-		} else {
-			modifierMatches = KeyModifier.getActiveModifiers().contains(modifier);
-		}
-
-		return codeMatches && modifierMatches;
-	}
-
+		// fabric: no modifier bindings, bound key alone must match
+		return code == getBoundCode();
 	}
 
 	public static boolean isKeyDown(int key) {
+		// fabric: EMI bakes search tooltips off the render thread; GLFW input calls
+		// must not run there
+		if (!RenderSystem.isOnRenderThread())
+			return false;
 		return InputConstants.isKeyDown(Minecraft.getInstance()
 			.getWindow()
 			.getWindow(), key);
 	}
 
 	public static boolean isMouseButtonDown(int button) {
+		if (!RenderSystem.isOnRenderThread())
+			return false;
 		return GLFW.glfwGetMouseButton(Minecraft.getInstance()
 			.getWindow()
 			.getWindow(), button) == 1;
 	}
 
 	public static boolean ctrlDown() {
-		return isKeyDown(CTRL_MODIFIER.keybind.getKey().getValue());
+		return isKeyDown(CTRL_MODIFIER.getBoundCode());
 	}
 
 	public static boolean shiftDown() {
-		return isKeyDown(SHIFT_MODIFIER.keybind.getKey().getValue());
+		return isKeyDown(SHIFT_MODIFIER.getBoundCode());
 	}
 
 	public static boolean altDown() {
-		return isKeyDown(ALT_MODIFIER.keybind.getKey().getValue());
+		return isKeyDown(ALT_MODIFIER.getBoundCode());
 	}
 
 }

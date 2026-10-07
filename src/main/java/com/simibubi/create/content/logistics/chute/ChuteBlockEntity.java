@@ -42,6 +42,8 @@ import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.VecHelper;
 
+import net.fabricmc.fabric.api.lookup.v1.block.BlockApiCache;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
@@ -70,11 +72,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
 import io.github.fabricators_of_create.porting_lib.block.CustomRenderBoundingBoxBlockEntity;
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
@@ -109,7 +106,7 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 	VersionedInventoryTrackerBehaviour invVersionTracker;
 
-	private final EnumMap<Direction, BlockCapabilityCache<IItemHandler, @Nullable Direction>> capCaches = new EnumMap<>(Direction.class);
+	private final EnumMap<Direction, BlockApiCache<Storage<ItemVariant>, Direction>> capCaches = new EnumMap<>(Direction.class);
 
 	public ChuteBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -120,13 +117,6 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		bottomPullDistance = 0;
 		// airCurrent = new AirCurrent(this);
 		updateAirFlow = true;
-	}
-
-	@Override
-	public void setLevel(Level level) {
-		super.setLevel(level);
-		capAbove = StorageProvider.createForItems(level, worldPosition.above());
-		capBelow = StorageProvider.createForItems(level, worldPosition.below());
 	}
 
 	@Override
@@ -539,7 +529,7 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		return true;
 	}
 
-	private @Nullable IItemHandler grabCapability(@NotNull Direction side) {
+	private @Nullable Storage<ItemVariant> grabCapability(@NotNull Direction side) {
 		BlockPos pos = this.worldPosition.relative(side);
 		if (level == null)
 			return null;
@@ -550,19 +540,18 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		}
 		if (capCaches.get(side) == null) {
 			if (level instanceof ServerLevel serverLevel) {
-				BlockCapabilityCache<IItemHandler, @Nullable Direction> cache = BlockCapabilityCache.create(
-						Capabilities.ItemHandler.BLOCK,
+				BlockApiCache<Storage<ItemVariant>, Direction> cache = BlockApiCache.create(
+						ItemStorage.SIDED,
 						serverLevel,
-						pos,
-						side.getOpposite()
+						pos
 				);
 				capCaches.put(side, cache);
-				return cache.getCapability();
+				return cache.find(side.getOpposite());
 			} else {
-				return level.getCapability(Capabilities.ItemHandler.BLOCK, pos, side.getOpposite());
+				return ItemStorage.SIDED.find(level, pos, side.getOpposite());
 			}
 		} else {
-			return capCaches.get(side).getCapability();
+			return capCaches.get(side).find(side.getOpposite());
 		}
 	}
 

@@ -1,6 +1,8 @@
 package com.simibubi.create.content.kinetics.saw;
 
 import java.util.List;
+import com.simibubi.create.compat.recipeViewerCommon.SequencedAssemblySubCategoryType;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
 import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,9 +24,8 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 @ParametersAreNonnullByDefault
 public class CuttingRecipe extends StandardProcessingRecipe<RecipeWrapper> implements IAssemblyRecipe {
@@ -34,7 +35,7 @@ public class CuttingRecipe extends StandardProcessingRecipe<RecipeWrapper> imple
 	}
 
 	@Override
-	public boolean matches(Container inv, Level worldIn) {
+	public boolean matches(RecipeWrapper inv, Level worldIn) {
 		if (inv.isEmpty())
 			return false;
 		return ingredients.get(0)

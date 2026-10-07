@@ -5,7 +5,7 @@ import com.simibubi.create.CreateClient;
 import com.simibubi.create.content.contraptions.elevator.ElevatorControlsHandler;
 import com.simibubi.create.content.contraptions.wrench.RadialWrenchHandler;
 import com.simibubi.create.content.equipment.toolbox.ToolboxHandlerClient;
-import com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorConnectionHandler;
+import com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorConnectionHandlerClient;
 import com.simibubi.create.content.kinetics.chainConveyor.ChainConveyorInteractionHandler;
 import com.simibubi.create.content.kinetics.chainConveyor.ChainPackageInteractionHandler;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelConnectionHandler;
@@ -79,7 +79,7 @@ public class InputEvents {
 		if (CreateClient.GLUE_HANDLER.onMouseInput(false))
 			return InteractionResult.SUCCESS;
 
-		if (FactoryPanelConnectionHandler.onRightClick() || ChainConveyorConnectionHandler.onRightClick()) {
+		if (FactoryPanelConnectionHandler.onRightClick() || ChainConveyorConnectionHandlerClient.onRightClick()) {
 			return InteractionResult.SUCCESS;
 		}
 

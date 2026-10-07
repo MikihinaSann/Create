@@ -1,6 +1,8 @@
 package com.simibubi.create.compat.rei.category;
 
 import java.util.ArrayList;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -62,16 +64,16 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 			if (stack.getItem() instanceof PotionItem) {
 				FluidStack fluidFromPotionItem = PotionFluidHandler.getFluidFromPotionItem(stack);
 				Ingredient bottle = Ingredient.of(Items.GLASS_BOTTLE);
-				consumer.accept(new ProcessingRecipeBuilder<>(FillingRecipe::new, Create.asResource("potions"))
+				consumer.accept(new StandardProcessingRecipe.Builder<>(FillingRecipe::new, Create.asResource("potions"))
 					.withItemIngredients(bottle)
-					.withFluidIngredients(FluidIngredient.fromFluidStack(fluidFromPotionItem))
+					.withFluidIngredients(SizedFluidIngredient.of(fluidFromPotionItem))
 					.withSingleItemOutput(stack)
 					.build());
 				return;
 			}
 
 			for (EntryStack<dev.architectury.fluid.FluidStack> fluidEntry: fluidStacks) {
-				FluidStack fluidStack = new FluidStack(fluidEntry.getValue().getFluid(), fluidEntry.getValue().getAmount(), fluidEntry.getValue().getTag());
+				FluidStack fluidStack = new FluidStack(fluidEntry.getValue().getFluid(), fluidEntry.getValue().getAmount(), fluidEntry.getValue().getPatch());
 				ItemStack copy = stack.copy();
 				MutableContainerItemContext ctx = new MutableContainerItemContext(copy);
 				Storage<FluidVariant> fhi = ctx.find(FluidStorage.ITEM);
@@ -95,11 +97,11 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 								.getKey(stack.getItem());
 						ResourceLocation fluidName = BuiltInRegistries.FLUID
 								.getKey(fluidCopy.getFluid());
-						consumer.accept(new ProcessingRecipeBuilder<>(FillingRecipe::new,
+						consumer.accept(new StandardProcessingRecipe.Builder<>(FillingRecipe::new,
 								Create.asResource("fill_" + itemName.getNamespace() + "_" + itemName.getPath()
 										+ "_with_" + fluidName.getNamespace() + "_" + fluidName.getPath()))
 								.withItemIngredients(bucket)
-								.withFluidIngredients(FluidIngredient.fromFluidStack(fluidCopy))
+								.withFluidIngredients(SizedFluidIngredient.of(fluidCopy))
 								.withSingleItemOutput(container)
 								.build());
 					}
@@ -119,7 +121,7 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 		Slot fluidSlot = basicSlot(27, 32, origin).disableBackground().markInput().entries(EntryIngredients.of(CreateRecipeCategory.convertToREIFluid(fluidStack)));
 		CreateRecipeCategory.setFluidRenderRatio(fluidSlot);
 		widgets.add(fluidSlot);
-		addFluidTooltip(widgets, List.of(display.getRecipe().getRequiredFluid()), Collections.emptyList());
+		addFluidTooltip(widgets, List.of(display.getRecipe().getRequiredFluid().ingredient()), Collections.emptyList());
 
 		widgets.add(WidgetUtil.textured(AllGuiTextures.JEI_SLOT, origin.getX() + 26, origin.getY() + 50));
 		widgets.add(Widgets.createSlot(point(origin.getX() + 27, origin.getY() + 51)).disableBackground().markInput().entries(display.getInputEntries().get(0)));

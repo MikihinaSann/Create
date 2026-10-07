@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
-import com.simibubi.create.content.logistics.packager.fabric.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBehaviour;
 import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBehaviour.RequestType;
 import com.simibubi.create.content.logistics.packagerLink.LogisticsManager;

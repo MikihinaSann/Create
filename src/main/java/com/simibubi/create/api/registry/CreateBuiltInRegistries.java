@@ -38,6 +38,8 @@ import net.minecraft.resources.ResourceKey;
  * @see CreateRegistries
  */
 public class CreateBuiltInRegistries {
+	private static final List<Runnable> BAKE_CALLBACKS = new ArrayList<>();
+
 	public static final Registry<ArmInteractionPointType> ARM_INTERACTION_POINT_TYPE = simpleWithFreezeCallback(CreateRegistries.ARM_INTERACTION_POINT_TYPE, ArmInteractionPointType::init);
 	public static final Registry<FanProcessingType> FAN_PROCESSING_TYPE = simpleWithFreezeCallback(CreateRegistries.FAN_PROCESSING_TYPE, FanProcessingTypeRegistry::init);
 	public static final Registry<ItemAttributeType> ITEM_ATTRIBUTE_TYPE = simple(CreateRegistries.ITEM_ATTRIBUTE_TYPE);
@@ -62,8 +64,6 @@ public class CreateBuiltInRegistries {
 	private static <T> Registry<T> withIntrusiveHolders(ResourceKey<Registry<T>> key) {
 		return register(key, true, () -> {});
 	}
-
-	private static final List<Runnable> BAKE_CALLBACKS = new ArrayList<>();
 
 	private static <T> Registry<T> register(ResourceKey<Registry<T>> key, boolean hasIntrusiveHolders, Runnable onBakeCallback) {
 		Registry<T> registry = FabricRegistryBuilder.from(new MappedRegistry<>(key, Lifecycle.stable(), hasIntrusiveHolders))

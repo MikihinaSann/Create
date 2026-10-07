@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import java.util.Iterator;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
 public class ChangeListeningStorageWrapper<T> implements Storage<T> {
 	private final Storage<T> wrapped;

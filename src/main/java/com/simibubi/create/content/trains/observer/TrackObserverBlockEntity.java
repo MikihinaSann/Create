@@ -23,7 +23,6 @@ import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.utility.CreateLang;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Clearable;
@@ -36,7 +35,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public class TrackObserverBlockEntity extends SmartBlockEntity implements TransformableBlockEntity, Clearable {
 	public TrackTargetingBehaviour<TrackObserver> edgePoint;
@@ -50,14 +48,8 @@ public class TrackObserverBlockEntity extends SmartBlockEntity implements Transf
 		super(type, pos, state);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-				PeripheralCapability.get(),
-				AllBlockEntityTypes.TRACK_OBSERVER.get(),
-				(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
-		}
+	public static void registerCapabilities() {
+		
 	}
 
 	@Override

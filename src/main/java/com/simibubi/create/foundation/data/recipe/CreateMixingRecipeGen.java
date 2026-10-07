@@ -17,8 +17,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.common.crafting.BlockTagIngredient;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
+import com.simibubi.create.foundation.item.BlockTagIngredient;
 
 /**
  * Create's own Data Generation for Mixing recipes
@@ -70,7 +70,7 @@ public final class CreateMixingRecipeGen extends MixingRecipeGen {
 		.require(CreateRecipeProvider.I.zincNugget())
 		.output(CreateRecipeProvider.I.andesiteAlloy(), 1)),
 
-	MUD = create("mud_by_mixing", b -> b.require(new BlockTagIngredient(BlockTags.CONVERTABLE_TO_MUD))
+	MUD = create("mud_by_mixing", b -> b.require(BlockTagIngredient.of(BlockTags.CONVERTABLE_TO_MUD))
 		.require(Fluids.WATER, 250)
 		.output(Blocks.MUD, 1)),
 

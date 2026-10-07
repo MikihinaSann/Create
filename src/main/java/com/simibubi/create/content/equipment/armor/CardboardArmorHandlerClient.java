@@ -1,5 +1,7 @@
 package com.simibubi.create.content.equipment.armor;
 
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.client.player.AbstractClientPlayer;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -42,7 +44,7 @@ public class CardboardArmorHandlerClient {
 
 		ms.pushPose();
 
-		Vec3 renderOffset = event.getRenderer().getRenderOffset((AbstractClientPlayer)player, event.getPartialTick());
+		Vec3 renderOffset = renderer.getRenderOffset((AbstractClientPlayer)player, partialTick);
 		ms.translate(0, -renderOffset.y, 0);
 
 		float movement = (float) player.position()

@@ -4,8 +4,11 @@ import java.util.Iterator;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
+
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
@@ -27,9 +30,8 @@ public class ItemHandlerWrapper implements Storage<ItemVariant> {
 		return wrapped.insert(resource, maxAmount, transaction);
 	}
 
-	@Override
 	public long simulateInsert(ItemVariant resource, long maxAmount, @Nullable TransactionContext transaction) {
-		return wrapped.simulateInsert(resource, maxAmount, transaction);
+		return StorageUtil.simulateInsert(wrapped, resource, maxAmount, transaction);
 	}
 
 	@Override
@@ -42,9 +44,8 @@ public class ItemHandlerWrapper implements Storage<ItemVariant> {
 		return wrapped.extract(resource, maxAmount, transaction);
 	}
 
-	@Override
 	public long simulateExtract(ItemVariant resource, long maxAmount, @Nullable TransactionContext transaction) {
-		return wrapped.simulateExtract(resource, maxAmount, transaction);
+		return StorageUtil.simulateExtract(wrapped, resource, maxAmount, transaction);
 	}
 
 	@Override
@@ -52,9 +53,8 @@ public class ItemHandlerWrapper implements Storage<ItemVariant> {
 		return wrapped.iterator();
 	}
 
-	@Override
 	public @Nullable StorageView<ItemVariant> exactView(ItemVariant resource) {
-		return wrapped.exactView(resource);
+		return TransferUtil.exactView(wrapped, resource);
 	}
 
 	@Override

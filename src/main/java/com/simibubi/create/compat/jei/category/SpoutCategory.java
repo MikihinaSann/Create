@@ -1,6 +1,7 @@
 package com.simibubi.create.compat.jei.category;
 
 import java.util.Arrays;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -20,11 +21,11 @@ import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.fabric.constants.FabricTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
-import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.runtime.IIngredientManager;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -41,6 +42,11 @@ import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import io.github.fabricators_of_create.porting_lib.transfer.MutableContainerItemContext;
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
+import com.simibubi.create.foundation.fluid.FluidIngredient;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
+
+import com.simibubi.create.foundation.fluid.DataComponentFluidIngredient;
+
 @ParametersAreNonnullByDefault
 public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 
@@ -51,7 +57,7 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 	}
 
 	public static void consumeRecipes(Consumer<RecipeHolder<FillingRecipe>> consumer, IIngredientManager ingredientManager) {
-		Collection<FluidStack> fluidStacks = ingredientManager.getAllIngredients(NeoForgeTypes.FLUID_STACK)
+		Collection<FluidStack> fluidStacks = ingredientManager.getAllIngredients(FabricTypes.FLUID_STACK)
 			.stream().map(CreateRecipeCategory::fromJei).toList();
 		for (ItemStack stack : ingredientManager.getAllIngredients(VanillaTypes.ITEM_STACK)) {
 			if (PotionFluidHandler.isPotionItem(stack)) {
@@ -88,20 +94,30 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 				if (copyStorage == null)
 					continue;
 
-					Ingredient bucket = Ingredient.of(stack);
-					ResourceLocation itemName = RegisteredObjectsHelper.getKeyOrThrow(stack.getItem());
-					ResourceLocation fluidName = RegisteredObjectsHelper.getKeyOrThrow(fluidCopy.getFluid());
-					ResourceLocation id = Create.asResource("fill_" + itemName.getNamespace() + "_" + itemName.getPath()
-							+ "_with_" + fluidName.getNamespace() + "_" + fluidName.getPath());
-					SizedFluidIngredient fluidIngredient = new SizedFluidIngredient(
-						DataComponentFluidIngredient.of(false, fluidCopy), fluidCopy.getAmount());
-					FillingRecipe recipe = new StandardProcessingRecipe.Builder<>(FillingRecipe::new, id)
-							.withItemIngredients(bucket)
+				if (!GenericItemFilling.isFluidHandlerValid(copy, copyStorage))
+					continue;
+				FluidStack fluidCopy = fluidStack.copy();
+				fluidCopy.setAmount(FluidConstants.BUCKET);
+				TransferUtil.insert(copyStorage, fluidCopy);
+				ItemStack container = context.getItemVariant().toStack(ItemHelper.truncateLong(context.getAmount()));
+				if (ItemHelper.sameItem(container, copy))
+					continue;
+				if (container.isEmpty())
+					continue;
+
+				Ingredient bucket = Ingredient.of(stack);
+				ResourceLocation itemName = RegisteredObjectsHelper.getKeyOrThrow(stack.getItem());
+				ResourceLocation fluidName = RegisteredObjectsHelper.getKeyOrThrow(fluidCopy.getFluid());
+				ResourceLocation id = Create.asResource("fill_" + itemName.getNamespace() + "_" + itemName.getPath()
+						+ "_with_" + fluidName.getNamespace() + "_" + fluidName.getPath());
+				SizedFluidIngredient fluidIngredient = new SizedFluidIngredient(
+					FluidIngredient.fromFluidStack(fluidCopy), fluidCopy.getAmount());
+				FillingRecipe recipe = new StandardProcessingRecipe.Builder<>(FillingRecipe::new, id)
+						.withItemIngredients(bucket)
 						.withFluidIngredients(fluidIngredient)
-							.withSingleItemOutput(container)
-							.build();
-					consumer.accept(new RecipeHolder<>(id, recipe));
-				}
+						.withSingleItemOutput(container)
+						.build();
+				consumer.accept(new RecipeHolder<>(id, recipe));
 			}
 		}
 	}
@@ -125,8 +141,8 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 	public void draw(FillingRecipe recipe, IRecipeSlotsView iRecipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
 		AllGuiTextures.JEI_SHADOW.render(graphics, 62, 57);
 		AllGuiTextures.JEI_DOWN_ARROW.render(graphics, 126, 29);
-		spout.withFluids(Arrays.asList(recipe.getRequiredFluid()
-				.getFluids()))
+		spout.withFluids(recipe.getRequiredFluid()
+				.getFluids())
 			.draw(graphics, getBackground().getWidth() / 2 - 13, 22);
 	}
 

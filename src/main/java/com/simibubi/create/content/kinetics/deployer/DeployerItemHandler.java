@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
+import com.simibubi.create.foundation.item.ItemHelper;
 
 import net.minecraft.core.component.DataComponents;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
@@ -18,13 +19,8 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
-import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
@@ -54,7 +50,7 @@ public class DeployerItemHandler extends SnapshotParticipant<Unit> implements St
 
 	@Override
 	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
-		int maxInsert = Math.min((int) maxAmount, resource.getItem().getMaxStackSize());
+		int maxInsert = Math.min((int) maxAmount, resource.getItem().getDefaultMaxStackSize());
 		ItemStack stack = resource.toStack(maxInsert);
 		if (!isItemValid(stack))
 			return 0;
@@ -205,7 +201,7 @@ public class DeployerItemHandler extends SnapshotParticipant<Unit> implements St
 				return 0;
 			int toExtract = (int) Math.min(maxAmount, stack.getCount());
 			updateSnapshots(transaction);
-			ItemStack newStack = io.github.fabricators_of_create.porting_lib.transfer.item.ItemHandlerHelper.copyStackWithSize(stack, stack.getCount() - toExtract);
+			ItemStack newStack = ItemHelper.copyStackWithSize(stack, stack.getCount() - toExtract);
 			heldSetter.accept(newStack);
 			return toExtract;
 		}

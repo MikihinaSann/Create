@@ -1,6 +1,8 @@
 package com.simibubi.create.content.equipment.zapper;
 
 import java.util.List;
+import io.github.fabricators_of_create.porting_lib.item.ReequipAnimationItem;
+import io.github.fabricators_of_create.porting_lib.item.EntitySwingListenerItem;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

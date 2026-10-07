@@ -7,6 +7,7 @@ import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.access
 
 import org.jetbrains.annotations.Nullable;
 
+import com.simibubi.create.content.kinetics.deployer.ItemApplicationRecipe;
 import com.simibubi.create.content.kinetics.deployer.ManualApplicationRecipe;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;

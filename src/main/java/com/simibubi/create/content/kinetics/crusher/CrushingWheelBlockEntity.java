@@ -11,6 +11,8 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingDropsEvent;
+
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -54,13 +56,13 @@ public class CrushingWheelBlockEntity extends KineticBlockEntity {
 		fixControllers();
 	}
 
-	public static boolean handleCrushedMobDrops(LivingEntity target, DamageSource damageSource, Collection<ItemEntity> drops, int lootingLevel, boolean recentlyHit) {
-		if (damageSource == null || !damageSource.is(AllDamageTypes.CRUSH))
-			return false;
+	public static void handleCrushedMobDrops(LivingDropsEvent event) {
+		DamageSource damageSource = event.getSource();
+		if (!damageSource.is(AllDamageTypes.CRUSH))
+			return;
 		Vec3 outSpeed = Vec3.ZERO;
-		for (ItemEntity outputItem : drops) {
+		for (ItemEntity outputItem : event.getDrops()) {
 			outputItem.setDeltaMovement(outSpeed);
 		}
-		return false;
 	}
 }

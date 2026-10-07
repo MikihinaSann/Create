@@ -4,30 +4,31 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.Create;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
-import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder.ProcessingRecipeParams;
+import com.simibubi.create.content.processing.recipe.ProcessingRecipeParams;
+import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 
 /**
  * Helper recipe type for displaying an item relationship in JEI
  */
 @ParametersAreNonnullByDefault
-public class ConversionRecipe extends ProcessingRecipe<Container> {
+public class ConversionRecipe extends StandardProcessingRecipe<RecipeWrapper> {
 
 	static int counter = 0;
 
-	public static ConversionRecipe create(ItemStack from, ItemStack to) {
+	public static RecipeHolder<ConversionRecipe> create(ItemStack from, ItemStack to) {
 		ResourceLocation recipeId = Create.asResource("conversion_" + counter++);
-		return new ProcessingRecipeBuilder<>(ConversionRecipe::new, recipeId)
+		ConversionRecipe recipe = new Builder<>(ConversionRecipe::new, recipeId)
 			.withItemIngredients(Ingredient.of(from))
 			.withSingleItemOutput(to)
 			.build();
+		return new RecipeHolder<>(recipeId, recipe);
 	}
 
 	public ConversionRecipe(ProcessingRecipeParams params) {
@@ -35,7 +36,7 @@ public class ConversionRecipe extends ProcessingRecipe<Container> {
 	}
 
 	@Override
-	public boolean matches(Container inv, Level worldIn) {
+	public boolean matches(RecipeWrapper inv, Level worldIn) {
 		return false;
 	}
 

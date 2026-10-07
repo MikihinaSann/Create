@@ -41,7 +41,7 @@ import com.simibubi.create.foundation.item.KineticStats;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.simibubi.create.foundation.recipe.AllIngredients;
 import com.simibubi.create.foundation.ponder.FabricStructureProcessing;
-import com.simibubi.create.foundation.recipe.AllIngredients;
+import com.simibubi.create.impl.registry.CreateDataMapsImpl;
 import com.simibubi.create.impl.registry.CreateRegistriesImpl;
 import com.simibubi.create.infrastructure.command.ServerLagger;
 import com.simibubi.create.infrastructure.config.AllConfigs;
@@ -52,21 +52,15 @@ import com.simibubi.create.infrastructure.worldgen.AllPlacementModifiers;
 import io.github.tropheusj.milk.Milk;
 import net.createmod.catnip.lang.FontHelper;
 import net.createmod.catnip.lang.LangBuilder;
+import com.simibubi.create.api.registry.CreateBuiltInRegistries;
+import com.simibubi.create.foundation.block.CopperRegistries;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.Level;
-
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModLoadingContext;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.common.NeoForgeMod;
-import net.neoforged.neoforge.registries.RegisterEvent;
 
 import net.fabricmc.api.ModInitializer;
 
@@ -115,7 +109,7 @@ public class Create implements ModInitializer {
 		AllSoundEvents.prepare();
 		AllTags.init();
 		AllCreativeModeTabs.register();
-		AllArmorMaterials.register(modEventBus);
+		AllArmorMaterials.register();
 		AllDisplaySources.register();
 		AllDisplayTargets.register();
 		AllBlocks.register();
@@ -136,16 +130,16 @@ public class Create implements ModInitializer {
 		AllPackets.register();
 		AllFeatures.register();
 		AllPlacementModifiers.register();
-		AllIngredients.register(modEventBus);
-		AllAttachmentTypes.register(modEventBus);
-		AllDataComponents.register(modEventBus);
-		AllMapDecorationTypes.register(modEventBus);
+		AllIngredients.register();
+		AllAttachmentTypes.register();
+		AllDataComponents.register();
+		AllMapDecorationTypes.register();
 		AllMountedStorageTypes.register();
 
 		AllConfigs.register();
 
 		// TODO - Make these use Registry.register and move them into the RegisterEvent
-		AllPackagePortTargetTypes.register(modEventBus);
+		AllPackagePortTargetTypes.register();
 
 		AllSchematicStateFilters.registerDefaults();
 
@@ -157,7 +151,8 @@ public class Create implements ModInitializer {
 		ComputerCraftProxy.register();
 
 		Milk.enableMilkFluid();
-		CopperRegistries.inject();
+		// fabric: copper weathering/waxing maps have no data-map runtime; a mixin hook into
+		// WeatheringCopper/HoneycombItem is still needed to consume CopperRegistries' views.
 
 		Create.init();
 		Create.onRegister();
@@ -167,13 +162,11 @@ public class Create implements ModInitializer {
 		// noinspection Convert2MethodRef
 		Mods.TRINKETS.executeIfInstalled(() -> () -> Trinkets.init());
 
-		// fabric exclusive
-		AllIngredients.register();
 		CommonEvents.register();
-		AllPackets.getChannel().initServerListener();
 		FabricStructureProcessing.init();
 		AllBiomeModifiers.bootstrap(); // moved out of datagen
 		CreateRegistriesImpl.registerDatapackRegistries();
+		CreateDataMapsImpl.register();
 		AllInventoryIdentifiers.registerDefaults();
 	}
 
@@ -194,7 +187,6 @@ public class Create implements ModInitializer {
 			AllOpenPipeEffectHandlers.registerDefaults();
 			AllMountedDispenseItemBehaviors.registerDefaults();
 			AllUnpackingHandlers.registerDefaults();
-			AllFluids.registerFluidInteractions();
 			// --
 //		});
 	}

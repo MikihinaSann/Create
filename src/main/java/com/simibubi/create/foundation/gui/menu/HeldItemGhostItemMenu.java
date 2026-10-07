@@ -8,8 +8,8 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 /**
  * A {@link GhostItemMenu} that is linked to the item in a player's main hand. Prevents its owner item from being manipulated.
@@ -24,7 +24,7 @@ public abstract class HeldItemGhostItemMenu extends GhostItemMenu<ItemStack> {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected ItemStack createOnClient(RegistryFriendlyByteBuf extraData) {
 		return ItemStack.STREAM_CODEC.decode(extraData);
 	}

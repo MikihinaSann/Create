@@ -5,6 +5,8 @@ import static com.simibubi.create.foundation.gui.AllGuiTextures.FACTORY_GAUGE_RE
 import static com.simibubi.create.foundation.gui.AllGuiTextures.FACTORY_GAUGE_RESTOCK;
 
 import java.util.ArrayList;
+
+import com.simibubi.create.foundation.recipe.RecipeHelper;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -689,7 +691,7 @@ public class FactoryPanelScreen extends AbstractSimiScreen {
 					return false;
 
 				Set<Item> itemsUsed = new HashSet<>();
-				for (Ingredient ingredient : r.value().getIngredients()) {
+				for (Ingredient ingredient : RecipeHelper.getIngredients(r.value())) {
 					if (ingredient.isEmpty())
 						continue;
 					boolean available = false;

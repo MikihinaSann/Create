@@ -10,9 +10,9 @@ import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRende
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.data.IntAttached;
+import net.createmod.catnip.data.LongAttached;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
-import net.createmod.catnip.platform.NeoForgeCatnipServices;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -32,6 +32,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
+import net.createmod.catnip.platform.FabricCatnipServices;
 
 public class BasinRenderer extends SmartBlockEntityRenderer<BasinBlockEntity> {
 
@@ -174,7 +175,7 @@ public class BasinRenderer extends SmartBlockEntityRenderer<BasinBlockEntity> {
 
 				float partial = Mth.clamp(units / totalUnits, 0, 1);
 				xMax += partial * 12 / 16f;
-				NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(renderedFluid, xMin, yMin, zMin, xMax, yMax, zMax,
+				FabricCatnipServices.FLUID_RENDERER.renderFluidBox(renderedFluid.getVariant(), xMin, yMin, zMin, xMax, yMax, zMax,
 					buffer, ms, light, false, false);
 
 				xMin = xMax;

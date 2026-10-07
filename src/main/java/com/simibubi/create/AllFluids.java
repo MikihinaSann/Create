@@ -1,6 +1,10 @@
 package com.simibubi.create;
 
 import static net.minecraft.world.item.Items.BUCKET;
+import com.simibubi.create.AllDataComponents;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.core.component.DataComponents;
 import static net.minecraft.world.item.Items.GLASS_BOTTLE;
 import static net.minecraft.world.item.Items.HONEY_BOTTLE;
 
@@ -29,7 +33,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
@@ -204,12 +207,14 @@ public class AllFluids {
 	public static class PotionFluidVariantRenderHandler implements FluidVariantRenderHandler {
 		@Override
 		public int getColor(FluidVariant fluidVariant, @Nullable BlockAndTintGetter view, @Nullable BlockPos pos) {
-			return PotionUtils.getColor(PotionUtils.getAllEffects(fluidVariant.getNbt())) | 0xff000000;
+			return fluidVariant.getComponents().get(DataComponents.POTION_CONTENTS)
+				.map(c -> (PotionContents) c)
+				.orElse(PotionContents.EMPTY).getColor() | 0xff000000;
 		}
 
 		@Override
 		public void appendTooltip(FluidVariant fluidVariant, List<Component> tooltip, TooltipFlag tooltipContext) {
-			PotionFluidHandler.addPotionTooltip(fluidVariant, tooltip, 1);
+			PotionFluidHandler.addPotionTooltip(fluidVariant, tooltip::add, 1);
 		}
 	}
 
@@ -220,14 +225,17 @@ public class AllFluids {
 		}
 
 		public String getTranslationKey(FluidVariant stack) {
-			CompoundTag tag = stack.getNbt();
-			if (tag == null)
+			PotionContents contents = stack.getComponents().get(DataComponents.POTION_CONTENTS)
+				.map(c -> (PotionContents) c)
+				.orElse(PotionContents.EMPTY);
+			if (contents.potion().isEmpty())
 				return "create.potion.invalid";
-			ItemLike itemFromBottleType =
-					PotionFluidHandler.itemFromBottleType(NBTHelper.readEnum(tag, "Bottle", BottleType.class));
-			return PotionUtils.getPotion(tag)
-					.getName(itemFromBottleType.asItem()
-							.getDescriptionId() + ".effect.");
+			ItemLike itemFromBottleType = PotionFluidHandler.itemFromBottleType(
+					stack.getComponents().get(AllDataComponents.POTION_FLUID_BOTTLE_TYPE)
+						.map(t -> (BottleType) t)
+						.orElse(BottleType.REGULAR));
+			return Potion.getName(contents.potion(), itemFromBottleType.asItem()
+					.getDescriptionId() + ".effect.");
 		}
 	}
 

@@ -1,6 +1,8 @@
 package com.simibubi.create.content.processing.basin;
 
 import java.util.ArrayList;
+
+import com.simibubi.create.foundation.recipe.RecipeHelper;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -23,10 +25,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.capabilities.Capabilities.FluidHandler;
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
 public abstract class BasinOperatingBlockEntity extends KineticBlockEntity {
 
@@ -139,8 +140,8 @@ public abstract class BasinOperatingBlockEntity extends KineticBlockEntity {
 		List<Recipe<?>> list = new ArrayList<>();
 		try {
 
-			IItemHandler availableItems = level.getCapability(ItemHandler.BLOCK, basin.getBlockPos(), null);
-			IFluidHandler availableFluids = level.getCapability(FluidHandler.BLOCK, basin.getBlockPos(), null);
+			Storage<ItemVariant> availableItems = basin.getItemStorage(null);
+			Storage<FluidVariant> availableFluids = basin.getFluidStorage(null);
 
 			// no point even searching, since no recipe will ever match
 			if (availableItems == null && availableFluids == null) {
@@ -162,7 +163,7 @@ public abstract class BasinOperatingBlockEntity extends KineticBlockEntity {
 					list.add(r.value());
 		}
 
-		list.sort((r1, r2) -> r2.getIngredients().size() - r1.getIngredients().size());
+		list.sort((r1, r2) -> RecipeHelper.getIngredients(r2).size() - RecipeHelper.getIngredients(r1).size());
 
 		return list;
 	}

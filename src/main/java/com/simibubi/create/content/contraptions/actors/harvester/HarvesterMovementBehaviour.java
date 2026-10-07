@@ -1,6 +1,7 @@
 package com.simibubi.create.content.contraptions.actors.harvester;
 
 import com.simibubi.create.compat.Mods;
+import com.simibubi.create.api.behaviour.SpecialPlantable;
 
 import com.simibubi.create.compat.farmersdelight.FarmersDelightCompat;
 
@@ -43,9 +44,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.SpecialPlantable;
 
-import io.github.fabricators_of_create.porting_lib.common.util.IPlantable;
 
 public class HarvesterMovementBehaviour implements MovementBehaviour {
 

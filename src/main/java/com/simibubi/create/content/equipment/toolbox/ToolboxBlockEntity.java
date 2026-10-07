@@ -1,5 +1,6 @@
 package com.simibubi.create.content.equipment.toolbox;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -96,12 +97,8 @@ public class ToolboxBlockEntity extends SmartBlockEntity implements MenuProvider
 		setLazyTickRate(10);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.TOOLBOX.get(),
-				(be, context) -> be.inventory
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.inventory, AllBlockEntityTypes.TOOLBOX.get());
 	}
 
 	public DyeColor getColor() {
@@ -377,7 +374,7 @@ public class ToolboxBlockEntity extends SmartBlockEntity implements MenuProvider
 	public void readInventory(ToolboxInventory inv) {
 		if (inv != null) {
 			this.inventory.filters = new ArrayList<>(inv.filters);
-			for (int i = 0; i < inv.getSlots(); i++)
+			for (int i = 0; i < inv.getSlotCount(); i++)
 				this.inventory.setStackInSlot(i, inv.getStackInSlot(i));
 		}
 	}

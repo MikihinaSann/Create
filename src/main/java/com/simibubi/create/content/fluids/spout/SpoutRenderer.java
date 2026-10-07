@@ -7,7 +7,6 @@ import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTank
 import com.simibubi.create.foundation.blockEntity.renderer.SafeBlockEntityRenderer;
 
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
-import net.createmod.catnip.platform.NeoForgeCatnipServices;
 import net.createmod.catnip.render.CachedBuffers;
 
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
@@ -19,6 +18,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
+import net.createmod.catnip.platform.FabricCatnipServices;
 
 public class SpoutRenderer extends SafeBlockEntityRenderer<SpoutBlockEntity> {
 
@@ -53,7 +53,7 @@ public class SpoutRenderer extends SafeBlockEntityRenderer<SpoutBlockEntity> {
 			if (!top) ms.translate(0, yOffset, 0);
 			else ms.translate(0, max - min, 0);
 
-			NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(fluidStack, min, min - yOffset, min, max, min,
+			FabricCatnipServices.FLUID_RENDERER.renderFluidBox(fluidStack.getVariant(), min, min - yOffset, min, max, min,
 				max, buffer, ms, light, false, true);
 
 			ms.popPose();
@@ -68,7 +68,7 @@ public class SpoutRenderer extends SafeBlockEntityRenderer<SpoutBlockEntity> {
 		if (!fluidStack.isEmpty() && processingTicks != -1) {
 			radius = (float) (Math.pow(((2 * processingProgress) - 1), 2) - 1);
 			AABB bb = new AABB(0.5, 0.0, 0.5, 0.5, -1.2, 0.5).inflate(radius / 32f);
-			NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(fluidStack, (float) bb.minX, (float) bb.minY, (float) bb.minZ,
+			FabricCatnipServices.FLUID_RENDERER.renderFluidBox(fluidStack.getVariant(), (float) bb.minX, (float) bb.minY, (float) bb.minZ,
 				(float) bb.maxX, (float) bb.maxY, (float) bb.maxZ, buffer, ms, light, true, true);
 		}
 

@@ -1,8 +1,9 @@
 package com.simibubi.create.content.fluids.tank;
 
 import static java.lang.Math.abs;
-
 import java.util.List;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import java.util.Objects;
 
 import org.jetbrains.annotations.Nullable;
@@ -84,16 +85,12 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 //		refreshCapability(); // fabric: lazy init to prevent access too early
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.FLUID_TANK.get(),
-				(be, context) -> {
-					if (be.fluidCapability == null)
+	public static void registerCapabilities() {
+		FluidStorage.SIDED.registerForBlockEntity((be, context) -> {
+					if (be.exposedTank == null)
 						be.refreshCapability();
-					return be.fluidCapability;
-				}
-		);
+					return be.exposedTank;
+				}, AllBlockEntityTypes.FLUID_TANK.get());
 	}
 
 	protected SmartFluidTank createInventory() {
@@ -385,7 +382,7 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 		sendData();
 	}
 
-	private void refreshCapability() {
+	protected void refreshCapability() {
 		exposedTank = handlerForCapability();
 	}
 

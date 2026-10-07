@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.foundation.utility.IInteractionChecker;
 
@@ -80,7 +79,7 @@ public class SchematicTableBlockEntity extends SmartBlockEntity implements MenuP
 
 	@Override
 	public void clearContent() {
-		((ItemStackHandlerAccessor) inventory).create$getStacks().clear();
+		inventory.clearContent();
 	}
 
 	@Override

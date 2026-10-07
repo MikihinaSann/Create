@@ -1,10 +1,13 @@
 package com.simibubi.create.compat.rei.category.animations;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Axis;
 import com.simibubi.create.AllBlocks;
-import com.simibubi.create.foundation.fluid.FluidRenderer;
+import net.createmod.catnip.platform.FabricCatnipServices;
 
 import net.createmod.catnip.gui.UIRenderHelper;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,14 +39,15 @@ public class AnimatedItemDrain extends AnimatedKinetics {
 			.scale(scale)
 			.render(graphics);
 
-		BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance()
-			.getBuilder());
+		ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(786432);
+		BufferSource buffer = MultiBufferSource.immediate(byteBufferBuilder);
 		UIRenderHelper.flipForGuiRender(matrixStack);
 		matrixStack.scale(scale, scale, scale);
 		float from = 2/16f;
 		float to = 1f - from;
-		FluidRenderer.renderFluidBox(fluid.getFluid(), fluid.getAmount(), from, from, from, to, 3/4f, to, buffer, matrixStack, LightTexture.FULL_BRIGHT, false, true, fluid.getTag());
+		FabricCatnipServices.FLUID_RENDERER.renderFluidBox(fluid.getVariant(), from, from, from, to, 3/4f, to, buffer, matrixStack, LightTexture.FULL_BRIGHT, false, true);
 		buffer.endBatch();
+		byteBufferBuilder.close();
 
 		matrixStack.popPose();
 	}

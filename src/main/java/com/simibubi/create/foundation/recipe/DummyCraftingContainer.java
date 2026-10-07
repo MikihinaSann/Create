@@ -2,6 +2,9 @@ package com.simibubi.create.foundation.recipe;
 
 import org.jetbrains.annotations.NotNull;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.player.StackedContents;
 import net.minecraft.world.inventory.TransientCraftingContainer;
@@ -13,6 +16,15 @@ public class DummyCraftingContainer extends TransientCraftingContainer {
 
 	public DummyCraftingContainer(NonNullList<ItemStack> stacks) {
 		super(null, 0, 0);
+		this.inv = stacks;
+	}
+
+	// fabric: snapshot a Storage<ItemVariant> (e.g. mid-transaction after simulated extraction)
+	public DummyCraftingContainer(Storage<ItemVariant> storage) {
+		super(null, 0, 0);
+		NonNullList<ItemStack> stacks = NonNullList.create();
+		for (StorageView<ItemVariant> view : storage.nonEmptyViews())
+			stacks.add(view.getResource().toStack());
 		this.inv = stacks;
 	}
 

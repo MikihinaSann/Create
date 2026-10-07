@@ -78,7 +78,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.material.PushReaction;
 
-import net.neoforged.neoforge.common.Tags.Blocks;
+import io.github.fabricators_of_create.porting_lib.tags.Tags.Blocks;
 
 public class BlockMovementChecksImpl {
 	private static final List<MovementNecessaryCheck> MOVEMENT_NECESSARY_CHECKS = new ArrayList<>();

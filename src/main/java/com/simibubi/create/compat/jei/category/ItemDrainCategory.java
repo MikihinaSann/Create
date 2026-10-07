@@ -1,6 +1,7 @@
 package com.simibubi.create.compat.jei.category;
 
 import java.util.function.Consumer;
+import net.minecraft.world.item.crafting.RecipeHolder;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

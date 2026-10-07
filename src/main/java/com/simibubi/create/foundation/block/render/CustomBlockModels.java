@@ -1,5 +1,6 @@
 package com.simibubi.create.foundation.block.render;
 
+import net.minecraft.world.level.block.Blocks;
 import java.util.IdentityHashMap;
 import java.util.Map;
 

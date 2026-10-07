@@ -2,6 +2,7 @@ package com.simibubi.create.content.kinetics.base;
 
 import org.jetbrains.annotations.Nullable;
 
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,11 +32,6 @@ public abstract class AbstractEncasedShaftBlock extends RotatedPillarKineticBloc
     }
 
 	@Override
-    public PushReaction getPistonPushReaction(@Nullable BlockState state) {
-        return PushReaction.NORMAL;
-    }
-
-    @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         if (context.getPlayer() != null && context.getPlayer()
                 .isShiftKeyDown())

@@ -9,7 +9,6 @@ import com.simibubi.create.foundation.utility.CreateLang;
 
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.nbt.NBTHelper;
-import net.createmod.catnip.outliner.Outliner;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -21,7 +20,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -38,9 +36,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
 public abstract class ClickToLinkBlockItem extends BlockItem {
 	public ClickToLinkBlockItem(Block pBlock, Properties pProperties) {
@@ -143,33 +138,6 @@ public abstract class ClickToLinkBlockItem extends BlockItem {
 		return useOn;
 	}
 
-	private static BlockPos lastShownPos = null;
-	private static AABB lastShownAABB = null;
-
-	@Environment(EnvType.CLIENT)
-	public static void clientTick() {
-		Player player = Minecraft.getInstance().player;
-		if (player == null)
-			return;
-		ItemStack heldItemMainhand = player.getMainHandItem();
-		if (!(heldItemMainhand.getItem() instanceof ClickToLinkBlockItem blockItem))
-			return;
-		if (!heldItemMainhand.has(AllDataComponents.CLICK_TO_LINK_DATA))
-			return;
-
-		//noinspection DataFlowIssue
-		BlockPos selectedPos = heldItemMainhand.get(AllDataComponents.CLICK_TO_LINK_DATA).selectedPos();
-
-		if (!selectedPos.equals(lastShownPos)) {
-			lastShownAABB = blockItem.getSelectionBounds(selectedPos);
-			lastShownPos = selectedPos;
-		}
-
-		Outliner.getInstance().showAABB("target", lastShownAABB)
-			.colored(0xffcb74)
-			.lineWidth(1 / 16f);
-	}
-
 	public abstract int getMaxDistanceFromSelection();
 
 	public abstract String getMessageTranslationKey();
@@ -182,14 +150,22 @@ public abstract class ClickToLinkBlockItem extends BlockItem {
 		return true;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public AABB getSelectionBounds(BlockPos pos) {
-		Level world = Minecraft.getInstance().level;
+		Level world = ClientAccess.level();
 		BlockState state = world.getBlockState(pos);
 		VoxelShape shape = state.getShape(world, pos);
 		return shape.isEmpty() ? new AABB(BlockPos.ZERO)
 			: shape.bounds()
 				.move(pos);
+	}
+
+	// fabric: lazily-loaded so the enclosing class verifies on a dedicated server;
+	// only ever invoked from client paths
+	@Environment(EnvType.CLIENT)
+	static class ClientAccess {
+		static Level level() {
+			return Minecraft.getInstance().level;
+		}
 	}
 
 	public record ClickToLinkData(BlockPos selectedPos, ResourceLocation selectedDim) {

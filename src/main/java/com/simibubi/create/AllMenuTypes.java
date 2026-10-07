@@ -28,14 +28,27 @@ import com.simibubi.create.content.schematics.table.SchematicTableMenu;
 import com.simibubi.create.content.schematics.table.SchematicTableScreen;
 import com.simibubi.create.content.trains.schedule.ScheduleMenu;
 import com.simibubi.create.content.trains.schedule.ScheduleScreen;
-import com.tterrag.registrate.builders.MenuBuilder;
+import com.simibubi.create.foundation.gui.menu.OpenMenuHelper;
 import com.tterrag.registrate.builders.MenuBuilder.ScreenFactory;
+import com.tterrag.registrate.fabric.EnvExecutor;
 import com.tterrag.registrate.util.entry.MenuEntry;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
+import io.github.fabricators_of_create.porting_lib.util.DeferredHolder;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 public class AllMenuTypes {
 
@@ -82,10 +95,23 @@ public class AllMenuTypes {
 		register("factory_panel_set_item", FactoryPanelSetItemMenu::new, () -> FactoryPanelSetItemScreen::new);
 
 	private static <C extends AbstractContainerMenu, S extends Screen & MenuAccess<C>> MenuEntry<C> register(
-			String name, MenuBuilder.ForgeMenuFactory<C> factory, NonNullSupplier<ScreenFactory<C, S>> screenFactory) {
-		return Create.registrate()
-			.menu(name, factory, screenFactory)
-			.register();
+			String name, MenuFactory<C> factory, NonNullSupplier<ScreenFactory<C, S>> screenFactory) {
+		AtomicReference<MenuType<C>> typeRef = new AtomicReference<>();
+		MenuType<C> type = new ExtendedScreenHandlerType<>(
+			(id, inv, data) -> factory.create(typeRef.get(), id, inv, data),
+			OpenMenuHelper.RAW_BUFFER_CODEC);
+		typeRef.set(type);
+		Registry.register(BuiltInRegistries.MENU, Create.asResource(name), type);
+		EnvExecutor.runWhenOn(EnvType.CLIENT,
+			() -> () -> MenuScreens.<C, S>register(type,
+				(menu, inv, title) -> screenFactory.get().create(menu, inv, title)));
+		return new MenuEntry<>(Create.registrate(),
+			DeferredHolder.create(Registries.MENU, Create.asResource(name)));
+	}
+
+	@FunctionalInterface
+	public interface MenuFactory<C extends AbstractContainerMenu> {
+		C create(MenuType<C> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData);
 	}
 
 	public static void register() {

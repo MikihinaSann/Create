@@ -49,6 +49,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import io.github.fabricators_of_create.porting_lib.mixin.accessors.common.accessor.LiquidBlockAccessor;
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
 public class FluidDrainingBehaviour extends FluidManipulationBehaviour {
 
@@ -170,7 +171,8 @@ public class FluidDrainingBehaviour extends FluidManipulationBehaviour {
 			} else if (blockState.getBlock() instanceof LiquidBlock flowingFluid) {
 				emptied = Blocks.AIR.defaultBlockState();
 				if (blockState.getValue(LiquidBlock.LEVEL) == 0)
-					fluid = flowingFluid.fluid;
+					fluid = blockState.getFluidState()
+						.getType();
 				else {
 					affectedArea = BBHelper.encapsulate(affectedArea, BoundingBox.fromCorners(currentPos, currentPos));
 					if (!blockEntity.isVirtual())

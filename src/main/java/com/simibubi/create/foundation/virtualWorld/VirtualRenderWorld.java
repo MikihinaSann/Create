@@ -55,7 +55,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.LevelTickAccess;
 
-import net.neoforged.neoforge.client.model.data.ModelData;
+import io.github.fabricators_of_create.porting_lib.models.data.ModelData;
 
 public class VirtualRenderWorld extends Level implements VisualizationLevel {
 	protected final Level level;
@@ -272,12 +272,8 @@ public class VirtualRenderWorld extends Level implements VisualizationLevel {
 		}
 	}
 
-	@Override
 	public ModelData getModelData(BlockPos pos) {
-		var blockEntity = getBlockEntity(pos);
-		if (blockEntity != null) {
-			return blockEntity.getModelData();
-		}
+		// fabric: no block-entity model data API; nothing provides it
 		return ModelData.EMPTY;
 	}
 
@@ -369,26 +365,6 @@ public class VirtualRenderWorld extends Level implements VisualizationLevel {
 	@Override
 	public PotionBrewing potionBrewing() {
 		return level.potionBrewing();
-	}
-
-	@Override
-	public void setDayTimeFraction(float v) {
-		level.setDayTimeFraction(v);
-	}
-
-	@Override
-	public void setDayTimePerTick(float v) {
-		level.setDayTimePerTick(v);
-	}
-
-	@Override
-	public float getDayTimeFraction() {
-		return level.getDayTimeFraction();
-	}
-
-	@Override
-	public float getDayTimePerTick() {
-		return level.getDayTimePerTick();
 	}
 
 	// ADDITIONAL OVERRRIDES

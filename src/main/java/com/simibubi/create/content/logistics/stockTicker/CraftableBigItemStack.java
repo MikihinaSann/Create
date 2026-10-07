@@ -2,6 +2,8 @@ package com.simibubi.create.content.logistics.stockTicker;
 
 import java.util.List;
 
+import com.simibubi.create.foundation.recipe.RecipeHelper;
+
 import com.simibubi.create.content.logistics.BigItemStack;
 
 import net.minecraft.world.item.ItemStack;
@@ -19,7 +21,7 @@ public class CraftableBigItemStack extends BigItemStack {
 	}
 
 	public List<Ingredient> getIngredients() {
-		return recipe.getIngredients();
+		return RecipeHelper.getIngredients(recipe);
 	}
 
 	public int getOutputCount(Level level) {

@@ -1,6 +1,7 @@
 package com.simibubi.create;
 
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 import com.simibubi.create.content.contraptions.ControlledContraptionEntity;
 import com.simibubi.create.content.contraptions.OrientedContraptionEntity;
 import com.simibubi.create.content.contraptions.actors.seat.SeatEntity;
@@ -82,9 +83,8 @@ public class AllEntityTypes {
 	private static <T extends Entity> CreateEntityBuilder<T, ?> contraption(String name, EntityFactory<T> factory,
 																			NonNullSupplier<NonNullFunction<EntityRendererProvider.Context, EntityRenderer<? super T>>> renderer, int range,
 																			int updateFrequency, boolean sendVelocity) {
-		return (CreateEntityBuilder<T, ?>) register(name, factory, renderer, MobCategory.MISC, range, updateFrequency, sendVelocity, true,
-			AbstractContraptionEntity::build)
-			.tag(EntityTypes.TELEPORTING_NOT_SUPPORTED);
+		return register(name, factory, renderer, MobCategory.MISC, range, updateFrequency, sendVelocity, true,
+			AbstractContraptionEntity::build);
 	}
 
 	private static <T extends Entity> CreateEntityBuilder<T, ?> register(String name, EntityFactory<T> factory,

@@ -1,6 +1,7 @@
 package com.simibubi.create;
 
 import java.util.LinkedList;
+import java.util.function.Supplier;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +15,7 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
 
-import net.neoforged.neoforge.registries.DeferredHolder;
+import io.github.fabricators_of_create.porting_lib.util.DeferredHolder;
 
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.ApiStatus.Internal;
@@ -61,8 +62,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import io.github.fabricators_of_create.porting_lib.util.DeferredRegister;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

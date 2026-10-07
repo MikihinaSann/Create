@@ -2,10 +2,9 @@ package com.simibubi.create.content.kinetics.deployer;
 
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllRecipeTypes;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
-
-import com.simibubi.create.content.processing.recipe.ItemApplicationRecipeParams;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -15,7 +14,6 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
-import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 
 public class ItemApplicationRecipe extends ProcessingRecipe<RecipeWrapper, ItemApplicationRecipeParams> {
 
@@ -28,7 +26,7 @@ public class ItemApplicationRecipe extends ProcessingRecipe<RecipeWrapper, ItemA
 	}
 
 	@Override
-	public boolean matches(Container inv, Level p_77569_2_) {
+	public boolean matches(RecipeWrapper inv, Level p_77569_2_) {
 		return getProcessedItem().test(inv.getItem(0)) && getRequiredHeldItem().test(inv.getItem(1));
 	}
 

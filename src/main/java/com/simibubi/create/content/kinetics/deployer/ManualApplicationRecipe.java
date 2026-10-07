@@ -1,6 +1,8 @@
 package com.simibubi.create.content.kinetics.deployer;
 
+import net.minecraft.world.entity.LivingEntity;
 import java.util.List;
+import net.minecraft.util.RandomSource;
 import java.util.Optional;
 
 import com.simibubi.create.AllBlocks;
@@ -16,7 +18,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.Container;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -47,8 +49,8 @@ public class ManualApplicationRecipe extends ItemApplicationRecipe {
 		if (blockState.isAir())
 			return InteractionResult.PASS;
 
-		RecipeType<Recipe<Container>> type = AllRecipeTypes.ITEM_APPLICATION.getType();
-		Optional<RecipeHolder<Recipe<Container>>> foundRecipe = level.getRecipeManager()
+		RecipeType<Recipe<RecipeWrapper>> type = AllRecipeTypes.ITEM_APPLICATION.getType();
+		Optional<RecipeHolder<Recipe<RecipeWrapper>>> foundRecipe = level.getRecipeManager()
 			.getAllRecipesFor(type)
 			.stream()
 			.filter(r -> {
@@ -82,9 +84,10 @@ public class ManualApplicationRecipe extends ItemApplicationRecipe {
 		boolean keepHeld = recipe.shouldKeepHeldItem() || creative;
 
 		if (!unbreakable && !keepHeld) {
-			if (heldItem.isDamageableItem())
+			if (heldItem.isDamageableItem()) {
 				heldItem.hurtAndBreak(1, player, LivingEntity.getSlotForHand(InteractionHand.MAIN_HAND));
-			else
+			} else {
+				ItemStack leftover = heldItem.getItem().getCraftingRemainingItem().getDefaultInstance();
 				heldItem.shrink(1);
 				if (heldItem.isEmpty()) {
 					player.setItemInHand(hand, leftover);

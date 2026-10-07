@@ -1,6 +1,7 @@
 package com.simibubi.create.content.logistics.packagePort.postbox;
 
-import java.lang.ref.WeakReference;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.minecraft.world.item.ItemStack;
 import java.util.List;
 
 import com.simibubi.create.AllBlockEntityTypes;
@@ -23,9 +24,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.BoneMealItem;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import java.lang.ref.WeakReference;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public class PostboxBlockEntity extends PackagePortBlockEntity {
 
@@ -45,12 +45,8 @@ public class PostboxBlockEntity extends PackagePortBlockEntity {
 			.startWithValue(0);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.PACKAGE_POSTBOX.get(),
-			(be, context) -> be.itemHandler
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.exposedInventory, AllBlockEntityTypes.PACKAGE_POSTBOX.get());
 	}
 
 	@Override
@@ -133,11 +129,6 @@ public class PostboxBlockEntity extends PackagePortBlockEntity {
 			return;
 		if (!station.connectedPorts.containsKey(worldPosition))
 			return;
-		GlobalPackagePort globalPackagePort = station.connectedPorts.get(worldPosition);
-		for (int i = 0; i < inventory.getSlotCount(); i++) {
-			globalPackagePort.offlineBuffer.setStackInSlot(i, inventory.getStackInSlot(i));
-			inventory.setStackInSlot(i, ItemStack.EMPTY);
-		}
 
 		GlobalPackagePort globalPackagePort = station.connectedPorts.get(worldPosition);
 		if (globalPackagePort == null)

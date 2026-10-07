@@ -2,12 +2,14 @@ package com.simibubi.create.content.kinetics.crafter;
 
 import static com.simibubi.create.content.kinetics.base.HorizontalKineticBlock.HORIZONTAL_FACING;
 
+import net.minecraft.world.item.Items;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
@@ -17,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.api.contraption.transformable.TransformableBlockEntity;
 import com.simibubi.create.content.contraptions.StructureTransform;
@@ -56,6 +59,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
 public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity, TransformableBlockEntity {
 
@@ -122,15 +126,13 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements 
 		wasPoweredBefore = true;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.MECHANICAL_CRAFTER.get(),
-				(be, context) -> be.getInvCapability()
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.getInvCapability(), AllBlockEntityTypes.MECHANICAL_CRAFTER.get());
 	}
 
-	protected IItemHandler getInvCapability() {
+	private Storage<ItemVariant> invCap;
+
+	protected Storage<ItemVariant> getInvCapability() {
 		if (invCap == null) {
 			invCap = input.getItemHandler(getLevel(), getBlockPos());
 		}
@@ -144,7 +146,7 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements 
 		//noinspection deprecation
 		connectivity = new EdgeInteractionBehaviour(this, ConnectedInputHandler::toggleConnection)
 			.connectivity(ConnectedInputHandler::shouldConnect)
-			.require(item -> item.builtInRegistryHolder().is(Items.TOOLS_WRENCH));
+			.require(item -> item.builtInRegistryHolder().is(AllItemTags.WRENCH.tag));
 		behaviours.add(inserting);
 		behaviours.add(connectivity);
 		registerAwardables(behaviours, AllAdvancements.CRAFTER, AllAdvancements.CRAFTER_LAZY);

@@ -77,7 +77,7 @@ public abstract class EmiSequencedAssemblySubCategory {
 		@Override
 		@NotNull
 		public EmiIngredient getAppliedIngredient(SequencedRecipe<?> recipe) {
-			FluidStack fluid = recipe.getRecipe().getFluidIngredients().get(0).getMatchingFluidStacks().get(0);
+			FluidStack fluid = recipe.getRecipe().getFluidIngredients().get(0).getFluids().get(0);
 			return CreateEmiRecipe.fluidStack(fluid);
 		}
 
@@ -90,7 +90,7 @@ public abstract class EmiSequencedAssemblySubCategory {
 				matrices.translate(3, 54, 0);
 				matrices.scale(scale, scale, scale);
 				CreateEmiAnimations.renderSpout(graphics, index, recipe.getRecipe()
-					.getFluidIngredients().get(0).getMatchingFluidStacks());
+					.getFluidIngredients().get(0).getFluids());
 			}).tooltip(getTooltip(recipe, index));
 		}
 	}

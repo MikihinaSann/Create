@@ -1,6 +1,8 @@
 package com.simibubi.create.content.equipment.wrench;
 
 import javax.annotation.Nonnull;
+import java.util.function.Consumer;
+import org.jetbrains.annotations.NotNull;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -34,11 +36,6 @@ public class WrenchItem extends Item {
 		super(properties);
 	}
 
-	@Override
-	@Environment(EnvType.CLIENT)
-	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-		consumer.accept(SimpleCustomRenderer.create(this, new WrenchItemRenderer()));
-	}
 
 	@NotNull
 	@Override

@@ -1,5 +1,7 @@
 package com.simibubi.create.foundation.networking;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import com.simibubi.create.foundation.blockEntity.SyncedBlockEntity;
 
 import net.createmod.catnip.net.base.ClientboundPacketPayload;

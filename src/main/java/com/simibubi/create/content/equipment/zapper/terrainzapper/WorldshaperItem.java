@@ -33,11 +33,6 @@ public class WorldshaperItem extends ZapperItem {
 		super(properties);
 	}
 
-	@Override
-	@Environment(EnvType.CLIENT)
-	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-		consumer.accept(SimpleCustomRenderer.create(this, new WorldshaperItemRenderer()));
-	}
 
 	@Override
 	@Environment(value = EnvType.CLIENT)

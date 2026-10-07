@@ -36,7 +36,10 @@ import com.simibubi.create.content.processing.sequenced.SequencedAssemblyRecipeS
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import com.simibubi.create.foundation.recipe.ItemCopyingRecipe;
 
+import io.github.fabricators_of_create.porting_lib.util.Constants;
+
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
@@ -118,7 +121,8 @@ public enum AllRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 
 	@Internal
 	public static void register() {
-		ShapedRecipeUtil.setCraftingSize(9, 9);
+		Constants.Crafting.WIDTH = 9;
+		Constants.Crafting.HEIGHT = 9;
 		// fabric: just load the class
 	}
 
@@ -166,18 +170,6 @@ public enum AllRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 		};
 	}
 
-	public <T extends ProcessingRecipe<?>> MapCodec<T> processingCodec() {
-		if (!isProcessingRecipe)
-			throw new AssertionError("AllRecipeTypes#processingCodec called on " + name() + ", which is not a processing recipe");
-		if (this == DEPLOYING || this == ITEM_APPLICATION)
-			return ItemApplicationRecipe.codec(this);
-		return ProcessingRecipeSerializer.codec(this);
-	}
-
-	private static class Registers {
-		private static final DeferredRegister<RecipeSerializer<?>> SERIALIZER_REGISTER = DeferredRegister.create(BuiltInRegistries.RECIPE_SERIALIZER, Create.ID);
-		private static final DeferredRegister<RecipeType<?>> TYPE_REGISTER = DeferredRegister.create(Registries.RECIPE_TYPE, Create.ID);
-	}
 
 
 }

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
+import com.simibubi.create.foundation.item.ItemHelper;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;

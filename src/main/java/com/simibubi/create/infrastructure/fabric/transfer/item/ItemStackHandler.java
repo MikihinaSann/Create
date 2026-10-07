@@ -69,6 +69,8 @@ public class ItemStackHandler implements SlottedStackStorage {
 		Iterator<Slot> itr = getInsertableSlotsFor(resource);
 		while (itr.hasNext()) {
 			Slot slot = itr.next();
+			if (!isItemValid(slot.index, resource.toStack(1)))
+				continue;
 			inserted += slot.insert(resource, maxAmount - inserted, transaction);
 			if (inserted >= maxAmount)
 				break;
@@ -138,6 +140,18 @@ public class ItemStackHandler implements SlottedStackStorage {
 
 	public void setStackInSlot(int slot, ItemStack stack) {
 		this.getInternalSlot(slot).setNewStack(stack);
+	}
+
+	public void clearContent() {
+		for (int i = 0; i < this.slots.size(); i++)
+			setStackInSlot(i, ItemStack.EMPTY);
+	}
+
+	public List<ItemStack> getStacks() {
+		List<ItemStack> stacks = new ArrayList<>(this.slots.size());
+		for (Slot slot : this.slots)
+			stacks.add(slot.getStack());
+		return stacks;
 	}
 
 	public ItemVariant getVariantInSlot(int slot) {

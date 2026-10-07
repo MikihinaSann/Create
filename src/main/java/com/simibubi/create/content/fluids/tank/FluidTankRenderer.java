@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidTank;
+import net.createmod.catnip.platform.FabricCatnipServices;
 
 public class FluidTankRenderer extends SafeBlockEntityRenderer<FluidTankBlockEntity> {
 
@@ -75,7 +76,7 @@ public class FluidTankRenderer extends SafeBlockEntityRenderer<FluidTankBlockEnt
 
 		ms.pushPose();
 		ms.translate(0, clampedLevel - totalHeight, 0);
-		NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(fluidStack, xMin, yMin, zMin, xMax, yMax, zMax, buffer,
+		FabricCatnipServices.FLUID_RENDERER.renderFluidBox(fluidStack.getVariant(), xMin, yMin, zMin, xMax, yMax, zMax, buffer,
 			ms, light, false, true);
 		ms.popPose();
 	}

@@ -1,6 +1,7 @@
 package com.simibubi.create.content.kinetics.deployer;
 
 import java.util.List;
+import com.simibubi.create.compat.recipeViewerCommon.SequencedAssemblySubCategoryType;
 import java.util.Set;
 
 import com.simibubi.create.AllBlocks;
@@ -8,6 +9,7 @@ import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.compat.jei.category.sequencedAssembly.SequencedAssemblySubCategory;
 import com.simibubi.create.content.processing.sequenced.IAssemblyRecipe;
+import com.simibubi.create.foundation.recipe.RecipeHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
 
 import net.fabricmc.api.EnvType;
@@ -41,7 +43,7 @@ public class DeployerApplicationRecipe extends ItemApplicationRecipe implements 
 				sandpaperRecipe.id().getPath() + "_using_deployer"
 		);
 		DeployerApplicationRecipe recipe = new ItemApplicationRecipe.Builder<>(DeployerApplicationRecipe::new, id)
-				.require(sandpaperRecipe.value().getIngredients()
+				.require(RecipeHelper.getIngredients(sandpaperRecipe.value())
 						.get(0))
 						.require(AllItemTags.SANDPAPER.tag)
 						.output(sandpaperRecipe.value().getResultItem(Minecraft.getInstance().level.registryAccess()))

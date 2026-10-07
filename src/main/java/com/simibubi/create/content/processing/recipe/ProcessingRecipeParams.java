@@ -17,8 +17,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Ingredient;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
+import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 
 public class ProcessingRecipeParams {
 	public static MapCodec<ProcessingRecipeParams> CODEC = codec(ProcessingRecipeParams::new);

@@ -26,7 +26,7 @@ public class FilterItemStack {
 	private FluidStack filterFluidStack;
 
 	public static FilterItemStack of(ItemStack filter) {
-		if (!filter.isComponentsPatchEmpty() && filter.getItem() instanceof FilterItem item) {
+		if (!filter.getComponentsPatch().isEmpty() && filter.getItem() instanceof FilterItem item) {
 			trimFilterComponents(filter);
 			return item.makeStackWrapper(filter);
 		}
@@ -129,7 +129,7 @@ public class FilterItemStack {
 
 			containedItems = new ArrayList<>();
 			ItemStackHandler items = ((ListFilterItem) filter.getItem()).getFilterItemHandler(filter);
-			for (int i = 0; i < items.getSlots(); i++) {
+			for (int i = 0; i < items.getSlotCount(); i++) {
 				ItemStack stackInSlot = items.getStackInSlot(i);
 				if (!stackInSlot.isEmpty())
 					containedItems.add(FilterItemStack.of(stackInSlot));

@@ -1,6 +1,9 @@
 package com.simibubi.create.foundation.item;
 
 import java.util.ArrayList;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -20,7 +23,6 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.simibubi.create.content.logistics.box.PackageEntity;
 import com.simibubi.create.foundation.block.IBE;
-import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 
 import net.createmod.catnip.data.Pair;
 import net.minecraft.core.BlockPos;
@@ -37,15 +39,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
-import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
 
 public class ItemHelper {
 
@@ -110,17 +105,21 @@ public class ItemHelper {
 	public static int calcRedstoneFromInventory(@Nullable Storage<ItemVariant> inv) {
 		if (inv == null)
 			return 0;
+		if (!(inv instanceof SlottedStorage<ItemVariant> slotted))
+			return 0;
 		int i = 0;
 		float f = 0.0F;
-		int totalSlots = 0;
+		int totalSlots = slotted.getSlotCount();
 
-		for (int j = 0; j < inv.getSlots(); ++j) {
-			int slotLimit = inv.getSlotLimit(j);
+		for (int j = 0; j < slotted.getSlotCount(); ++j) {
+			SingleSlotStorage<ItemVariant> slot = slotted.getSlot(j);
+			int slotLimit = (int) Math.min(slot.getCapacity(), Integer.MAX_VALUE);
 			if (slotLimit == 0) {
 				totalSlots--;
 				continue;
 			}
-			ItemStack itemstack = inv.getStackInSlot(j);
+			ItemStack itemstack = slot.getResource()
+				.toStack((int) Math.min(slot.getAmount(), Integer.MAX_VALUE));
 			if (!itemstack.isEmpty()) {
 				f += (float) itemstack.getCount() / (float) Math.min(slotLimit, itemstack.getMaxStackSize());
 				++i;
@@ -203,25 +202,40 @@ public class ItemHelper {
 		ItemVariant extracting = null;
 		List<ItemVariant> otherTargets = null;
 
-		Extraction:
-		do {
-			extracting = ItemStack.EMPTY;
-
-			for (int slot = 0; slot < inv.getSlots(); slot++) {
-				ItemStack slotStack = inv.getStackInSlot(slot);
-				if (slotStack.isEmpty())
-					continue;
-				int amountToExtractFromThisSlot =
-					Math.min(maxExtractionCount - extracting.getCount(), slotStack.getMaxStackSize());
-				ItemStack stack = inv.extractItem(slot, amountToExtractFromThisSlot, true);
-
-				if (stack.isEmpty())
-					continue;
-				if (!test.test(stack))
-					continue;
-				if (!extracting.isEmpty() && !canItemStackAmountsStack(stack, extracting)) {
-					potentialOtherMatch = true;
-					continue;
+		if (inv.supportsExtraction()) {
+			try (Transaction t = Transaction.openOuter()) {
+				for (StorageView<ItemVariant> view : inv.nonEmptyViews()) {
+					ItemVariant contained = view.getResource();
+					int maxStackSize = contained.getItem().getDefaultMaxStackSize();
+					// amount stored, amount needed, or max size, whichever is lowest.
+					int amountToExtractFromThisSlot = Math.min(truncateLong(view.getAmount()), Math.min(amount - extracted, maxStackSize));
+					if (!test.test(contained.toStack(amountToExtractFromThisSlot)))
+						continue;
+					if (extracting == null) {
+						extracting = contained; // we found a target
+					}
+					boolean sameType = extracting.equals(contained);
+					if (sameType && maxStackSize == extracted) {
+						// stack is maxed out, skip
+						continue;
+					}
+					if (!sameType) {
+						// multiple types passed the test
+						if (otherTargets == null) {
+							otherTargets = new ArrayList<>();
+						}
+						otherTargets.add(contained);
+						continue;
+					}
+					ItemVariant toExtract = extracting;
+					long actualExtracted = view.extract(toExtract, amountToExtractFromThisSlot, t);
+					if (actualExtracted == 0) continue;
+					extracted += actualExtracted;
+					if (extracted == amount) {
+						if (!simulate)
+							t.commit();
+						return toExtract.toStack(extracted);
+					}
 				}
 
 				// if the code reaches this point, we've extracted as much as possible, and it isn't enough.
@@ -297,6 +311,10 @@ public class ItemHelper {
 		return ItemStack.isSameItemSameComponents(a, b) && a.getCount() + b.getCount() <= a.getMaxStackSize();
 	}
 
+	public static boolean canItemStacksStack(ItemStack a, ItemStack b) {
+		return !a.isEmpty() && !b.isEmpty() && ItemStack.isSameItemSameComponents(a, b);
+	}
+
 	public static int truncateLong(long l) {
 		if (l > Integer.MAX_VALUE) {
 			return Integer.MAX_VALUE;
@@ -325,7 +343,7 @@ public class ItemHelper {
 	}
 
 	public static ItemContainerContents containerContentsFromHandler(ItemStackHandler handler) {
-		return ItemContainerContents.fromItems(((ItemStackHandlerAccessor) handler).create$getStacks());
+		return ItemContainerContents.fromItems(handler.getStacks());
 	}
 
 	public static ItemStack limitCountToMaxStackSize(ItemStack stack, boolean simulate) {
@@ -344,11 +362,11 @@ public class ItemHelper {
 			throw new IllegalArgumentException("Slot count mismatch");
 		}
 
-		for (int slot = to.getSlots() - 1; slot >= 0; slot--) {
+		for (int slot = to.getSlotCount() - 1; slot >= 0; slot--) {
 			to.setStackInSlot(slot, ItemStack.EMPTY);
 		}
 
-		for (int i = 0; i < from.getSlots(); i++) {
+		for (int i = 0; i < from.getSlotCount(); i++) {
 			to.setStackInSlot(i, from.getStackInSlot(i).copy());
 		}
 	}
@@ -372,5 +390,47 @@ public class ItemHelper {
 			}
 		}
 		return stacks;
+	}
+
+	/** Equivalent to Forge's {@code ItemHelper.copyStackWithSize}. */
+	public static ItemStack copyStackWithSize(ItemStack stack, int size) {
+		return stack.copyWithCount(size);
+	}
+
+	/**
+	 * Insert a stack into an item storage, preferring slots that already contain
+	 * the item, then empty slots. Equivalent to Forge's
+	 * {@code ItemHelper.insertItemStacked}.
+	 *
+	 * @return the remainder that could not be inserted
+	 */
+	public static ItemStack insertItemStacked(Storage<ItemVariant> storage, ItemStack stack, boolean simulate) {
+		if (stack.isEmpty())
+			return ItemStack.EMPTY;
+		ItemVariant variant = ItemVariant.of(stack);
+		long remaining = stack.getCount();
+		try (Transaction tx = Transaction.openOuter()) {
+			if (storage instanceof SlottedStorage<ItemVariant> slotted) {
+				for (SingleSlotStorage<ItemVariant> slot : slotted.getSlots()) {
+					if (remaining <= 0)
+						break;
+					if (!variant.equals(slot.getResource()))
+						continue;
+					remaining -= slot.insert(variant, remaining, tx);
+				}
+				for (SingleSlotStorage<ItemVariant> slot : slotted.getSlots()) {
+					if (remaining <= 0)
+						break;
+					if (!slot.isResourceBlank())
+						continue;
+					remaining -= slot.insert(variant, remaining, tx);
+				}
+			} else {
+				remaining -= storage.insert(variant, remaining, tx);
+			}
+			if (!simulate)
+				tx.commit();
+		}
+		return remaining <= 0 ? ItemStack.EMPTY : stack.copyWithCount((int) remaining);
 	}
 }

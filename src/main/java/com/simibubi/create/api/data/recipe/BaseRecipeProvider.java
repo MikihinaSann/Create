@@ -6,10 +6,11 @@ import java.util.concurrent.CompletableFuture;
 
 import com.simibubi.create.Create;
 
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -18,12 +19,12 @@ import net.minecraft.resources.ResourceLocation;
  * a processing recipe type and want to use Create's helpers.
  * For processing recipes extend {@link StandardProcessingRecipeGen}.
  */
-public abstract class BaseRecipeProvider extends RecipeProvider {
+public abstract class BaseRecipeProvider extends FabricRecipeProvider {
 	protected final String modid;
 	protected final List<GeneratedRecipe> all = new ArrayList<>();
 
 	public BaseRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries, String defaultNamespace) {
-		super(output, registries);
+		super((FabricDataOutput) output, registries);
 		this.modid = defaultNamespace;
 	}
 

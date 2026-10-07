@@ -1,5 +1,6 @@
 package com.simibubi.create.content.contraptions.mounted;
 
+import net.minecraft.world.level.material.PushReaction;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,7 +78,7 @@ public class CartAssemblerBlock extends BaseRailBlock
 	public static final MapCodec<CartAssemblerBlock> CODEC = simpleCodec(CartAssemblerBlock::new);
 
 	public CartAssemblerBlock(Properties properties) {
-		super(true, properties);
+		super(true, properties.pushReaction(PushReaction.BLOCK));
 		registerDefaultState(defaultBlockState().setValue(POWERED, false)
 			.setValue(BACKWARDS, false)
 			.setValue(RAIL_TYPE, CartAssembleRailType.POWERED_RAIL)
@@ -233,12 +234,6 @@ public class CartAssemblerBlock extends BaseRailBlock
 				return AllShapes.CART_ASSEMBLER_PLAYER_COLLISION.get(getRailAxis(state));
 		}
 		return Shapes.block();
-	}
-
-	@Override
-	@NotNull
-	public PushReaction getPistonPushReaction(@NotNull BlockState state) {
-		return PushReaction.BLOCK;
 	}
 
 	@Override

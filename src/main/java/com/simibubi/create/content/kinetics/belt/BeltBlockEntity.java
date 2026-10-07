@@ -1,11 +1,12 @@
 package com.simibubi.create.content.kinetics.belt;
 
 import static com.simibubi.create.content.kinetics.belt.BeltPart.MIDDLE;
+import java.util.ArrayList;
 import static com.simibubi.create.content.kinetics.belt.BeltSlope.HORIZONTAL;
 import static net.minecraft.core.Direction.AxisDirection.NEGATIVE;
 import static net.minecraft.core.Direction.AxisDirection.POSITIVE;
 
-import java.util.ArrayList;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,18 +87,14 @@ public class BeltBlockEntity extends KineticBlockEntity implements SidedStorageB
 		color = Optional.empty();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.BELT.get(),
-				(be, context) -> {
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> {
 						if (!BeltBlock.canTransportObjects(be.getBlockState()))
 							return null;
 						if (!be.isRemoved() && be.itemHandler == null)
 							be.initializeItemHandler();
 						return be.itemHandler;
-				}
-		);
+				}, AllBlockEntityTypes.BELT.get());
 	}
 
 	@Override

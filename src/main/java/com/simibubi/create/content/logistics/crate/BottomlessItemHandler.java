@@ -6,31 +6,16 @@ import java.util.function.Supplier;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerSlot;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
-
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
-
-import net.minecraft.nbt.CompoundTag;
-
-import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
-
-import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerSlot;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -60,19 +45,13 @@ public class BottomlessItemHandler extends ItemStackHandler implements SingleSlo
 		if (!resource.matches(stack))
 			return 0;
 		if (!stack.isEmpty())
-			return stack.copyWithCount(stack.getMaxStackSize());
-		return stack;
+			return Math.min(stack.getMaxStackSize(), maxAmount);
+		return 0;
 	}
 
 	protected ItemStack getStack() {
 		ItemStack stack = suppliedItemStack.get();
-		if (slot == 1)
-			return ItemStack.EMPTY;
-		if (stack == null)
-			return ItemStack.EMPTY;
-		if (!stack.isEmpty())
-			return stack.copyWithCount(Math.min(stack.getMaxStackSize(), amount));
-		return ItemStack.EMPTY;
+		return stack == null || stack.isEmpty() ? ItemStack.EMPTY : stack;
 	}
 
 	@Override
@@ -134,12 +113,6 @@ public class BottomlessItemHandler extends ItemStackHandler implements SingleSlo
 
 		@Override
 		protected void setStack(ItemStack stack) {
-		}
-
-		@Override
-		@Nullable
-		public CompoundTag save() {
-			return null;
 		}
 
 		@Override

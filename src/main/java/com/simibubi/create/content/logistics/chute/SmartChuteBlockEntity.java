@@ -1,5 +1,6 @@
 package com.simibubi.create.content.logistics.chute;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.List;
 
 import com.simibubi.create.AllBlockEntityTypes;
@@ -14,8 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public class SmartChuteBlockEntity extends ChuteBlockEntity implements Clearable {
 	FilteringBehaviour filtering;
@@ -24,12 +23,8 @@ public class SmartChuteBlockEntity extends ChuteBlockEntity implements Clearable
 		super(type, pos, state);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.SMART_CHUTE.get(),
-			(be, context) -> be.itemHandler
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.itemHandler, AllBlockEntityTypes.SMART_CHUTE.get());
 	}
 
 	@Override

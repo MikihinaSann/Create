@@ -65,7 +65,7 @@ public class ItemThresholdCondition extends CargoThresholdCondition {
 					continue;
 
 				if (stacks)
-					foundItems += stackInSlot.getCount() == stackInSlot.getMaxStackSize() ? 1 : 0;
+					foundItems += view.getAmount() >= view.getCapacity() ? 1 : 0;
 				else
 					foundItems += view.getAmount();
 			}

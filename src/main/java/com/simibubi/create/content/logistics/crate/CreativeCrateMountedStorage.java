@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.Codec;
 import com.simibubi.create.AllMountedStorageTypes;
+import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorage;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 
@@ -66,6 +67,11 @@ public class CreativeCrateMountedStorage extends MountedItemStorage implements S
 	}
 
 	@Override
+	public boolean isItemValid(int slot, ItemStack stack) {
+		return true;
+	}
+
+	@Override
 	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		return maxAmount;
 	}
@@ -98,6 +104,11 @@ public class CreativeCrateMountedStorage extends MountedItemStorage implements S
 	@Override
 	public long getCapacity() {
 		return Long.MAX_VALUE;
+	}
+
+	@Override
+	public int getSlotCount() {
+		return 1;
 	}
 
 	@Override

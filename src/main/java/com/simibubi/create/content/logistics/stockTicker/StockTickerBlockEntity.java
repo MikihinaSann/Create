@@ -1,5 +1,6 @@
 package com.simibubi.create.content.logistics.stockTicker;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,7 +21,7 @@ import com.simibubi.create.content.logistics.filter.FilterItem;
 import com.simibubi.create.content.logistics.filter.FilterItemStack;
 import com.simibubi.create.content.logistics.packager.IdentifiedInventory;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
-import com.simibubi.create.content.logistics.packager.fabric.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBehaviour.RequestType;
 import com.simibubi.create.content.logistics.packagerLink.WiFiParticle;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
@@ -28,7 +29,6 @@ import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.item.SmartInventory;
 import com.simibubi.create.foundation.utility.CreateLang;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.platform.CatnipServices;
@@ -83,20 +83,8 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 		hiddenCategoriesByPlayer = new HashMap<>();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.STOCK_TICKER.get(),
-			(be, context) -> be.receivedPayments
-		);
-
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-				PeripheralCapability.get(),
-				AllBlockEntityTypes.STOCK_TICKER.get(),
-				(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
-		}
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.receivedPayments, AllBlockEntityTypes.STOCK_TICKER.get());
 	}
 
 	@Override
@@ -116,7 +104,7 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 		CatnipServices.NETWORK.sendToServer(new LogisticalStockRequestPacket(worldPosition));
 	}
 
-	public IItemHandler getReceivedPaymentsHandler() {
+	public Storage<ItemVariant> getReceivedPaymentsHandler() {
 		return receivedPayments;
 	}
 
@@ -282,8 +270,6 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 	public void clearContent() {
 		categories.clear();
 		receivedPayments.clearContent();
-	}
-
 	}
 
 	@Override

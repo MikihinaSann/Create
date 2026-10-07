@@ -8,7 +8,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import com.simibubi.create.foundation.virtualWorld.VirtualRenderWorld;
+
+import io.github.fabricators_of_create.porting_lib.models.data.ModelData;
 
 public class WrappedBlockAndTintGetter implements BlockAndTintGetter {
 	protected final BlockAndTintGetter wrapped;
@@ -57,9 +59,10 @@ public class WrappedBlockAndTintGetter implements BlockAndTintGetter {
 		return wrapped.getBlockTint(pBlockPos, pColorResolver);
 	}
 	
-	@Override
 	public ModelData getModelData(BlockPos pPos) {
-		return wrapped.getModelData(pPos);
+		if (wrapped instanceof VirtualRenderWorld virtualWorld)
+			return virtualWorld.getModelData(pPos);
+		return ModelData.EMPTY;
 	}
 	
 }

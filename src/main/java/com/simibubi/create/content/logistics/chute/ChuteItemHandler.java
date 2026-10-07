@@ -1,6 +1,8 @@
 package com.simibubi.create.content.logistics.chute;
 
 import com.simibubi.create.foundation.item.ItemHelper;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage;
@@ -34,22 +36,12 @@ public class ChuteItemHandler extends SingleVariantStorage<ItemVariant> {
 
 	@Override
 	protected long getCapacity(ItemVariant variant) {
-		return Math.min(64, variant.getItem().getMaxStackSize());
+		return Math.min(64, variant.getItem().getDefaultMaxStackSize());
 	}
 
 	@Override
 	protected ItemVariant getBlankVariant() {
 		return ItemVariant.blank();
-	}
-
-	@Override
-	public int getSlotLimit(int slot) {
-		return getStackInSlot(slot).getOrDefault(DataComponents.MAX_STACK_SIZE, 64);
-	}
-
-	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
-		return true;
 	}
 
 }

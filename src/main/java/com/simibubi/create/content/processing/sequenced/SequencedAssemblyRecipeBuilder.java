@@ -14,7 +14,7 @@ import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Builder;
 
-import net.fabricmc.fabric.api.resource.conditions.v1.ConditionJsonProvider;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceCondition;
 
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -25,14 +25,14 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.ItemLike;
 
-import io.github.fabricators_of_create.porting_lib.conditions.ICondition;
+import com.simibubi.create.foundation.data.recipe.ConditionalRecipeOutput;
 
 
 public class SequencedAssemblyRecipeBuilder {
 
 	private ResourceLocation id;
 	private SequencedAssemblyRecipe recipe;
-	protected List<ConditionJsonProvider> recipeConditions;
+	protected List<ResourceCondition> recipeConditions;
 
 	public SequencedAssemblyRecipeBuilder(ResourceLocation id) {
 		this.id = id;
@@ -108,6 +108,8 @@ public class SequencedAssemblyRecipeBuilder {
 		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(holder.id().getNamespace(),
 				AllRecipeTypes.SEQUENCED_ASSEMBLY.getId().getPath() + "/" + holder.id().getPath());
 
-		consumer.accept(id, holder.value(), null, recipeConditions.toArray(new ICondition[0]));
+		RecipeOutput conditionalOutput = recipeConditions.isEmpty() ? consumer
+			: ConditionalRecipeOutput.wrap(consumer, recipeConditions.toArray(new ResourceCondition[0]));
+		conditionalOutput.accept(id, holder.value(), null);
 	}
 }

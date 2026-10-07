@@ -57,3 +57,4 @@ local.properties
 .gitmodules
 Ponder
 Ponder/
+/.merge_tmp

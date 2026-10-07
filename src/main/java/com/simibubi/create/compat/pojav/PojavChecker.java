@@ -9,8 +9,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
 
-import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 
 /**
  * Mobile devices have low quality graphics drivers that cause visual issues.
@@ -60,14 +59,12 @@ public class PojavChecker {
 		if (!IS_PRESENT)
 			return;
 
-		NeoForge.EVENT_BUS.addListener(PojavChecker::onScreenInit);
-	}
-
-	public static void onScreenInit(ScreenEvent.Init.Post event) {
-		if (!screenShown && event.getScreen() instanceof TitleScreen titleScreen) {
-			Minecraft.getInstance().setScreen(new PojavWarningScreen(titleScreen));
-			screenShown = true;
-		}
+		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+			if (!screenShown && screen instanceof TitleScreen titleScreen) {
+				Minecraft.getInstance().setScreen(new PojavWarningScreen(titleScreen));
+				screenShown = true;
+			}
+		});
 	}
 
 	private static boolean isKnownAndroidPathFragment(String path) {

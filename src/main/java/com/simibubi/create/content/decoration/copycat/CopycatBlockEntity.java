@@ -3,6 +3,7 @@ package com.simibubi.create.content.decoration.copycat;
 import java.util.List;
 
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.api.contraption.transformable.TransformableBlockEntity;
 import com.simibubi.create.api.schematic.nbt.PartialSafeNBT;
 import com.simibubi.create.api.schematic.requirement.SpecialBlockEntityItemRequirement;
@@ -37,7 +38,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 
 public class CopycatBlockEntity extends SmartBlockEntity
-	implements SpecialBlockEntityItemRequirement, TransformableBlockEntity, PartialSafeNBT, RenderDataBlockEntity {
+	implements SpecialBlockEntityItemRequirement, TransformableBlockEntity, PartialSafeNBT, RenderDataBlockEntity, Clearable {
 
 	private BlockState material = AllBlocks.COPYCAT_BASE.getDefaultState();
 	private ItemStack consumedItem = ItemStack.EMPTY;
@@ -122,11 +123,11 @@ public class CopycatBlockEntity extends SmartBlockEntity
 	}
 
 	private void updateLight() {
-		if (level != null) {
-			AuxiliaryLightManager lightManager = level.getAuxLightManager(getBlockPos());
-			if (lightManager != null)
-				lightManager.setLightAt(getBlockPos(), material.getLightEmission(level, getBlockPos()));
-		}
+		// fabric: no auxiliary light api; vanilla light engine handles block light
+		if (level != null)
+			level.getChunkSource()
+				.getLightEngine()
+				.checkBlock(getBlockPos());
 	}
 
 	@Override

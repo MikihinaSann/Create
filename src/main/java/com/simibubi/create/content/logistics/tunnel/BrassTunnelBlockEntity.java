@@ -1,5 +1,6 @@
 package com.simibubi.create.content.logistics.tunnel;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -8,7 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.annotation.Nullable;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -53,6 +53,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -126,12 +127,8 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 		syncedOutputActive = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.BRASS_TUNNEL.get(),
-				(be, context) -> be.tunnelCapability
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.tunnelCapability, AllBlockEntityTypes.BRASS_TUNNEL.get());
 	}
 
 	@Override

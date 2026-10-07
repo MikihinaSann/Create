@@ -1,6 +1,7 @@
 package com.simibubi.create.content.trains.schedule;
 
 import java.util.ArrayList;
+import com.simibubi.create.foundation.gui.ScreenWithStencils;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -300,7 +301,7 @@ public class ScheduleScreen extends AbstractSimiContainerScreen<ScheduleMenu> im
 
 		editorSubWidgets.reset();
 		field.initConfigurationWidgets(editorSubWidgets.newLineBuilder(
-			font, getGuiLeft() + 77, getGuiTop() + 92
+			font, leftPos + 77, topPos + 92
 		).speechBubble());
 		editorSubWidgets.load(field.getData());
 
@@ -898,7 +899,7 @@ public class ScheduleScreen extends AbstractSimiContainerScreen<ScheduleMenu> im
 			return super.keyPressed(pKeyCode, pScanCode, pModifiers);
 		InputConstants.Key mouseKey = InputConstants.getKey(pKeyCode, pScanCode);
 		boolean hitEnter = getFocused() instanceof EditBox && (pKeyCode == 257 || pKeyCode == 335);
-		boolean hitE = getFocused() == null || minecraft.options.keyInventory.isActiveAndMatches(mouseKey);
+		boolean hitE = getFocused() == null || minecraft.options.keyInventory.matches(pKeyCode, pScanCode);
 		if (hitEnter) {
 			onEditorClose.accept(true);
 			stopEditing();
@@ -1067,8 +1068,8 @@ public class ScheduleScreen extends AbstractSimiContainerScreen<ScheduleMenu> im
 		}
 
 		matrices.pushPose();
-		matrices.translate(0, getGuiTop() + 87, 0);
-		editorSubWidgets.renderBg(getGuiLeft() + 77, graphics);
+		matrices.translate(0, topPos + 87, 0);
+		editorSubWidgets.renderBg(leftPos + 77, graphics);
 		matrices.popPose();
 
 		matrices.popPose();

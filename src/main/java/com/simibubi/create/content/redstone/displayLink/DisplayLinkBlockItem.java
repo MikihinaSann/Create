@@ -3,17 +3,10 @@ package com.simibubi.create.content.redstone.displayLink;
 import com.simibubi.create.api.behaviour.display.DisplayTarget;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
 public class DisplayLinkBlockItem extends ClickToLinkBlockItem {
 
@@ -21,9 +14,8 @@ public class DisplayLinkBlockItem extends ClickToLinkBlockItem {
 		super(pBlock, pProperties);
 	}
 
-	@Environment(EnvType.CLIENT)
 	public AABB getSelectionBounds(BlockPos pos) {
-		Level world = Minecraft.getInstance().level;
+		Level world = ClientAccess.level();
 		DisplayTarget target = DisplayTarget.get(world, pos);
 		if (target != null)
 			return target.getMultiblockBounds(world, pos);

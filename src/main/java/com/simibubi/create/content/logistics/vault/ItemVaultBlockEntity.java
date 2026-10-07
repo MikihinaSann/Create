@@ -9,13 +9,10 @@ import javax.annotation.Nullable;
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.api.connectivity.ConnectivityHandler;
 import com.simibubi.create.api.packager.InventoryIdentifier;
-import com.simibubi.create.foundation.ICapabilityProvider;
 import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.VersionedInventoryWrapper;
-import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
-import com.simibubi.create.foundation.utility.SameSizeCombinedInvWrapper;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
@@ -39,14 +36,15 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.CombinedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
-public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Inventory, Clearable {
-	protected ICapabilityProvider<IItemHandler> itemCapability = null;
+import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
+
+public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Inventory, SidedStorageBlockEntity, Clearable {
+	protected Storage<ItemVariant> itemCapability = null;
 	protected InventoryIdentifier invId;
 
 	protected ItemStackHandler inventory;
@@ -73,11 +71,6 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		itemCapability = null;
 		radius = 1;
 		length = 1;
-	}
-
-	public InventoryIdentifier getInvId() {
-		this.initCapability();
-		return this.invId;
 	}
 
 	@Override
@@ -172,11 +165,10 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		}
 
 		BlockState blockstate = level.getBlockState(updatePos);
-		blockstate.onNeighborChange(level, updatePos, provokingPos);
 		if (blockstate.isRedstoneConductor(level, updatePos)) {
 			updatePos.move(direction);
 			blockstate = level.getBlockState(updatePos);
-			if (blockstate.getWeakChanges(level, updatePos)) {
+			if (blockstate.is(Blocks.OBSERVER)) {
 				level.neighborChanged(blockstate, updatePos, provokingBlock, provokingPos, false);
 			}
 		}
@@ -321,7 +313,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 
 	@Override
 	public void clearContent() {
-		((ItemStackHandlerAccessor) inventory).create$getStacks().clear();
+		inventory.clearContent();
 	}
 
 	public ItemStackHandler getInventoryOfBlock() {
@@ -354,13 +346,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 			if (controllerBE == null)
 				return;
 			controllerBE.initCapability();
-			itemCapability = ICapabilityProvider.of(() -> {
-				if (controllerBE.isRemoved())
-					return null;
-				if (controllerBE.itemCapability == null)
-					return null;
-				return controllerBE.itemCapability.getCapability();
-			});
+			itemCapability = controllerBE.itemCapability;
 			invId = controllerBE.invId;
 			return;
 		}
@@ -382,7 +368,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 			}
 		}
 
-		itemCapability = ICapabilityProvider.of(new VersionedInventoryWrapper(SameSizeCombinedInvWrapper.create(invs)));
+		itemCapability = new VersionedInventoryWrapper(new CombinedStorage<>(List.of(invs)));
 
 		// build an identifier encompassing all component vaults
 		BlockPos farCorner = alongZ

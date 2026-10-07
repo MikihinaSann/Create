@@ -1,6 +1,7 @@
 package com.simibubi.create.content.logistics.filter;
 
 import java.util.List;
+import com.simibubi.create.foundation.gui.menu.OpenMenuHelper;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
@@ -40,7 +41,6 @@ import net.fabricmc.api.Environment;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-import io.github.fabricators_of_create.porting_lib.util.NetworkHooks;
 
 public abstract class FilterItem extends Item implements MenuProvider, SupportsItemCopying {
 	public static ListFilterItem regular(Properties properties) {
@@ -87,9 +87,9 @@ public abstract class FilterItem extends Item implements MenuProvider, SupportsI
 
 		if (!player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND) {
 			if (!world.isClientSide && player instanceof ServerPlayer)
-				player.openMenu(this, buf -> {
+				player.openMenu(OpenMenuHelper.create(this, buf -> {
 					ItemStack.STREAM_CODEC.encode(buf, heldItem);
-				});
+				}));
 			return InteractionResultHolder.success(heldItem);
 		}
 		return InteractionResultHolder.pass(heldItem);

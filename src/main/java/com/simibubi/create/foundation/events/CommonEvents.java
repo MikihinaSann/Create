@@ -5,7 +5,6 @@ import java.util.concurrent.Executor;
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.simibubi.create.AllMapDecorationTypes;
 import com.simibubi.create.Create;
 import com.simibubi.create.api.event.PipeCollisionEvent;
 import com.simibubi.create.compat.trainmap.TrainMapSync;
@@ -95,7 +94,6 @@ import com.simibubi.create.foundation.block.ItemUseOverrides;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsInputHandler;
 import com.simibubi.create.foundation.blockEntity.behaviour.edgeInteraction.EdgeInteractionHandler;
 import com.simibubi.create.foundation.data.RuntimeDataGenerator;
-import com.simibubi.create.foundation.map.StationMapDecorationRenderer;
 import com.simibubi.create.foundation.pack.DynamicPack;
 import com.simibubi.create.foundation.pack.DynamicPackSource;
 import com.simibubi.create.foundation.recipe.RecipeFinder;
@@ -139,14 +137,21 @@ import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 
-import io.github.fabricators_of_create.porting_lib.entity.events.EntityDataEvents;
-import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents;
-import io.github.fabricators_of_create.porting_lib.entity.events.EntityMountEvents;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingAttackEvent;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingEntityEvents;
-import io.github.fabricators_of_create.porting_lib.entity.events.LivingEntityEvents.LivingVisibilityEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityMountEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.ProjectileImpactEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.AttackEntityEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingChangeTargetEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingDropsEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingExperienceDropEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingHurtEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingKnockBackEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.EntityTickEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent;
 import io.github.fabricators_of_create.porting_lib.event.common.AddPackFindersEvent;
-import io.github.fabricators_of_create.porting_lib.event.common.BlockEvents;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent;
 
 public class CommonEvents {
 
@@ -186,7 +191,6 @@ public class CommonEvents {
 		Create.LOGISTICS.tick(world);
 	}
 
-	@SubscribeEvent
 	public static void onEntityTick(EntityTickEvent.Pre event) {
 		CapabilityMinecartController.entityTick(event);
 
@@ -255,11 +259,10 @@ public class CommonEvents {
 		}
 	}
 
-	@EventBusSubscriber
 	public static class ModBusEvents {
 
 //		@SubscribeEvent
-//		public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+//		public static void registerCapabilities() {
 //			event.register(CapabilityMinecartController.class);
 //		}
 
@@ -276,11 +279,6 @@ public class CommonEvents {
 		event.addRepositorySource(new DynamicPackSource("create:dynamic_data", PackType.SERVER_DATA, Pack.Position.BOTTOM, dynamicPack));
 	}
 
-	@net.neoforged.bus.api.SubscribeEvent
-	public static void onRegisterMapDecorationRenderers(RegisterMapDecorationRenderersEvent event) {
-		event.register(AllMapDecorationTypes.STATION_MAP_DECORATION.value(), new StationMapDecorationRenderer());
-	}
-
 	public static void register() {
 		// Fabric Events
 		ServerTickEvents.END_SERVER_TICK.register(CommonEvents::onServerTick);
@@ -293,10 +291,14 @@ public class CommonEvents {
 		ServerPlayConnectionEvents.DISCONNECT.register(CommonEvents::playerLoggedOut);
 		AttackEntityCallback.EVENT.register(CommonEvents::onEntityAttackedByPlayer);
 		CommandRegistrationCallback.EVENT.register(CommonEvents::registerCommands);
-		EntityEvents.START_TRACKING_TAIL.register(CommonEvents::startTracking);
-		EntityEvents.ENTERING_SECTION.register(CommonEvents::onEntityEnterSection);
-		LivingEntityEvents.TICK.register(CommonEvents::onUpdateLivingEntity);
+		PlayerEvent.StartTracking.EVENT.register(event -> {
+			if (event.getEntity() instanceof ServerPlayer player)
+				CommonEvents.startTracking(event.getTarget(), player);
+		});
+		EntityEvent.EnteringSection.EVENT.register(event -> CommonEvents
+			.onEntityEnterSection(event.getEntity(), event.getPackedOldPos(), event.getPackedNewPos()));
 		ServerPlayConnectionEvents.JOIN.register(CommonEvents::playerLoggedIn);
+		EntityTickEvent.Pre.EVENT.register(CommonEvents::onEntityTick);
 		AddPackFindersEvent.EVENT.register(CommonEvents::addPackFinders);
 		PipeCollisionEvent.FLOW.register(FluidReactions::handlePipeFlowCollisionFallback);
 		PipeCollisionEvent.SPILL.register(FluidReactions::handlePipeSpillCollisionFallback);
@@ -324,31 +326,83 @@ public class CommonEvents {
 		AttackBlockCallback.EVENT.register(ClipboardValueSettingsHandler::leftClickToPaste);
 		AttackBlockCallback.EVENT.register(ZapperInteractionHandler::leftClickingBlocksWithTheZapperSelectsTheBlock);
 		UseEntityCallback.EVENT.register(ScheduleItemEntityInteraction::interactWithConductor);
-		ServerTickEvents.END_WORLD_TICK.register(HauntedBellPulser::hauntedBellCreatesPulse);
-		EntityMountEvents.MOUNT.register(CouplingHandler::preventEntitiesFromMoutingOccupiedCart);
-		LivingEntityEvents.EXPERIENCE_DROP.register(DeployerFakePlayer::deployerKillsDoNotSpawnXP);
-		LivingEntityEvents.HURT.register(ExtendoGripItem::bufferLivingAttackEvent);
-		LivingEntityEvents.KNOCKBACK_STRENGTH.register(ExtendoGripItem::attacksByExtendoGripHaveMoreKnockback);
-		LivingEntityEvents.TICK.register(ExtendoGripItem::holdingExtendoGripIncreasesRange);
-		LivingEntityEvents.TICK.register(DivingBootsItem::accellerateDescentUnderwater);
-		LivingEntityEvents.TICK.register(DivingHelmetItem::breatheUnderwater);
-		LivingEntityEvents.DROPS.register(CrushingWheelBlockEntity::handleCrushedMobDrops);
-		LivingEntityEvents.LOOTING_LEVEL.register(CrushingWheelBlockEntity::crushingIsFortunate);
-		LivingEntityEvents.DROPS.register(DeployerFakePlayer::deployerCollectsDropsFromKilledEntities);
+		PlayerTickEvent.Post.EVENT.register(HauntedBellPulser::hauntedBellCreatesPulse);
+		EntityMountEvent.EVENT.register(event -> {
+			if (event.isMounting() && CouplingHandler.preventEntitiesFromMoutingOccupiedCart(
+				event.getEntityBeingMounted(), event.getEntityMounting()))
+				event.setCanceled(true);
+		});
+		LivingExperienceDropEvent.EVENT.register(DeployerFakePlayer::deployerKillsDoNotSpawnXP);
+		LivingHurtEvent.EVENT.register(ExtendoGripItem::bufferLivingAttackEvent);
+		LivingKnockBackEvent.EVENT.register(ExtendoGripItem::attacksByExtendoGripHaveMoreKnockback);
+		EntityTickEvent.Pre.EVENT.register(ExtendoGripItem::holdingExtendoGripIncreasesRange);
+		livingTick(DivingBootsItem::accelerateDescentUnderwater);
+		livingTick(DivingHelmetItem::breatheUnderwater);
+		LivingDropsEvent.EVENT.register(CrushingWheelBlockEntity::handleCrushedMobDrops);
+		LivingDropsEvent.EVENT.register(DeployerFakePlayer::deployerCollectsDropsFromKilledEntities);
 		ServerEntityEvents.EQUIPMENT_CHANGE.register(NetheriteDivingHandler::onLivingEquipmentChange);
-		LivingEntityEvents.CHANGE_TARGET.register(DeployerFakePlayer::entitiesDontRetaliate);
-		EntityEvents.SIZE.register(DeployerFakePlayer::deployerHasEyesOnHisFeet);
-		BlockEvents.POST_PROCESS_PLACE.register(SymmetryHandler::onBlockPlaced);
-		BlockEvents.POST_PROCESS_PLACE.register(SuperGlueHandler::glueListensForBlockPlacement);
-		EntityEvents.PROJECTILE_IMPACT.register(BlazeBurnerHandler::onThrowableImpact);
-		EntityDataEvents.LOAD.register(ExtendoGripItem::addReachToJoiningPlayersHoldingExtendo);
+		LivingChangeTargetEvent.EVENT.register(DeployerFakePlayer::entitiesDontRetaliate);
+		EntityEvent.Size.EVENT.register(DeployerFakePlayer::deployerHasEyesOnHisFeet);
+		BlockEvent.EntityPlaceEvent.EVENT.register(SymmetryHandler::onBlockPlaced);
+		BlockEvent.EntityPlaceEvent.EVENT.register(SuperGlueHandler::glueListensForBlockPlacement);
+		ProjectileImpactEvent.EVENT.register(BlazeBurnerHandler::onThrowableImpact);
+		PlayerEvent.PlayerLoggedInEvent.EVENT.register(ExtendoGripItem::addReachToJoiningPlayersHoldingExtendo);
 		PlayerBlockBreakEvents.BEFORE.register(SymmetryHandler::onBlockDestroyed);
-		PlayerBlockBreakEvents.AFTER.register(ExtendoGripItem::consumeDurabilityOnBlockBreak);
-		BlockEvents.POST_PROCESS_PLACE.register(ExtendoGripItem::consumeDurabilityOnPlace);
-		EntityEvents.SIZE.register(CardboardArmorHandler::playerHitboxChangesWhenHidingAsBox);
-		LivingVisibilityEvent.VISIBILITY.register(CardboardArmorHandler::playersStealthWhenWearingCardboard);
-		LivingEntityEvents.TICK.register(CardboardArmorHandler::mobsMayLoseTargetWhenItIsWearingCardboard);
+		BlockEvent.BreakEvent.EVENT.register(
+			event -> ExtendoGripItem.consumeDurabilityOnBlockBreak((BlockEvent.BreakEvent) event));
+		BlockEvent.EntityPlaceEvent.EVENT.register(ExtendoGripItem::consumeDurabilityOnPlace);
+		EntityEvent.Size.EVENT.register(CardboardArmorHandler::playerHitboxChangesWhenHidingAsBox);
+		LivingEvent.LivingVisibilityEvent.EVENT.register(CardboardArmorHandler::playersStealthWhenWearingCardboard);
+		livingTick(CardboardArmorHandler::mobsMayLoseTargetWhenItIsWearingCardboard);
 		AttackBlockCallback.EVENT.register(CardboardSwordItem::cardboardSwordsMakeNoiseOnClick);
-		LivingAttackEvent.ATTACK.register(CardboardSwordItem::cardboardSwordsCannotHurtYou);
+		AttackEntityEvent.EVENT.register(CardboardSwordItem::cardboardSwordsCannotHurtYou);
+
+		// Block-entity storage registrations (upstream: RegisterCapabilitiesEvent on the mod bus)
+		registerCapabilities();
+	}
+
+	private static void livingTick(java.util.function.Consumer<LivingEntity> handler) {
+		EntityTickEvent.Post.EVENT.register(event -> {
+			if (event.getEntity() instanceof LivingEntity living)
+				handler.accept(living);
+		});
+	}
+
+	// fabric: capability registration is just direct BlockApiLookup registration
+	private static void registerCapabilities() {
+		SmartChuteBlockEntity.registerCapabilities();
+		BeltBlockEntity.registerCapabilities();
+		BrassTunnelBlockEntity.registerCapabilities();
+		CrushingWheelControllerBlockEntity.registerCapabilities();
+		ToolboxBlockEntity.registerCapabilities();
+		DeployerBlockEntity.registerCapabilities();
+		DepotBlockEntity.registerCapabilities();
+		PortableFluidInterfaceBlockEntity.registerCapabilities();
+		SpoutBlockEntity.registerCapabilities();
+		PortableItemInterfaceBlockEntity.registerCapabilities();
+		SawBlockEntity.registerCapabilities();
+		EjectorBlockEntity.registerCapabilities();
+		FluidTankBlockEntity.registerCapabilities();
+		CreativeFluidTankBlockEntity.registerCapabilities();
+		ItemDrainBlockEntity.registerCapabilities();
+		MechanicalCrafterBlockEntity.registerCapabilities();
+		StressGaugeBlockEntity.registerCapabilities();
+		SpeedGaugeBlockEntity.registerCapabilities();
+		StationBlockEntity.registerCapabilities();
+		SpeedControllerBlockEntity.registerCapabilities();
+		SequencedGearshiftBlockEntity.registerCapabilities();
+		DisplayLinkBlockEntity.registerCapabilities();
+		StockTickerBlockEntity.registerCapabilities();
+		PackagerBlockEntity.registerCapabilities();
+		RepackagerBlockEntity.registerCapabilities();
+		PostboxBlockEntity.registerCapabilities();
+		FrogportBlockEntity.registerCapabilities();
+		RedstoneRequesterBlockEntity.registerCapabilities();
+		TableClothBlockEntity.registerCapabilities();
+		SignalBlockEntity.registerCapabilities();
+		CreativeMotorBlockEntity.registerCapabilities();
+		TrackObserverBlockEntity.registerCapabilities();
+		NixieTubeBlockEntity.registerCapabilities();
+		StickerBlockEntity.registerCapabilities();
 	}
 }

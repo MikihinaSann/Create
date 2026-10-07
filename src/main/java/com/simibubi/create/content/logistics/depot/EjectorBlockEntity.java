@@ -1,5 +1,7 @@
 package com.simibubi.create.content.logistics.depot;
 
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -8,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.AllBlockEntityTypes;
+import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
@@ -120,12 +123,8 @@ public class EjectorBlockEntity extends KineticBlockEntity implements SidedStora
 		powered = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.WEIGHTED_EJECTOR.get(),
-				(be, context) -> be.depotBehaviour.itemHandler
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.depotBehaviour.itemHandler, AllBlockEntityTypes.WEIGHTED_EJECTOR.get());
 	}
 
 	@Override
@@ -634,7 +633,7 @@ public class EjectorBlockEntity extends KineticBlockEntity implements SidedStora
 	@Override
 	@Environment(EnvType.CLIENT)
 	public AABB getRenderBoundingBox() {
-		return AABB.INFINITE;
+		return BlockHelper.INFINITE_AABB;
 	}
 
 	private static abstract class EntityHack extends Entity {

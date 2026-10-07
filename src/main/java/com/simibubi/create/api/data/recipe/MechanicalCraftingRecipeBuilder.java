@@ -1,6 +1,7 @@
 package com.simibubi.create.api.data.recipe;
 
 import java.util.ArrayList;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,12 +10,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.simibubi.create.content.kinetics.crafter.MechanicalCraftingRecipe;
+import com.simibubi.create.foundation.data.recipe.ConditionalRecipeOutput;
 
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 
-import net.fabricmc.fabric.api.resource.conditions.v1.ConditionJsonProvider;
 
-import net.fabricmc.fabric.api.resource.conditions.v1.DefaultResourceConditions;
+
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceCondition;
 
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -26,8 +28,8 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipePattern;
 import net.minecraft.world.level.ItemLike;
 
-import net.fabricmc.fabric.api.resource.conditions.v1.ConditionJsonProvider;
-import net.fabricmc.fabric.api.resource.conditions.v1.DefaultResourceConditions;
+
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceCondition;
 
 /**
  * The builder for building Mechanical Crafting recipes.
@@ -40,7 +42,7 @@ public class MechanicalCraftingRecipeBuilder {
 	private final List<String> pattern = Lists.newArrayList();
 	private final Map<Character, Ingredient> key = Maps.newLinkedHashMap();
 	private boolean acceptMirrored;
-	private final List<ICondition> recipeConditions;
+	private final List<ResourceCondition> recipeConditions;
 
 	public MechanicalCraftingRecipeBuilder(ItemLike result, int resultCount) {
 		this.result = result.asItem();
@@ -147,7 +149,9 @@ public class MechanicalCraftingRecipeBuilder {
 			new ItemStack(result, count),
 			acceptMirrored
 		);
-		output.accept(id, recipe, null, recipeConditions.toArray(ICondition[]::new));
+		RecipeOutput conditionalOutput = recipeConditions.isEmpty() ? output
+			: ConditionalRecipeOutput.wrap(output, recipeConditions.toArray(new ResourceCondition[0]));
+		conditionalOutput.accept(id, recipe, null);
 	}
 
 	/**
@@ -181,20 +185,20 @@ public class MechanicalCraftingRecipeBuilder {
 	 * Add a new condition so this recipe is only enabled when the specified mod is loaded.
 	 */
 	public MechanicalCraftingRecipeBuilder whenModLoaded(String modid) {
-		return withCondition(DefaultResourceConditions.allModsLoaded(modid));
+		return withCondition(ResourceConditions.allModsLoaded(modid));
 	}
 
 	/**
 	 * Add a new condition so this recipe is only enabled when the specified mod is not loaded.
 	 */
 	public MechanicalCraftingRecipeBuilder whenModMissing(String modid) {
-		return withCondition(DefaultResourceConditions.not(DefaultResourceConditions.allModsLoaded(modid)));
+		return withCondition(ResourceConditions.not(ResourceConditions.allModsLoaded(modid)));
 	}
 
 	/**
 	 * Add a new condition so this recipe is only enabled when the condition is true.
 	 */
-	public MechanicalCraftingRecipeBuilder withCondition(ICondition condition) {
+	public MechanicalCraftingRecipeBuilder withCondition(ResourceCondition condition) {
 		recipeConditions.add(condition);
 		return this;
 	}

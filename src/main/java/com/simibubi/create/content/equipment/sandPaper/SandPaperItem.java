@@ -37,6 +37,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.block.WeatheringCopper;
 
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
@@ -132,8 +133,8 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 				playerInv.placeItemBackInInventory(polished);
 			}
 
-			if (toPolish.hasCraftingRemainingItem()) {
-				playerInv.placeItemBackInInventory(toPolish.getCraftingRemainingItem());
+			if (toPolish.getItem().hasCraftingRemainingItem()) {
+				playerInv.placeItemBackInInventory(toPolish.getItem().getCraftingRemainingItem().getDefaultInstance());
 			}
 
 			stack.remove(AllDataComponents.SAND_PAPER_POLISHING);

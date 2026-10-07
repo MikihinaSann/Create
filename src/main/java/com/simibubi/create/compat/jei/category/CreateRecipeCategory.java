@@ -1,6 +1,8 @@
 package com.simibubi.create.compat.jei.category;
 
 import static mezz.jei.api.recipe.RecipeType.createRecipeHolderType;
+import net.minecraft.world.item.crafting.RecipeInput;
+import net.minecraft.world.level.ItemLike;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,11 +29,13 @@ import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.compat.jei.ItemIcon;
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import com.simibubi.create.foundation.utility.CreateLang;
 
 import mezz.jei.api.fabric.constants.FabricTypes;
+import mezz.jei.api.fabric.ingredients.fluids.JeiFluidIngredient;
 import mezz.jei.api.fabric.ingredients.fluids.IJeiFluidIngredient;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
@@ -39,7 +43,6 @@ import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotRichTooltipCallback;
 import mezz.jei.api.gui.ingredient.IRecipeSlotView;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
-import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
@@ -168,8 +171,8 @@ public abstract class CreateRecipeCategory<T extends Recipe<?>> implements IReci
 		};
 	}
 
-	public static IRecipeSlotBuilder addFluidSlot(IRecipeLayoutBuilder builder, int x, int y, FluidIngredient ingredient) {
-		long amount = ingredient.getRequiredAmount();
+	public static IRecipeSlotBuilder addFluidSlot(IRecipeLayoutBuilder builder, int x, int y, SizedFluidIngredient ingredient) {
+		long amount = ingredient.amount();
 		return builder.addSlot(RecipeIngredientRole.OUTPUT, x, y)
 			.setBackground(getRenderedSlot(), -1, -1)
 			.addIngredients(FabricTypes.FLUID_STACK, toJei(ingredient.getMatchingFluidStacks()))
@@ -186,26 +189,11 @@ public abstract class CreateRecipeCategory<T extends Recipe<?>> implements IReci
 	// fabric: don't need potion tooltip stuff, handled by attribute handler
 
 	public static FluidStack fromJei(IJeiFluidIngredient jei) {
-		return new FluidStack(jei.getFluid(), jei.getAmount(), jei.getTag().orElse(null));
+		return new FluidStack(jei.getFluidVariant(), jei.getAmount());
 	}
 
 	public static IJeiFluidIngredient toJei(FluidStack stack) {
-		return new IJeiFluidIngredient() {
-			@Override
-			public Fluid getFluid() {
-				return stack.getFluid();
-			}
-
-			@Override
-			public long getAmount() {
-				return stack.getAmount();
-			}
-
-			@Override
-			public Optional<CompoundTag> getTag() {
-				return Optional.ofNullable(stack.getTag());
-			}
-		};
+		return new JeiFluidIngredient(stack.getVariant(), stack.getAmount());
 	}
 
 	public static List<FluidStack> fromJei(List<IJeiFluidIngredient> stacks) {

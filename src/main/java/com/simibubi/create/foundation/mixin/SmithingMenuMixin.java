@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.simibubi.create.AllItems;
+import com.simibubi.create.foundation.item.CustomEnchantableItem;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 
 import net.minecraft.core.component.DataComponents;
@@ -38,8 +39,10 @@ public class SmithingMenuMixin {
 	private ItemStack create$preventUnbreakingOnBacktanks(ItemStack original) {
 		if (AllItems.COPPER_BACKTANK.isIn(original) || AllItems.NETHERITE_BACKTANK.isIn(original)) {
 			ItemEnchantments.Mutable mutableEnchantments =
-				new ItemEnchantments.Mutable(original.getTagEnchantments());
-			mutableEnchantments.removeIf(enchant -> !original.supportsEnchantment(enchant));
+				new ItemEnchantments.Mutable(original.getEnchantments());
+			mutableEnchantments.removeIf(enchant -> !(original.getItem() instanceof CustomEnchantableItem item)
+				? !enchant.value().isSupportedItem(original)
+				: !item.supportsEnchantment(original, enchant));
 			original.set(DataComponents.ENCHANTMENTS, mutableEnchantments.toImmutable());
 		}
 

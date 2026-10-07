@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.simibubi.create.Create;
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 import com.simibubi.create.compat.rei.category.CreateRecipeCategory;
 import com.simibubi.create.content.processing.basin.BasinRecipe;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
@@ -45,8 +46,8 @@ public class BasinDisplay extends CreateDisplay<BasinRecipe> {
 
 	private static List<EntryIngredient> getInputs(BasinRecipe recipe) {
 		List<EntryIngredient> input = new ArrayList<>(EntryIngredients.ofIngredients(recipe.getIngredients()));
-		for (FluidIngredient fluidIngredient : recipe.getFluidIngredients()) {
-			input.add(EntryIngredients.of(VanillaEntryTypes.FLUID, CreateRecipeCategory.convertToREIFluids(fluidIngredient.getMatchingFluidStacks())));
+		for (SizedFluidIngredient fluidIngredient : recipe.getFluidIngredients()) {
+			input.add(EntryIngredients.of(VanillaEntryTypes.FLUID, CreateRecipeCategory.convertToREIFluids(fluidIngredient.getFluids())));
 		}
 		return input;
 	}

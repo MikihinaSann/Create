@@ -23,14 +23,14 @@ public class MountedItemStorageWrapper extends CombinedSlottedStackStorage<Mount
 		this.storages = storages;
 		
 		// Build lookup arrays
-		int totalSlots = getSlots();
+		int totalSlots = getSlotCount();
 		this.slotToStorage = new int[totalSlots];
-		this.slotOffsets = new int[itemHandler.length];
+		this.slotOffsets = new int[parts.size()];
 		
 		int currentSlot = 0;
-		for (int storageIdx = 0; storageIdx < itemHandler.length; storageIdx++) {
+		for (int storageIdx = 0; storageIdx < parts.size(); storageIdx++) {
 			slotOffsets[storageIdx] = currentSlot;
-			int slotsInStorage = itemHandler[storageIdx].getSlots();
+			int slotsInStorage = parts.get(storageIdx).getSlotCount();
 			
 			for (int i = 0; i < slotsInStorage; i++) {
 				slotToStorage[currentSlot + i] = storageIdx;
@@ -38,18 +38,5 @@ public class MountedItemStorageWrapper extends CombinedSlottedStackStorage<Mount
 			
 			currentSlot += slotsInStorage;
 		}
-	}
-	
-	@Override
-	protected int getIndexForSlot(int slot) {
-		if (slot < 0 || slot >= slotToStorage.length) {
-			return -1;
-		}
-		return slotToStorage[slot];
-	}
-	
-	@Override
-	protected int getSlotFromIndex(int slot, int index) {
-		return slot - slotOffsets[index];
 	}
 }

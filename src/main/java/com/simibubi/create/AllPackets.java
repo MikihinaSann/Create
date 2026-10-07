@@ -1,6 +1,8 @@
 package com.simibubi.create;
 
 import java.util.Locale;
+import net.createmod.catnip.net.packets.ClientboundSimpleActionPacket;
+import com.simibubi.create.infrastructure.command.SimpleCreateActions;
 
 import com.simibubi.create.compat.computercraft.AttachedComputerPacket;
 import com.simibubi.create.compat.trainmap.TrainMapSyncPacket;

@@ -516,9 +516,6 @@ public class BezierConnection implements Iterable<BezierConnection.Segment> {
 		}
 	}
 
-	private SegmentAngles[] bakedSegments;
-	private GirderAngles[] bakedGirders;
-
 	@Environment(EnvType.CLIENT)
 	public static class SegmentAngles {
 		public final int length;
@@ -541,122 +538,10 @@ public class BezierConnection implements Iterable<BezierConnection.Segment> {
 				int i = segment.index;
 				boolean end = i == 0 || i == segmentCount;
 
-	@Environment(EnvType.CLIENT)
-	public SegmentAngles[] getBakedSegments() {
-		if (bakedSegments != null)
-			return bakedSegments;
-
-		int segmentCount = getSegmentCount();
-		bakedSegments = new SegmentAngles[segmentCount + 1];
-		Couple<Vec3> previousOffsets = null;
-
-		for (BezierConnection.Segment segment : this) {
-			int i = segment.index;
-			boolean end = i == 0 || i == segmentCount;
-
-			SegmentAngles angles = bakedSegments[i] = new SegmentAngles();
-			Couple<Vec3> railOffsets = Couple.create(segment.position.add(segment.normal.scale(.965f)),
-				segment.position.subtract(segment.normal.scale(.965f)));
-			Vec3 railMiddle = railOffsets.getFirst()
-				.add(railOffsets.getSecond())
-				.scale(.5);
-
-			if (previousOffsets == null) {
-				previousOffsets = railOffsets;
-				continue;
-			}
-
-			// Tie
-			Vec3 prevMiddle = previousOffsets.getFirst()
-				.add(previousOffsets.getSecond())
-				.scale(.5);
-			Vec3 tieAngles = TrackRenderer.getModelAngles(segment.normal, railMiddle.subtract(prevMiddle));
-			angles.lightPosition = BlockPos.containing(railMiddle);
-			angles.railTransforms = Couple.create(null, null);
-
-			PoseStack poseStack = new PoseStack();
-			TransformStack.of(poseStack)
-				.translate(prevMiddle)
-				.rotateY((float) tieAngles.y)
-				.rotateX((float) tieAngles.x)
-				.rotateZ((float) tieAngles.z)
-				.translate(-1 / 2f, -2 / 16f - 1 / 256f, 0);
-			angles.tieTransform = poseStack.last();
-
-			// Rails
-			float scale = end ? 2.2f : 2.1f;
-			for (boolean first : Iterate.trueAndFalse) {
-				Vec3 railI = railOffsets.get(first);
-				Vec3 prevI = previousOffsets.get(first);
-				Vec3 diff = railI.subtract(prevI);
-				Vec3 anglesI = TrackRenderer.getModelAngles(segment.normal, diff);
-
-				poseStack = new PoseStack();
-				TransformStack.of(poseStack)
-					.translate(prevI)
-					.rotateY((float) anglesI.y)
-					.rotateX((float) anglesI.x)
-					.rotateZ((float) anglesI.z)
-					.translate(0, -2 / 16f - 1 / 256f, -1 / 32f)
-					.scale(1, 1, (float) diff.length() * scale);
-				angles.railTransforms.set(first, poseStack.last());
-			}
-
-			previousOffsets = railOffsets;
-		}
-
-		return bakedSegments;
-	}
-
-	@Environment(EnvType.CLIENT)
-	public GirderAngles[] getBakedGirders() {
-		if (bakedGirders != null)
-			return bakedGirders;
-
-		int segmentCount = getSegmentCount();
-		bakedGirders = new GirderAngles[segmentCount + 1];
-		Couple<Couple<Vec3>> previousOffsets = null;
-
-		for (BezierConnection.Segment segment : this) {
-			int i = segment.index;
-			boolean end = i == 0 || i == segmentCount;
-			GirderAngles angles = bakedGirders[i] = new GirderAngles();
-
-			Vec3 leftGirder = segment.position.add(segment.normal.scale(.965f));
-			Vec3 rightGirder = segment.position.subtract(segment.normal.scale(.965f));
-			Vec3 upNormal = segment.derivative.normalize()
-				.cross(segment.normal);
-			Vec3 firstGirderOffset = upNormal.scale(-8 / 16f);
-			Vec3 secondGirderOffset = upNormal.scale(-10 / 16f);
-			Vec3 leftTop = segment.position.add(segment.normal.scale(1))
-				.add(firstGirderOffset);
-			Vec3 rightTop = segment.position.subtract(segment.normal.scale(1))
-				.add(firstGirderOffset);
-			Vec3 leftBottom = leftTop.add(secondGirderOffset);
-			Vec3 rightBottom = rightTop.add(secondGirderOffset);
-
-			angles.lightPosition = BlockPos.containing(leftGirder.add(rightGirder)
-				.scale(.5));
-
-			Couple<Couple<Vec3>> offsets =
-				Couple.create(Couple.create(leftTop, rightTop), Couple.create(leftBottom, rightBottom));
-
-			if (previousOffsets == null) {
-				previousOffsets = offsets;
-				continue;
-			}
-
-			angles.beams = Couple.create(null, null);
-			angles.beamCaps = Couple.create(Couple.create(null, null), Couple.create(null, null));
-			float scale = end ? 2.3f : 2.2f;
-
-			for (boolean first : Iterate.trueAndFalse) {
-
-				// Middle
-				Vec3 currentBeam = offsets.getFirst()
-					.get(first)
-					.add(offsets.getSecond()
-						.get(first))
+				Couple<Vec3> railOffsets = Couple.create(segment.position.add(segment.normal.scale(.965f)),
+					segment.position.subtract(segment.normal.scale(.965f)));
+				Vec3 railMiddle = railOffsets.getFirst()
+					.add(railOffsets.getSecond())
 					.scale(.5);
 
 				if (previousOffsets == null) {
@@ -706,6 +591,7 @@ public class BezierConnection implements Iterable<BezierConnection.Segment> {
 
 	}
 
+	@Environment(EnvType.CLIENT)
 	public static class GirderAngles {
 		public final int length;
 		public final Couple<Pose>[] beams;

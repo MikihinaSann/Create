@@ -1,6 +1,7 @@
 package com.simibubi.create.content.kinetics.press;
 
 import java.util.List;
+import com.simibubi.create.compat.recipeViewerCommon.SequencedAssemblySubCategoryType;
 import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;

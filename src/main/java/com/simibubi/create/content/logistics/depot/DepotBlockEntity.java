@@ -1,5 +1,6 @@
 package com.simibubi.create.content.logistics.depot;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.List;
 
 import net.minecraft.core.Direction;
@@ -21,7 +22,7 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
-public class DepotBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
+public class DepotBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity, Clearable {
 
 	DepotBehaviour depotBehaviour;
 
@@ -29,25 +30,14 @@ public class DepotBlockEntity extends SmartBlockEntity implements SidedStorageBl
 		super(type, pos, state);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.DEPOT.get(),
-				(be, context) -> be.depotBehaviour.itemHandler
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.depotBehaviour.itemHandler, AllBlockEntityTypes.DEPOT.get());
 	}
 
 	@Override
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
 		behaviours.add(depotBehaviour = new DepotBehaviour(this));
 		depotBehaviour.addSubBehaviours(behaviours);
-	}
-
-
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
-
-public class DepotBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity, Clearable {
-
 	}
 
 	public ItemStack getHeldItem() {
@@ -59,5 +49,10 @@ public class DepotBlockEntity extends SmartBlockEntity implements SidedStorageBl
 		if (depotBehaviour.heldItem != null)
 			newStack.angle = depotBehaviour.heldItem.angle;
 		depotBehaviour.setHeldItem(newStack);
+	}
+
+	@Override
+	public void clearContent() {
+		depotBehaviour.clearContent();
 	}
 }

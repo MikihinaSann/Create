@@ -1,5 +1,6 @@
 package com.simibubi.create.content.fluids.drain;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 
 public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity, Clearable {
 
@@ -83,26 +85,17 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 		}
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.ITEM_DRAIN.get(),
-				(be, context) -> {
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> {
 					if (context != null && context.getAxis().isHorizontal())
 						return be.itemHandlers.get(context);
 					return null;
-				}
-		);
-
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.ITEM_DRAIN.get(),
-				(be, context) -> {
+				}, AllBlockEntityTypes.ITEM_DRAIN.get());
+		FluidStorage.SIDED.registerForBlockEntity((be, context) -> {
 					if (context != Direction.UP)
 						return be.internalTank.getCapability();
 					return null;
-				}
-		);
+				}, AllBlockEntityTypes.ITEM_DRAIN.get());
 	}
 
 	@Override

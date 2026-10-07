@@ -18,6 +18,7 @@ import me.shedaniel.math.Point;
 import me.shedaniel.rei.api.client.gui.widgets.Widget;
 import me.shedaniel.rei.api.common.entry.EntryStack;
 import me.shedaniel.rei.api.common.entry.type.VanillaEntryTypes;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -33,8 +34,11 @@ public abstract class ProcessingViaFanCategory<T extends Recipe<?>> extends Crea
 	}
 
 	public static Supplier<ItemStack> getFan(String name) {
-		return () -> AllBlocks.ENCASED_FAN.asStack()
-			.setHoverName(CreateLang.translateDirect("recipe." + name + ".fan").withStyle(style -> style.withItalic(false)));
+		return () -> {
+			ItemStack fan = AllBlocks.ENCASED_FAN.asStack();
+			fan.set(DataComponents.CUSTOM_NAME, CreateLang.translateDirect("recipe." + name + ".fan").withStyle(style -> style.withItalic(false)));
+			return fan;
+		};
 	}
 
 	@Override
@@ -90,7 +94,7 @@ public abstract class ProcessingViaFanCategory<T extends Recipe<?>> extends Crea
 
 	protected abstract void renderAttachedBlock(GuiGraphics graphics);
 
-	public static abstract class MultiOutput<T extends ProcessingRecipe<?>> extends ProcessingViaFanCategory<T> {
+	public static abstract class MultiOutput<T extends ProcessingRecipe<?, ?>> extends ProcessingViaFanCategory<T> {
 
 		public MultiOutput(Info<T> info) {
 			super(info);

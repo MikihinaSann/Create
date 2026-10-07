@@ -1,5 +1,7 @@
 package com.simibubi.create.foundation.networking;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import java.util.HashSet;
 
 import com.simibubi.create.AllPackets;
@@ -29,14 +31,14 @@ public interface ISyncPersistentData {
 		);
 
 		public PersistentDataPacket(Entity entity) {
-			this(entity.getId(), entity.getPersistentData());
+			this(entity.getId(), entity.getCustomData());
 		}
 
 		@Override
 		@Environment(EnvType.CLIENT)
 		public void handle(LocalPlayer player) {
 			Entity entityByID = player.clientLevel.getEntity(entityId);
-			CompoundTag data = entityByID.getPersistentData();
+			CompoundTag data = entityByID.getCustomData();
 			new HashSet<>(data.getAllKeys()).forEach(data::remove);
 			data.merge(readData);
 			if (!(entityByID instanceof ISyncPersistentData))

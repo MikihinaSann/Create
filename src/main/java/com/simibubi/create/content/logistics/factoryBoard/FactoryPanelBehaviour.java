@@ -1,6 +1,7 @@
 package com.simibubi.create.content.logistics.factoryBoard;
 
 import java.lang.ref.WeakReference;
+import com.simibubi.create.foundation.gui.menu.OpenMenuHelper;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.mojang.serialization.Codec;
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.logistics.BigItemStack;
@@ -75,7 +77,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStackLinkedSet;
+import com.simibubi.create.foundation.mixin.accessor.ItemStackLinkedSetAccessor;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -438,7 +440,7 @@ public class FactoryPanelBehaviour extends FilteringBehaviour implements MenuPro
 			ItemStack item = source.getFilter();
 
 
-			Map<ItemStack, ItemStackConnections> networkItemCounts = consolidated.computeIfAbsent(source.network, $ -> new Object2ObjectOpenCustomHashMap<>(ItemStackLinkedSet.TYPE_AND_TAG));
+			Map<ItemStack, ItemStackConnections> networkItemCounts = consolidated.computeIfAbsent(source.network, $ -> new Object2ObjectOpenCustomHashMap<>(ItemStackLinkedSetAccessor.getTYPE_AND_TAG()));
 			networkItemCounts.computeIfAbsent(item, $ -> new ItemStackConnections(item));
 			ItemStackConnections existingConnections = networkItemCounts.get(item);
 			existingConnections.add(connection);
@@ -590,7 +592,7 @@ public class FactoryPanelBehaviour extends FilteringBehaviour implements MenuPro
 		boolean isClientSide = player.level().isClientSide;
 
 		// Wrench cycles through arrow bending
-		if (targeting.size() + targetedByLinks.size() > 0 && player.getItemInHand(hand).is(Items.TOOLS_WRENCH)) {
+		if (targeting.size() + targetedByLinks.size() > 0 && player.getItemInHand(hand).is(AllItemTags.WRENCH.tag)) {
 			int sharedMode = -1;
 			boolean notifySelf = false;
 
@@ -639,7 +641,7 @@ public class FactoryPanelBehaviour extends FilteringBehaviour implements MenuPro
 			// Open screen for setting an item through JEI
 			if (heldItem.isEmpty()) {
 				if (!isClientSide && player instanceof ServerPlayer sp)
-					sp.openMenu(this, buf -> FactoryPanelPosition.STREAM_CODEC.encode(buf, getPanelPosition()));
+					sp.openMenu(OpenMenuHelper.create(this, buf -> FactoryPanelPosition.STREAM_CODEC.encode(buf, getPanelPosition())));
 				return;
 			}
 

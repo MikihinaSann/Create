@@ -2609,7 +2609,7 @@ public class AllBlocks {
 			.tag(Tags.Blocks.STORAGE_BLOCKS)
 			.tag(AllBlockTags.CARDBOARD_STORAGE_BLOCKS.tag)
 			.item()
-			.burnTime(4000)
+			.onRegister(i -> FuelRegistry.INSTANCE.add(i, 4000)) // fabric: registrate burnTime is not deferred
 			.tag(AllItemTags.CARDBOARD_STORAGE_BLOCKS.tag)
 			.tag(Tags.Items.STORAGE_BLOCKS)
 			.build()
@@ -2636,7 +2636,7 @@ public class AllBlocks {
 					.add(LootItem.lootTableItem(AllBlocks.CARDBOARD_BLOCK.asItem()))
 					.when(((BlockLootSubProviderAccessor) r).create$hasSilkTouch().invert())))))
 			.item()
-			.burnTime(4000)
+			.onRegister(i -> FuelRegistry.INSTANCE.add(i, 4000)) // fabric: registrate burnTime is not deferred
 			.build()
 			.lang("Bound Block of Cardboard")
 			.register();

@@ -52,9 +52,15 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import io.github.fabricators_of_create.porting_lib.common.util.EnvExecutor;
 
 import org.jetbrains.annotations.Nullable;
+import com.simibubi.create.AllBlocks;
+import com.simibubi.create.AllDataComponents;
+import com.simibubi.create.api.schematic.requirement.SpecialBlockItemRequirement;
+import com.simibubi.create.content.schematics.requirement.ItemRequirement;
+import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
+import com.simibubi.create.content.schematics.requirement.ItemRequirement.PartialStrictNbtStackRequirement;
 
 public class ClipboardBlock extends FaceAttachedHorizontalDirectionalBlock
 	implements IBE<ClipboardBlockEntity>, IWrenchable, ProperWaterloggedBlock, SpecialBlockItemRequirement {

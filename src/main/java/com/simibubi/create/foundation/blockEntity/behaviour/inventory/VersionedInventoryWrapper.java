@@ -6,11 +6,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.simibubi.create.foundation.utility.fabric.ListeningStorageView;
 import com.simibubi.create.infrastructure.fabric.ProcessingIterator;
 import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
+import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
@@ -66,11 +69,9 @@ public class VersionedInventoryWrapper implements Storage<ItemVariant> {
 		return inventory.insert(resource, maxAmount, transaction);
 	}
 
-	@SuppressWarnings("removal")
-	@Override
 	public long simulateInsert(ItemVariant resource, long maxAmount, @Nullable TransactionContext transaction) {
 		this.listen(transaction);
-		return inventory.simulateInsert(resource, maxAmount, transaction);
+		return StorageUtil.simulateInsert(inventory, resource, maxAmount, transaction);
 	}
 
 	@Override
@@ -79,11 +80,9 @@ public class VersionedInventoryWrapper implements Storage<ItemVariant> {
 		return inventory.extract(resource, maxAmount, transaction);
 	}
 
-	@SuppressWarnings("removal")
-	@Override
 	public long simulateExtract(ItemVariant resource, long maxAmount, @Nullable TransactionContext transaction) {
 		this.listen(transaction);
-		return inventory.simulateExtract(resource, maxAmount, transaction);
+		return StorageUtil.simulateExtract(inventory, resource, maxAmount, transaction);
 	}
 
 	@Override
@@ -102,10 +101,8 @@ public class VersionedInventoryWrapper implements Storage<ItemVariant> {
 		return this::nonEmptyIterator;
 	}
 
-	@SuppressWarnings("removal")
-	@Override
 	@Nullable
 	public StorageView<ItemVariant> exactView(ItemVariant resource) {
-		return new ListeningStorageView<>(Storage.super.exactView(resource), this::incrementVersion);
+		return new ListeningStorageView<>(TransferUtil.exactView(inventory, resource), this::incrementVersion);
 	}
 }

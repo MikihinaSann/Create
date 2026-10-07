@@ -1,5 +1,6 @@
 package com.simibubi.create.api.data.recipe;
 
+import net.minecraft.tags.TagKey;
 import java.util.concurrent.CompletableFuture;
 
 import org.jetbrains.annotations.ApiStatus.ScheduledForRemoval;
@@ -9,12 +10,13 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.content.kinetics.millstone.MillingRecipe;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
-import net.neoforged.neoforge.common.conditions.NotCondition;
-import net.neoforged.neoforge.common.conditions.TagEmptyCondition;
 
 /**
  * The base class for Milling recipe generation.
@@ -32,7 +34,7 @@ public abstract class MillingRecipeGen extends StandardProcessingRecipeGen<Milli
 	@Deprecated(since = "6.0.7", forRemoval = true)
 	protected GeneratedRecipe metalOre(String name, ItemEntry<? extends Item> crushed, int duration) {
 		return create(name + "_ore", b -> b.duration(duration)
-			.withCondition(new NotCondition(new TagEmptyCondition("c", "ores/" + name)))
+			.withCondition(ResourceConditions.not(ResourceConditions.tagsPopulated(TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", "ores/" + name)))))
 			.require(AllTags.commonItemTag("ores/" + name))
 			.output(crushed.get()));
 	}

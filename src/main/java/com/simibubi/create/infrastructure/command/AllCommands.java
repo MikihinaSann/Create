@@ -21,7 +21,7 @@ public class AllCommands {
 			.then(ToggleDebugCommand.register())
 			.then(FabulousWarningCommand.register())
 			.then(OverlayConfigCommand.register())
-			.then(FixLightingCommand.register())
+			//.then(FixLightingCommand.register()) fabric: Forge only command
 
 			// utility
 			.then(util);

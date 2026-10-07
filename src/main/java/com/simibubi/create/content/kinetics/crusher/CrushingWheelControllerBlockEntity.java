@@ -1,5 +1,6 @@
 package com.simibubi.create.content.kinetics.crusher;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -8,6 +9,7 @@ import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlockEntityTypes;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
 import com.simibubi.create.content.processing.recipe.ProcessingInventory;
@@ -62,7 +64,7 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import io.github.fabricators_of_create.porting_lib.common.util.EnvExecutor;
 
 
 public class CrushingWheelControllerBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity, Clearable {
@@ -72,6 +74,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 	protected boolean searchForEntity;
 
 	public ProcessingInventory inventory;
+	private RecipeWrapper wrapper;
 	public float crushingspeed;
 
 	public CrushingWheelControllerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -84,14 +87,11 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 			}
 
 		};
+		wrapper = new RecipeWrapper(inventory);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.CRUSHING_WHEEL_CONTROLLER.get(),
-			(be, context) -> be.inventory
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.inventory, AllBlockEntityTypes.CRUSHING_WHEEL_CONTROLLER.get());
 	}
 
 	@Override
@@ -115,7 +115,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 			List<Entity> search = level.getEntities((Entity) null, new AABB(getBlockPos()),
 				e -> entityUUID.equals(e.getUUID()));
 			if (search.isEmpty())
-				clear();
+				clearProcessingEntity();
 			else
 				processingEntity = search.get(0);
 		}
@@ -214,7 +214,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 
 		if (!processingEntity.isAlive() || !processingEntity.getBoundingBox()
 			.intersects(new AABB(worldPosition).inflate(.5f))) {
-			clear();
+			clearProcessingEntity();
 			return;
 		}
 
@@ -327,8 +327,8 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 					ItemHelper.addToList(stack, list);
 				}
 			}
-			if (input.hasCraftingRemainingItem()) {
-				ItemHelper.addToList(input.getCraftingRemainingItem(), list);
+			if (input.getItem().hasCraftingRemainingItem()) {
+				ItemHelper.addToList(input.getItem().getCraftingRemainingItem().getDefaultInstance(), list);
 			}
 			for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlotCount(); slot++)
 
@@ -342,7 +342,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 	public Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> findRecipe() {
 		Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> crushingRecipe = AllRecipeTypes.CRUSHING.find(wrapper, level);
 		if (!crushingRecipe.isPresent())
-			crushingRecipe = AllRecipeTypes.MILLING.find(inventory, level);
+			crushingRecipe = AllRecipeTypes.MILLING.find(wrapper, level);
 		return crushingRecipe;
 	}
 
@@ -389,7 +389,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 		return inventory;
 	}
 
-	public void clear() {
+	public void clearProcessingEntity() {
 		processingEntity = null;
 		entityUUID = null;
 	}

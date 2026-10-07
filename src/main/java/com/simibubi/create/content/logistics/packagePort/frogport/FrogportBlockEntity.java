@@ -88,20 +88,8 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 		goggles = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.PACKAGE_FROGPORT.get(),
-			(be, context) -> be.itemHandler
-		);
-
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-				PeripheralCapability.get(),
-				AllBlockEntityTypes.PACKAGE_FROGPORT.get(),
-				(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
-		}
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.exposedInventory, AllBlockEntityTypes.PACKAGE_FROGPORT.get());
 	}
 
 	@Override
@@ -266,7 +254,7 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 		failedLastExport = false;
 		Storage<ItemVariant> inventory = this.exposedInventory;
 
-		if (itemHandler == null)
+		if (inventory == null)
 			return;
 
 		if (!inventory.nonEmptyViews().iterator().hasNext())

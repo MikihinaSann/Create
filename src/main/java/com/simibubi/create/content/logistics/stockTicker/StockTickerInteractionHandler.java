@@ -1,6 +1,7 @@
 package com.simibubi.create.content.logistics.stockTicker;
 
 import java.util.ArrayList;
+import com.simibubi.create.foundation.gui.menu.OpenMenuHelper;
 import java.util.List;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
@@ -40,7 +41,6 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransferUtil;
-import io.github.fabricators_of_create.porting_lib.util.NetworkHooks;
 
 public class StockTickerInteractionHandler {
 
@@ -84,11 +84,11 @@ public class StockTickerInteractionHandler {
 				stbe.behaviour.mayAdministrate(player) && Create.LOGISTICS.isLockable(stbe.behaviour.freqId);
 			boolean isCurrentlyLocked = Create.LOGISTICS.isLocked(stbe.behaviour.freqId);
 
-			sp.openMenu(stbe.new RequestMenuProvider(), buf -> {
+			sp.openMenu(OpenMenuHelper.create(stbe.new RequestMenuProvider(), buf -> {
 				buf.writeBoolean(showLockOption);
 				buf.writeBoolean(isCurrentlyLocked);
 				buf.writeBlockPos(targetPos);
-			});
+			}));
 			stbe.getRecentSummary()
 				.divideAndSendTo(sp, targetPos);
 		}

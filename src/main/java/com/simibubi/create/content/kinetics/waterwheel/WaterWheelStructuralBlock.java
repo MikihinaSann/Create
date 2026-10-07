@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.api.equipment.goggles.IProxyHoveringInformation;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.render.MultiPosDestructionHandler;
@@ -41,8 +42,11 @@ import net.minecraft.world.phys.HitResult;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import io.github.fabricators_of_create.porting_lib.block.CustomDestroyEffectsBlock;
+import io.github.fabricators_of_create.porting_lib.block.CustomHitEffectsBlock;
+import io.github.fabricators_of_create.porting_lib.block.CustomLandingEffectsBlock;
 
-public class WaterWheelStructuralBlock extends DirectionalBlock implements IWrenchable, IProxyHoveringInformation, MultiPosDestructionHandler {
+public class WaterWheelStructuralBlock extends DirectionalBlock implements IWrenchable, IProxyHoveringInformation, MultiPosDestructionHandler, CustomLandingEffectsBlock, CustomDestroyEffectsBlock, CustomHitEffectsBlock {
 
 	public static final MapCodec<WaterWheelStructuralBlock> CODEC = simpleCodec(WaterWheelStructuralBlock::new);
 

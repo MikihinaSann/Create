@@ -70,20 +70,9 @@ public class BeltCrusherInteractionHandler {
 				currentItem.stack = remainder;
 				beltInventory.belt.sendData();
 				return true;
-
-			int notFilled = currentItem.stack.getCount() - toInsert.getCount();
-			if (!remainder.isEmpty()) {
-				remainder.grow(notFilled);
-			} else if (notFilled > 0)
-				remainder = currentItem.stack.copyWithCount(notFilled);
-
-			currentItem.stack = remainder;
-			beltInventory.belt.notifyUpdate();
-			return true;
+			}
 		}
 
 		return false;
 	}
-
-
 }

@@ -1,6 +1,7 @@
 package com.simibubi.create.content.logistics.redstoneRequester;
 
 import java.util.List;
+import com.simibubi.create.foundation.gui.menu.OpenMenuHelper;
 
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllSoundEvents;
@@ -15,7 +16,6 @@ import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.logistics.stockTicker.StockCheckingBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.createmod.catnip.codecs.CatnipCodecUtils;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.core.BlockPos;
@@ -35,7 +35,6 @@ import net.minecraft.world.phys.Vec3;
 
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
-import io.github.fabricators_of_create.porting_lib.util.NetworkHooks;
 
 public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity implements MenuProvider {
 
@@ -53,14 +52,8 @@ public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity imple
 		allowPartialRequests = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-				PeripheralCapability.get(),
-				AllBlockEntityTypes.REDSTONE_REQUESTER.get(),
-				(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
-		}
+	public static void registerCapabilities() {
+		
 	}
 
 	@Override
@@ -155,7 +148,7 @@ public class RedstoneRequesterBlockEntity extends StockCheckingBlockEntity imple
 		if (!behaviour.mayInteractMessage(player))
 			return InteractionResult.SUCCESS;
 
-		player.openMenu(this, worldPosition);
+		player.openMenu(OpenMenuHelper.create(this, worldPosition));
 		return InteractionResult.SUCCESS;
 	}
 

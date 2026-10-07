@@ -2,6 +2,7 @@ package com.simibubi.create.infrastructure.fabric.transfer;
 
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
 public record ChangeListeningViewWrapper<T>(StorageView<T> wrapped, Runnable onChange) implements StorageView<T> {
 	@Override

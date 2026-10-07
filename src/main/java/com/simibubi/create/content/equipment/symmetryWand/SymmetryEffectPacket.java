@@ -32,6 +32,6 @@ public record SymmetryEffectPacket(BlockPos mirror, List<BlockPos> positions) im
 		if (player.position().distanceTo(Vec3.atLowerCornerOf(mirror)) > 100)
 			return;
 		for (BlockPos to : positions)
-			SymmetryHandler.drawEffect(mirror, to);
+			SymmetryHandlerClient.drawEffect(mirror, to);
 	}
 }

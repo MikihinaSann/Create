@@ -1,6 +1,7 @@
 package com.simibubi.create.content.kinetics.simpleRelays.encased;
 
 import java.util.function.Supplier;
+import net.minecraft.world.level.BlockGetter;
 
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllBlocks;

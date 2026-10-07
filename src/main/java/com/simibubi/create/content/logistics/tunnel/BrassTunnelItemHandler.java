@@ -5,9 +5,12 @@ import com.simibubi.create.foundation.item.ItemHelper;
 import net.minecraft.world.Clearable;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.items.IItemHandler;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
-public class BrassTunnelItemHandler implements IItemHandler, Clearable {
+public class BrassTunnelItemHandler implements SingleSlotStorage<ItemVariant>, Clearable {
 
 	private BrassTunnelBlockEntity blockEntity;
 
@@ -16,22 +19,7 @@ public class BrassTunnelItemHandler implements IItemHandler, Clearable {
 	}
 
 	@Override
-	public void clearContent() {
-		blockEntity.stackToDistribute = ItemStack.EMPTY;
-	}
-
-	@Override
-	public int getSlots() {
-		return 1;
-	}
-
-	@Override
-	public ItemStack getStackInSlot(int slot) {
-		return blockEntity.stackToDistribute;
-	}
-
-	@Override
-	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		if (!blockEntity.hasDistributionBehaviour()) {
 			Storage<ItemVariant> beltCapability = blockEntity.getBeltCapability();
 			if (beltCapability == null)
@@ -41,7 +29,7 @@ public class BrassTunnelItemHandler implements IItemHandler, Clearable {
 
 		if (!blockEntity.canTakeItems())
 			return 0;
-		int toInsert = Math.min(ItemHelper.truncateLong(maxAmount), resource.getItem().getMaxStackSize());
+		int toInsert = Math.min(ItemHelper.truncateLong(maxAmount), resource.getItem().getDefaultMaxStackSize());
 
 		blockEntity.setStackToDistribute(resource.toStack(toInsert), null, transaction);
 		return toInsert;
@@ -84,13 +72,7 @@ public class BrassTunnelItemHandler implements IItemHandler, Clearable {
 	}
 
 	@Override
-	public int getSlotLimit(int slot) {
-		return blockEntity.stackToDistribute.isEmpty() ? 64 : blockEntity.stackToDistribute.getMaxStackSize();
+	public void clearContent() {
+		blockEntity.stackToDistribute = ItemStack.EMPTY;
 	}
-
-	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
-		return true;
-	}
-
 }

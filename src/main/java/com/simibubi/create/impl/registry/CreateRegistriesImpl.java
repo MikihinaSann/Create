@@ -1,6 +1,7 @@
 package com.simibubi.create.impl.registry;
 
 import com.simibubi.create.api.equipment.potatoCannon.PotatoCannonProjectileType;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import com.simibubi.create.api.registry.CreateRegistries;
 
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;

@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllDataComponents;
+import com.simibubi.create.foundation.item.CustomEnchantableItem;
 import com.simibubi.create.foundation.item.LayeredArmorItem;
 
 import net.minecraft.core.Holder;
@@ -25,7 +26,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
 
-public class BacktankItem extends BaseArmorItem {
+public class BacktankItem extends BaseArmorItem implements CustomEnchantableItem {
 	public static final EquipmentSlot SLOT = EquipmentSlot.CHEST;
 	public static final ArmorItem.Type TYPE = ArmorItem.Type.CHESTPLATE;
 	public static final int BAR_COLOR = 0xEFEFEF;
@@ -63,7 +64,7 @@ public class BacktankItem extends BaseArmorItem {
 	public boolean supportsEnchantment(ItemStack stack, Holder<Enchantment> enchantment) {
 		if (enchantment.is(Enchantments.MENDING) || enchantment.is(Enchantments.UNBREAKING))
 			return false;
-		return super.supportsEnchantment(stack, enchantment);
+		return enchantment.value().getSupportedItems().contains(stack.getItemHolder());
 	}
 
 	@Override

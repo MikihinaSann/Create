@@ -7,10 +7,10 @@ val loaderVersion = "0.16.10"
 val fapiVersion = "0.115.1+1.21.1"
 
 // in-house dependencies
-val flywheelVersion = "1.0.1-11"
-val ponderVersion = "1.0.44"
+val flywheelVersion = "1.0.7-48"
+val ponderVersion = "1.0.85"
 val registrateVersion = "1.3.77-MC1.21.1"
-val milkLibVersion = "1.2.60"
+val milkLibVersion = "1.3.61"
 
 // external dependencies
 val configApiVersion = "21.1.3"
@@ -19,7 +19,7 @@ val jsr305Version = "3.0.2"
 
 // compat
 // https://modrinth.com/mod/cc-tweaked/versions
-val ccVersion = "1.115.1"
+val ccVersion = "1.116.1"
 // for CC - https://modrinth.com/mod/cloth-config/versions
 val clothVersion = "15.0.140+fabric"
 // https://modrinth.com/mod/jei/versions
@@ -35,7 +35,7 @@ val modmenuVersion = "11.0.3"
 // https://modrinth.com/mod/sandwichable/versions
 val sandwichableVersion = "1.3.1+1.20.1"
 // https://modrinth.com/mod/sodium
-val sodiumVersion = "mc1.21.1-0.6.9-fabric"
+val sodiumVersion = "mc1.21.1-0.8.13-fabric"
 // https://github.com/emilyploszaj/trinkets/releases/
 val trinketsVersion = "3.10.0"
 // for Trinkets - https://modrinth.com/mod/cardinal-components-api/versions
@@ -43,14 +43,14 @@ val ccaVersion = "6.1.2"
 // https://modrinth.com/mod/journeymap
 val jmVersion = "1.21.1-6.0.0-beta.39+fabric"
 // check the jm jar, it's JiJ
-val jmApiVersion = "1.20-1.9-SNAPSHOT"
+val jmApiVersion = "2.0.0-1.21.1-SNAPSHOT"
 
 // dev stuff
 val ccRuntime = false
 val recipeViewer = "emi" // jei, rei, or emi
 
 plugins {
-    id("fabric-loom") version "1.10.+"
+    id("fabric-loom") version "1.11.+"
     id("maven-publish")
 }
 
@@ -60,12 +60,14 @@ val buildNum = providers.environmentVariable("GITHUB_RUN_NUMBER")
     .orElse("-local")
     .getOrElse("")
 
-version = "6.0.0.0+mc$minecraftVersion$buildNum"
+version = "6.0.11+mc$minecraftVersion$buildNum"
 
 group = "com.simibubi.create"
 base.archivesName = "create-fabric"
 
 repositories {
+    // local CI artifacts not published to a maven (e.g. Ponder 1.0.85)
+    maven("libs/maven")
     maven("https://maven.parchmentmc.org") // Parchment
     maven("https://maven.fabricmc.net") // FAPI, Loader
     maven("https://maven.createmod.net") // Ponder, Flywheel
@@ -84,6 +86,10 @@ repositories {
     maven("https://maven.ladysnake.org/releases") // CCA, for Trinkets
     maven("https://maven.ftb.dev/releases") // FTB
     maven("https://chocolateminecraft.com/maven") // Xaero
+    maven {
+        url = uri("https://cursemaven.com") // Curse Maven
+        content { includeGroup("curse.maven") }
+    }
     maven("https://maven.architectury.dev") // Architectury API
     maven("https://jm.gserv.me/repository/maven-public/") // Journey map
 }
@@ -103,6 +109,18 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fapiVersion")
 
     modApi(include("com.tterrag.registrate_fabric:Registrate:$registrateVersion")!!)
+
+    // Registrate transitively brings in Porting-Lib beta.39, but the port targets beta.53 APIs.
+    // Pin every module to a single consistent version.
+    // beta.53 is the first build containing the ExperienceOrbMixin production fix (upstream #146).
+    val portingLibVersion = "3.1.0-beta.53+1.21.1"
+    listOf(
+        "accessors", "asm", "attributes", "base", "blocks", "brewing", "common", "conditions",
+        "config", "core", "data", "entity", "extensions", "fluids", "gametest",
+        "client_events", "gui_utils", "item_abilities", "lazy_registration", "level_events", "loot",
+        "mixin_extensions", "model_data", "model_loader", "models", "obj_loader",
+        "recipe_book_categories", "render_types", "tags", "transfer"
+    ).forEach { modApi(include("io.github.fabricators_of_create.Porting-Lib:$it:$portingLibVersion")!!) }
 
     modApi(include("com.electronwill.night-config:core:$nightConfigVersion")!!)
     modApi(include("com.electronwill.night-config:toml:$nightConfigVersion")!!)
@@ -127,7 +145,8 @@ dependencies {
     modCompileOnly("vazkii.botania:Botania:$botaniaVersion") { isTransitive = false }
     modCompileOnly("com.terraformersmc:modmenu:$modmenuVersion")
     modCompileOnly("maven.modrinth:sandwichable:$sandwichableVersion")
-    modCompileOnly("maven.modrinth:sodium:$sodiumVersion")
+    // local jar with Fabric-Loom-Version stripped (0.8.x is built with loom 1.16, we use older)
+    modCompileOnly(files("libs/sodium-mc1.21.1-0.8.13-fabric.jar"))
 
     modCompileOnly("dev.emi:trinkets:$trinketsVersion")
     // for Trinkets
@@ -141,9 +160,10 @@ dependencies {
     modCompileOnly("dev.ftb.mods:ftb-library-fabric:2001.2.4")
 
     modCompileOnly("maven.modrinth:journeymap:$jmVersion")
-    modCompileOnly("info.journeymap:journeymap-api:$jmApiVersion")
+    // repackaged api jar with Fabric-Loom-Version stripped (built with loom 1.14, we use older)
+    modCompileOnly(files("libs/journeymap-api-fabric.jar"))
 
-    compileOnly("xaero.lib:xaerolib-fabric-1.21:1.0.42")
+    modCompileOnly("xaero.lib:xaerolib-fabric-1.21:1.0.42")
     modCompileOnly("curse.maven:xaeros-world-map-317780:7401095")
 
     // EMI
@@ -191,6 +211,7 @@ loom {
             vmArg("-Dfabric-api.datagen")
             vmArg("-Dfabric-api.datagen.output-dir=${file("src/generated/resources")}")
             vmArg("-Dfabric-api.datagen.modid=create")
+            vmArg("-Dporting_lib.datagen.existing_resources=${file("src/main/resources").absolutePath}")
         }
 
         register("gametestServer") {
@@ -204,6 +225,11 @@ loom {
 
         named("server") {
             runDir("run/server")
+        }
+
+        named("client") {
+            // temp: smoke-test world entry without manual clicks
+            programArgs("--quickPlaySingleplayer", "testworld")
         }
 
         configureEach {
@@ -234,6 +260,9 @@ tasks.named<ProcessResources>("processResources") {
         "forge_config_version" to configApiVersion,
         "milk_lib_version" to milkLibVersion
     )
+
+    listOf("accessors", "attributes", "base", "entity", "extensions", "obj_loader", "tags", "transfer", "models",
+        "client_events").forEach { properties["port_lib_${it}_version"] = "3.1.0-beta.47+1.21.1" }
 
     inputs.properties(properties)
 

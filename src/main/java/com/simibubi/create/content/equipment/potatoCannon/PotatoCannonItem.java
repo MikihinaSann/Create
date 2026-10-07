@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllEntityTypes;
+import com.simibubi.create.foundation.item.CustomEnchantableItem;
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.api.equipment.potatoCannon.PotatoCannonProjectileType;
 import com.simibubi.create.content.equipment.armor.BacktankUtil;
@@ -57,9 +58,7 @@ import io.github.fabricators_of_create.porting_lib.enchant.CustomEnchantingBehav
 import io.github.fabricators_of_create.porting_lib.item.EntitySwingListenerItem;
 import io.github.fabricators_of_create.porting_lib.item.ReequipAnimationItem;
 
-public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmPoseItem, EntitySwingListenerItem, ReequipAnimationItem, CustomEnchantingBehaviorItem {
-
-public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmPoseItem {
+public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmPoseItem, EntitySwingListenerItem, ReequipAnimationItem, CustomEnchantingBehaviorItem, CustomEnchantableItem {
 	private static final Predicate<ItemStack> AMMO_PREDICATE = s ->
 		PotatoCannonProjectileType.getTypeForItem(GlobalRegistryAccess.getOrThrow(), s.getItem()).isPresent();
 
@@ -190,8 +189,8 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 			return;
 
 		HolderLookup<Enchantment> lookup = registries.lookupOrThrow(Registries.ENCHANTMENT);
-		int power = stack.getEnchantmentLevel(lookup.getOrThrow(Enchantments.POWER));
-		int punch = stack.getEnchantmentLevel(lookup.getOrThrow(Enchantments.PUNCH));
+		int power = EnchantmentHelper.getItemEnchantmentLevel(lookup.getOrThrow(Enchantments.POWER), stack);
+		int punch = EnchantmentHelper.getItemEnchantmentLevel(lookup.getOrThrow(Enchantments.PUNCH), stack);
 		final float additionalDamageMult = 1 + power * .2f;
 		final float additionalKnockback = punch * .5f;
 
@@ -253,7 +252,7 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 			return false;
 		if (enchantment.is(Enchantments.LOOTING))
 			return true;
-		return super.supportsEnchantment(stack, enchantment);
+		return enchantment.value().getSupportedItems().contains(stack.getItemHolder());
 	}
 
 	@Override
@@ -276,7 +275,7 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 	}
 
 	@Override
-	public boolean onEntitySwing(ItemStack stack, LivingEntity entity, InteractionHand hand) {
+	public boolean onEntitySwing(ItemStack stack, LivingEntity entity) {
 		return true;
 	}
 

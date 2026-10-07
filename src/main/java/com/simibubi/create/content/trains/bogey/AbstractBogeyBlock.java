@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-import javax.annotation.Nullable;
 
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;

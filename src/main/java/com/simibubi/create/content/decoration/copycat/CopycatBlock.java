@@ -8,6 +8,8 @@ import io.github.fabricators_of_create.porting_lib.block.CustomFrictionBlock;
 import io.github.fabricators_of_create.porting_lib.block.CustomLandingEffectsBlock;
 import io.github.fabricators_of_create.porting_lib.block.CustomRunningEffectsBlock;
 import io.github.fabricators_of_create.porting_lib.block.ExplosionResistanceBlock;
+import io.github.fabricators_of_create.porting_lib.block.HarvestableBlock;
+import io.github.fabricators_of_create.porting_lib.util.PortingHooks;
 import io.github.fabricators_of_create.porting_lib.block.LightEmissiveBlock;
 
 import io.github.fabricators_of_create.porting_lib.enchant.EnchantmentBonusBlock;
@@ -77,12 +79,14 @@ import io.github.fabricators_of_create.porting_lib.block.CustomLandingEffectsBlo
 import io.github.fabricators_of_create.porting_lib.block.CustomRunningEffectsBlock;
 import io.github.fabricators_of_create.porting_lib.block.CustomSoundTypeBlock;
 import io.github.fabricators_of_create.porting_lib.block.ExplosionResistanceBlock;
+import io.github.fabricators_of_create.porting_lib.block.HarvestableBlock;
+import io.github.fabricators_of_create.porting_lib.util.PortingHooks;
 import io.github.fabricators_of_create.porting_lib.block.LightEmissiveBlock;
 import io.github.fabricators_of_create.porting_lib.block.ValidSpawnBlock;
 import io.github.fabricators_of_create.porting_lib.enchant.EnchantmentBonusBlock;
 
 public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEntity>, IWrenchable,
-		CustomFrictionBlock, CustomSoundTypeBlock, LightEmissiveBlock, ExplosionResistanceBlock,
+		CustomFrictionBlock, CustomSoundTypeBlock, LightEmissiveBlock, ExplosionResistanceBlock, HarvestableBlock,
 		BlockPickInteractionAware, CustomLandingEffectsBlock, CustomRunningEffectsBlock, EnchantmentBonusBlock,
 		ValidSpawnBlock {
 
@@ -123,7 +127,7 @@ public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEnti
 
 	@Override
 	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-								 if (player == null || AdventureUtil.isAdventure(pPlayer))
+								 if (player == null || AdventureUtil.isAdventure(player))
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
 		Direction face = hitResult.getDirection();
@@ -331,11 +335,6 @@ public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEnti
 	}
 
 	@Override
-	public boolean hasDynamicLightEmission(BlockState state) {
-		return true;
-	}
-
-	@Override
 	public int getLightEmission(BlockState state, BlockGetter level, BlockPos pos) {
 		return maybeMaterialAs(
 				level, pos, LightEmissiveBlock.class,
@@ -346,8 +345,11 @@ public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEnti
 
 	@Override
 	public boolean canHarvestBlock(BlockState state, BlockGetter level, BlockPos pos, Player player) {
-		return getMaterial(level, pos).canHarvestBlock(level, pos, player);
-
+		return maybeMaterialAs(
+				level, pos, HarvestableBlock.class,
+				(material, block) -> block.canHarvestBlock(material, level, pos, player),
+				material -> PortingHooks.isCorrectToolForDrops(material, player)
+		);
 	}
 
 	@Override
@@ -367,7 +369,7 @@ public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEnti
 		return maybeMaterialAs(
 				level, pos, BlockPickInteractionAware.class,
 				(mat, block) -> block.getPickedStack(mat, level, pos, player, result),
-				mat -> mat.getBlock().getCloneItemStack(level, pos, mat)
+				mat -> mat.getBlock().getCloneItemStack((LevelReader) level, pos, mat)
 		);
 	}
 

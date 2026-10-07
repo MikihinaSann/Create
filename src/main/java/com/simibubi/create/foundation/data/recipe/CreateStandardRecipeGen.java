@@ -29,6 +29,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
+import com.simibubi.create.AllTags;
 import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.Create;
 import com.simibubi.create.api.data.recipe.BaseRecipeProvider;
@@ -62,6 +63,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.DyeColor;
@@ -84,10 +86,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.common.conditions.ICondition;
-import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
-import net.neoforged.neoforge.common.conditions.NotCondition;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceCondition;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 
 /**
  * Create's own Data Generation for all vanilla recipe types.
@@ -253,10 +254,10 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 			.pattern("I")
 			.pattern("P")),
 
-	CAKE = create(() -> Items.CAKE).unlockedByTag(() -> Tags.Items.FOODS_DOUGH)
+	CAKE = create(() -> Items.CAKE).unlockedByTag(() -> AllTags.commonItemTag("foods/dough"))
 		.viaShaped(b -> b.define('E', Tags.Items.EGGS)
 			.define('S', Items.SUGAR)
-			.define('P', Tags.Items.FOODS_DOUGH)
+			.define('P', AllTags.commonItemTag("foods/dough"))
 			.define('M', () -> Items.MILK_BUCKET)
 			.pattern(" M ")
 			.pattern("SES")
@@ -1510,7 +1511,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 		private String suffix;
 		private Supplier<? extends ItemLike> result;
 		private ResourceLocation compatDatagenOutput;
-		List<ICondition> recipeConditions;
+		List<ResourceCondition> recipeConditions;
 
 		private Supplier<ItemPredicate> unlockedBy;
 		private int amount;
@@ -1552,14 +1553,14 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 		}
 
 		GeneratedRecipeBuilder whenModLoaded(String modid) {
-			return withCondition(new ModLoadedCondition(modid));
+			return withCondition(ResourceConditions.allModsLoaded(modid));
 		}
 
 		GeneratedRecipeBuilder whenModMissing(String modid) {
-			return withCondition(new NotCondition(new ModLoadedCondition(modid)));
+			return withCondition(ResourceConditions.not(ResourceConditions.allModsLoaded(modid)));
 		}
 
-		GeneratedRecipeBuilder withCondition(ICondition condition) {
+		GeneratedRecipeBuilder withCondition(ResourceCondition condition) {
 			recipeConditions.add(condition);
 			return this;
 		}
@@ -1587,7 +1588,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 				if (unlockedBy != null)
 					b.unlockedBy("has_item", inventoryTrigger(unlockedBy.get()));
 
-				RecipeOutput conditionalOutput = recipeOutput.withConditions(recipeConditions.toArray(new ICondition[0]));
+				RecipeOutput conditionalOutput = recipeConditions.isEmpty() ? recipeOutput : ConditionalRecipeOutput.wrap(recipeOutput, recipeConditions.toArray(new ResourceCondition[0]));
 
 				b.save(conditionalOutput, createLocation("crafting"));
 			});
@@ -1691,7 +1692,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 					if (unlockedBy != null)
 						b.unlockedBy("has_item", inventoryTrigger(unlockedBy.get()));
 
-					RecipeOutput conditionalOutput = recipeOutput.withConditions(recipeConditions.toArray(new ICondition[0]));
+					RecipeOutput conditionalOutput = recipeConditions.isEmpty() ? recipeOutput : ConditionalRecipeOutput.wrap(recipeOutput, recipeConditions.toArray(new ResourceCondition[0]));
 
 					b.save(
 						isOtherMod ? new ModdedCookingRecipeOutput(conditionalOutput, compatDatagenOutput) : conditionalOutput,
@@ -1823,8 +1824,8 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 		}
 
 		@Override
-		public void accept(ResourceLocation id, Recipe<?> recipe, @Nullable AdvancementHolder advancement, ICondition... conditions) {
-			wrapped.accept(id, new ModdedCookingRecipeOutputShim(recipe, outputOverride), advancement, conditions);
+		public void accept(ResourceLocation id, Recipe<?> recipe, @Nullable AdvancementHolder advancement) {
+			wrapped.accept(id, new ModdedCookingRecipeOutputShim(recipe, outputOverride), advancement);
 		}
 	}
 }

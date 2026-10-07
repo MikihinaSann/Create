@@ -1,5 +1,6 @@
 package com.simibubi.create.content.equipment.armor;
 
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -30,7 +31,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 
 import net.fabricmc.api.EnvType;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import io.github.fabricators_of_create.porting_lib.common.util.EnvExecutor;
 
 public class BacktankUtil {
 
@@ -106,7 +107,7 @@ public class BacktankUtil {
 
 	public static int maxAir(ItemStack backtank) {
 		int enchantLevel = 0;
-		ItemEnchantments enchants = backtank.getTagEnchantments();
+		ItemEnchantments enchants = backtank.getEnchantments();
 		for (Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
 			if (entry.getKey().is(AllEnchantments.CAPACITY)) {
 				enchantLevel = entry.getIntValue();

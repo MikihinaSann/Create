@@ -24,9 +24,8 @@ import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-import net.neoforged.neoforge.data.event.GatherDataEvent;
-import net.neoforged.neoforge.fluids.BaseFlowingFluid;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import io.github.fabricators_of_create.porting_lib.fluids.BaseFlowingFluid;
+import io.github.fabricators_of_create.porting_lib.util.DeferredHolder;
 
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +45,7 @@ import com.simibubi.create.foundation.block.connected.CTModel;
 import com.simibubi.create.foundation.block.connected.ConnectedTextureBehaviour;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.tterrag.registrate.AbstractRegistrate;
+import com.tterrag.registrate.providers.RegistrateDataProvider;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.builders.BlockEntityBuilder.BlockEntityFactory;
 import com.tterrag.registrate.builders.Builder;
@@ -77,7 +77,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 
 public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
-	private static final Map<RegistryEntry<?>, ResourceKey<CreativeModeTab>> TAB_LOOKUP = Collections.synchronizedMap(new IdentityHashMap<>());
+	private static final Map<RegistryEntry<?, ?>, ResourceKey<CreativeModeTab>> TAB_LOOKUP = Collections.synchronizedMap(new IdentityHashMap<>());
 
 	@Nullable
 	protected Function<Item, TooltipModifier> currentTooltipModifierFactory;
@@ -97,7 +97,7 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 		return registrate;
 	}
 
-	public static boolean isInCreativeTab(RegistryEntry<?> entry, ResourceKey<CreativeModeTab> tab) {
+	public static boolean isInCreativeTab(RegistryEntry<?, ?> entry, ResourceKey<CreativeModeTab> tab) {
 		return TAB_LOOKUP.get(entry) == tab;
 	}
 
@@ -227,7 +227,7 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 																						  NonNullFunction<SimpleFlowableFluid.Properties, T> sourceFactory,
 																						  NonNullFunction<SimpleFlowableFluid.Properties, T> flowingFactory) {
 		return entry(name,
-			c -> new VirtualFluidBuilder<>(self(), self(), name, c, new ResourceLocation(getModid(), "fluid/" + name + "_still"),
+			c -> new VirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(getModid(), "fluid/" + name + "_still"),
 				ResourceLocation.fromNamespaceAndPath(getModid(), "fluid/" + name + "_flow"), sourceFactory, flowingFactory));
 	}
 
@@ -239,7 +239,7 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 
 	public FluidBuilder<VirtualFluid, CreateRegistrate> virtualFluid(String name) {
 		return entry(name,
-			c -> new VirtualFluidBuilder<>(self(), self(), name, c, new ResourceLocation(getModid(), "fluid/" + name + "_still"),
+			c -> new VirtualFluidBuilder<>(self(), self(), name, c, ResourceLocation.fromNamespaceAndPath(getModid(), "fluid/" + name + "_still"),
 				ResourceLocation.fromNamespaceAndPath(getModid(), "fluid/" + name + "_flow"), /*null, */VirtualFluid::createSource, VirtualFluid::createFlowing));
 	}
 
@@ -334,11 +334,8 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 	private static void registerCTBehviour(Block entry, Supplier<ConnectedTextureBehaviour> behaviorSupplier) {
 		ConnectedTextureBehaviour behavior = behaviorSupplier.get();
 		CreateClient.MODEL_SWAPPER.getCustomBlockModels()
-			.register(RegisteredObjectsHelper.getKeyOrThrow(entry), model -> new CTModel(model, behavior));
+			.register(RegisteredObjectsHelper.getKeyOrThrow(entry), new CTModelProvider(behavior));
 	}
-
-	@Override
-	protected void onData(@NotNull GatherDataEvent event) {} // NO-OP so this doesn't run before create can add its generators
 
 	@ApiStatus.Internal
 	public RegistrateDataProvider setDataProvider(RegistrateDataProvider provider) {

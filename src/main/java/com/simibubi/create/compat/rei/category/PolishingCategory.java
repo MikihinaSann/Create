@@ -17,6 +17,9 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import com.simibubi.create.AllDataComponents;
+import com.simibubi.create.content.equipment.sandPaper.SandPaperItemComponent;
+import net.minecraft.util.Unit;
 
 
 
@@ -57,9 +60,8 @@ public class PolishingCategory extends CreateRecipeCategory<SandPaperPolishingRe
 			return;
 
 
-		CompoundTag tag = renderedSandpaper.getOrCreateTag();
-		tag.put("Polishing", NBTSerializer.serializeNBT(matchingStacks[0]));
-		tag.putBoolean("JEI", true);
+		renderedSandpaper.set(AllDataComponents.SAND_PAPER_POLISHING, new SandPaperItemComponent(matchingStacks[0]));
+		renderedSandpaper.set(AllDataComponents.SAND_PAPER_JEI, Unit.INSTANCE);
 		GuiGameElement.of(renderedSandpaper)
 				.<GuiGameElement.GuiRenderBuilder>at(getDisplayWidth(null) / 2 - 16, 0, 0)
 				.scale(2)

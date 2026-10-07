@@ -1,6 +1,8 @@
 package com.simibubi.create.content.logistics.depot;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import java.util.Random;
+import net.minecraft.util.RandomSource;
 import com.mojang.math.Axis;
 import com.simibubi.create.content.kinetics.belt.BeltHelper;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
@@ -89,7 +91,7 @@ public class DepotRenderer extends SafeBlockEntityRenderer<DepotBlockEntity> {
 				msr.rotateYDegrees(-(360 / 8f * i));
 			RandomSource r = RandomSource.create(i + 1);
 			int angle = (int) (360 * r.nextFloat());
-			renderItem(ms, buffer, light, overlay, stack, renderUpright ? angle + 90 : angle, r,
+			renderItem(ms, buffer, light, overlay, stack, renderUpright ? angle + 90 : angle, new Random(r.nextLong()),
 				itemPosition, false);
 			ms.popPose();
 		}

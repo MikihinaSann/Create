@@ -2,15 +2,37 @@ package com.simibubi.create.infrastructure.fabric.transfer.item;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import net.minecraft.world.item.ItemStack;
 
 public interface SlottedStackStorage extends SlottedStorage<ItemVariant> {
+
+	default int getSlotCount() {
+		return getSlots().size();
+	}
+
 	ItemStack getStackInSlot(int slot);
+
+	default ItemStack getItem(int slot) {
+		return getStackInSlot(slot);
+	}
 
 	void setStackInSlot(int slot, ItemStack stack);
 
 	int getSlotLimit(int slot);
 
 	boolean isItemValid(int slot, ItemStack stack);
+
+	default boolean isItemValid(int slot, ItemVariant resource, int count) {
+		return isItemValid(slot, resource.toStack(count));
+	}
+
+	default long insertSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		return getSlot(slot).insert(resource, maxAmount, transaction);
+	}
+
+	default long extractSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		return getSlot(slot).extract(resource, maxAmount, transaction);
+	}
 }

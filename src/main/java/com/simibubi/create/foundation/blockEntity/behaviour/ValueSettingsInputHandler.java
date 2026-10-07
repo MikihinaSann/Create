@@ -4,6 +4,7 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.CreateClient;
+import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.SidedFilteringBehaviour;
 import com.simibubi.create.foundation.utility.AdventureUtil;
@@ -16,17 +17,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.LogicalSide;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.Tags.Items;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.tags.Tags.Items;
+import net.fabricmc.fabric.api.entity.FakePlayer;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import io.github.fabricators_of_create.porting_lib.common.util.EnvExecutor;
 
 public class ValueSettingsInputHandler {
 
@@ -66,7 +64,7 @@ public class ValueSettingsInputHandler {
 			if (!valueSettingsBehaviour.isActive())
 				continue;
 			if (valueSettingsBehaviour.onlyVisibleWithWrench()
-				&& !player.getItemInHand(hand).is(Items.TOOLS_WRENCH))
+				&& !player.getItemInHand(hand).is(AllItemTags.WRENCH.tag))
 				continue;
 			if (valueSettingsBehaviour.getSlotPositioning()instanceof ValueBoxTransform.Sided sidedSlot) {
 				if (!sidedSlot.isSideActive(sbe.getBlockState(), ray.getDirection()))

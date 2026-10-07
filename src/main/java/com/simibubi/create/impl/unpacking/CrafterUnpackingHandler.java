@@ -43,12 +43,13 @@ public enum CrafterUnpackingHandler implements UnpackingHandler {
 		if (inventories.isEmpty())
 			return false;
 
-		// insert in the order's defined ordering
-		int max = Math.min(inventories.size(), craftingContext.size());
-		outer: for (int i = 0; i < max; i++) {
-			BigItemStack targetStack = craftingContext.get(i);
-			if (targetStack.stack.isEmpty())
-				continue;
+		try (Transaction t = Transaction.openOuter()) {
+			// insert in the order's defined ordering
+			int max = Math.min(inventories.size(), craftingContext.size());
+			outer: for (int i = 0; i < max; i++) {
+				BigItemStack targetStack = craftingContext.get(i);
+				if (targetStack.stack.isEmpty())
+					continue;
 
 				Inventory inventory = inventories.get(i);
 				// if there's already an item here, no point in trying

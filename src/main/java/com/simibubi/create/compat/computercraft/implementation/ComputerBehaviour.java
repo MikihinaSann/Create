@@ -1,6 +1,7 @@
 package com.simibubi.create.compat.computercraft.implementation;
 
 import org.jetbrains.annotations.Nullable;
+import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -62,8 +63,18 @@ public class ComputerBehaviour extends AbstractComputerBehaviour {
 
 	public ComputerBehaviour(SmartBlockEntity be) {
 		super(be);
-		this.peripheral = getPeripheralFor(be);
+		this.peripheralSupplier = getPeripheralFor(be);
 		this.be = be;
+	}
+
+	// fabric: fallback peripheral lookup, NeoForge uses capabilities instead
+	public static IPeripheral peripheralProvider(Level level, BlockPos pos) {
+		if (level.getBlockEntity(pos) instanceof SmartBlockEntity sbe) {
+			AbstractComputerBehaviour behaviour = sbe.getBehaviour(AbstractComputerBehaviour.TYPE);
+			if (behaviour != null)
+				return behaviour.getPeripheral();
+		}
+		return null;
 	}
 
 	public static Supplier<SyncedPeripheral<?>> getPeripheralFor(SmartBlockEntity be) {
@@ -84,7 +95,7 @@ public class ComputerBehaviour extends AbstractComputerBehaviour {
 		if (be instanceof SignalBlockEntity sbe)
 			return () -> new SignalPeripheral(sbe);
 		if (be instanceof SpeedGaugeBlockEntity sgbe)
-			return new SpeedGaugePeripheral(sgbe);
+			return () -> new SpeedGaugePeripheral(sgbe);
 		if (be instanceof StressGaugeBlockEntity sgbe)
 			return () -> new StressGaugePeripheral(sgbe);
 		if (be instanceof StockTickerBlockEntity sgbe)
@@ -122,14 +133,14 @@ public class ComputerBehaviour extends AbstractComputerBehaviour {
 
 	@Override
 	public <T> T getPeripheral() {
+		if (peripheral == null)
+			peripheral = peripheralSupplier.get();
 		//noinspection unchecked
 		return (T) peripheral;
 	}
 
 	@Override
 	public void removePeripheral() {
-		if (peripheral != null)
-			getWorld().invalidateCapabilities(be.getBlockPos());
 	}
 
 	@Override

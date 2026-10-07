@@ -13,7 +13,7 @@ import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.items.ItemStackHandler;
+import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 
 public class PackageLuaObject implements LuaComparable {
 	public final PackagerBlockEntity blockEntity;
@@ -76,7 +76,7 @@ public class PackageLuaObject implements LuaComparable {
 		ItemStackHandler results = PackageItem.getContents(box);
 		List<LuaItemStack> result = new ArrayList<>();
 
-		for (int i = 0; i < results.getSlots(); i++) {
+		for (int i = 0; i < results.getSlotCount(); i++) {
 			ItemStack stack = results.getStackInSlot(i);
 			if (!stack.isEmpty()) {
 				result.add(new LuaItemStack(stack));

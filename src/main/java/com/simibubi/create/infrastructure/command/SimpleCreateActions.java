@@ -1,6 +1,9 @@
 package com.simibubi.create.infrastructure.command;
 
 import com.simibubi.create.Create;
+import com.simibubi.create.content.equipment.goggles.GoggleConfigScreen;
+import com.simibubi.create.content.kinetics.KineticDebugger;
+import com.simibubi.create.content.trains.CameraDistanceModifier;
 import com.simibubi.create.foundation.utility.CameraAngleAnimationService;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
@@ -20,13 +23,13 @@ public class SimpleCreateActions {
 
 		if (value.equals("info")) {
 			Component text = Component.literal("Rainbow Debug Utility is currently: ")
-					.append(boolToText(AllConfigs.client().rainbowDebug.get()));
+					.append(boolToText(KineticDebugger.rainbowDebug));
 			player.displayClientMessage(text, false);
 			return;
 		}
 
-		AllConfigs.client().rainbowDebug.set(Boolean.parseBoolean(value));
-		Component text = boolToText(AllConfigs.client().rainbowDebug.get())
+		KineticDebugger.rainbowDebug = Boolean.parseBoolean(value);
+		Component text = boolToText(KineticDebugger.rainbowDebug)
 				.append(Component.literal(" Rainbow Debug Utility").withStyle(ChatFormatting.WHITE));
 		player.displayClientMessage(text, false);
 	}
@@ -73,6 +76,33 @@ public class SimpleCreateActions {
 
 		} catch (NumberFormatException ignored) {
 			Create.LOGGER.debug("Received non-float value {} in camAngle packet, ignoring", value);
+		}
+	}
+
+	public static void camAngleFunction(String value) {
+		CameraAngleAnimationService.Mode mode = CameraAngleAnimationService.Mode.LINEAR;
+		String modeString = value;
+		float speed = -1;
+		String[] split = value.split(":");
+		if (split.length > 1) {
+			modeString = split[0];
+			try {
+				speed = Float.parseFloat(split[1]);
+			} catch (NumberFormatException ignored) {}
+		}
+		try {
+			mode = CameraAngleAnimationService.Mode.valueOf(modeString);
+		} catch (IllegalArgumentException ignored) {}
+
+		CameraAngleAnimationService.setAnimationMode(mode);
+		CameraAngleAnimationService.setAnimationSpeed(speed);
+	}
+
+	private static MutableComponent boolToText(boolean b) {
+		if (b) {
+			return Component.literal("enabled").withStyle(ChatFormatting.DARK_GREEN);
+		} else {
+			return Component.literal("disabled").withStyle(ChatFormatting.RED);
 		}
 	}
 }

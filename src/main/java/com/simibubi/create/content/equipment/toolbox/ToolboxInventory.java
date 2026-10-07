@@ -1,6 +1,7 @@
 package com.simibubi.create.content.equipment.toolbox;
 
 import java.util.ArrayList;
+import org.jetbrains.annotations.ApiStatus.ScheduledForRemoval;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -33,13 +34,10 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
-import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
-import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerSlot;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
 // TODO - This should use NonNullList<ItemStack>
 public class ToolboxInventory extends ItemStackHandler {
@@ -213,7 +211,7 @@ public class ToolboxInventory extends ItemStackHandler {
 				break;
 		}
 
-		return ItemHandlerHelper.copyStackWithSize(stack, toInsert - inserted);
+		return ItemHelper.copyStackWithSize(stack, toInsert - inserted);
 	}
 
 	public ItemStack takeFromCompartment(int amount, int compartment, TransactionContext ctx) {
@@ -224,7 +222,7 @@ public class ToolboxInventory extends ItemStackHandler {
 		int extracted = 0;
 		for (int i = STACKS_PER_COMPARTMENT - 1; i >= 0; i--) {
 			int slot = compartment * STACKS_PER_COMPARTMENT + i;
-			ItemStackHandlerSlot handlerSlot = getSlot(slot);
+			SingleSlotStorage<ItemVariant> handlerSlot = getSlot(slot);
 			if (handlerSlot.isResourceBlank())
 				continue;
 			if (toExtract == null)

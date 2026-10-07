@@ -1,6 +1,8 @@
 package com.simibubi.create.content.processing.basin;
 
 import java.util.ArrayList;
+
+import com.simibubi.create.foundation.recipe.RecipeHelper;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,6 +39,8 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
 import com.simibubi.create.infrastructure.fabric.transfer.fluid.FluidStack;
+
+import com.simibubi.create.foundation.fluid.SizedFluidIngredient;
 
 public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 
@@ -82,7 +86,7 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 		List<ItemStack> recipeOutputItems = new ArrayList<>();
 		List<FluidStack> recipeOutputFluids = new ArrayList<>();
 
-		List<Ingredient> ingredients = new LinkedList<>(recipe.getIngredients());
+		List<Ingredient> ingredients = new LinkedList<>(RecipeHelper.getIngredients(recipe));
 		List<SizedFluidIngredient> fluidIngredients =
 			isBasinRecipe ? ((BasinRecipe) recipe).getFluidIngredients() : Collections.emptyList();
 
@@ -111,17 +115,12 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 			boolean fluidsAffected = false;
 			FluidIngredients:
 			for (SizedFluidIngredient fluidIngredient : fluidIngredients) {
-				int amountRequired = fluidIngredient.amount();
-
-				for (int tank = 0; tank < availableFluids.getTanks(); tank++) {
-					FluidStack fluidStack = availableFluids.getFluidInTank(tank);
-					if (simulate && fluidStack.getAmount() <= extractedFluidsFromTank[tank])
-						continue;
-					if (!fluidIngredient.test(fluidStack))
-						continue;
-					int drainedAmount = Math.min(amountRequired, fluidStack.getAmount());
-					if (!simulate) {
-						fluidStack.shrink(drainedAmount);
+				long amountRequired = fluidIngredient.amount();
+				for (StorageView<FluidVariant> view : availableFluids.nonEmptyViews()) {
+					FluidStack fluidStack = new FluidStack(view);
+					if (!fluidIngredient.test(fluidStack)) continue;
+					long drainedAmount = Math.min(amountRequired, fluidStack.getAmount());
+					if (view.extract(fluidStack.getVariant(), drainedAmount, t) == drainedAmount) {
 						fluidsAffected = true;
 						amountRequired -= drainedAmount;
 						if (amountRequired != 0) continue;
@@ -141,29 +140,28 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 				});
 			}
 
-			CraftingInput remainderInput = new DummyCraftingContainer(availableItems, extractedItemsFromSlot)
+			CraftingInput remainderInput = new DummyCraftingContainer(availableItems)
 					.asCraftInput();
 
-				if (recipe instanceof BasinRecipe basinRecipe) {
-					recipeOutputItems.addAll(basinRecipe.rollResults(basin.getLevel().random));
+			if (recipe instanceof BasinRecipe basinRecipe) {
+				recipeOutputItems.addAll(basinRecipe.rollResults(basin.getLevel().random));
 
-					for (FluidStack fluidStack : basinRecipe.getFluidResults())
-						if (!fluidStack.isEmpty())
-							recipeOutputFluids.add(fluidStack);
-					for (ItemStack stack : basinRecipe.getRemainingItems(remainderInput))
-						if (!stack.isEmpty())
-							recipeOutputItems.add(stack);
+				for (FluidStack fluidStack : basinRecipe.getFluidResults())
+					if (!fluidStack.isEmpty())
+						recipeOutputFluids.add(fluidStack);
+				for (ItemStack stack : basinRecipe.getRemainingItems(remainderInput))
+					if (!stack.isEmpty())
+						recipeOutputItems.add(stack);
 
 			} else {
 				recipeOutputItems.add(recipe.getResultItem(basin.getLevel()
 					.registryAccess()));
 
-					if (recipe instanceof CraftingRecipe craftingRecipe) {
-						for (ItemStack stack : craftingRecipe.getRemainingItems(remainderInput))
-							if (!stack.isEmpty())
-								recipeOutputItems.add(stack);
-					}
-//				}
+				if (recipe instanceof CraftingRecipe craftingRecipe) {
+					for (ItemStack stack : craftingRecipe.getRemainingItems(remainderInput))
+						if (!stack.isEmpty())
+							recipeOutputItems.add(stack);
+				}
 			}
 
 			// fabric: bad
@@ -180,7 +178,7 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 
 	public static RecipeHolder<BasinRecipe> convertShapeless(RecipeHolder<?> recipe) {
 		BasinRecipe basinRecipe =
-			new Builder<>(BasinRecipe::new, recipe.id()).withItemIngredients(recipe.value().getIngredients())
+			new Builder<>(BasinRecipe::new, recipe.id()).withItemIngredients(RecipeHelper.getIngredients(recipe.value()))
 				.withSingleItemOutput(recipe.value().getResultItem(Minecraft.getInstance().level.registryAccess()))
 				.build();
 		return new RecipeHolder<>(recipe.id(), basinRecipe);

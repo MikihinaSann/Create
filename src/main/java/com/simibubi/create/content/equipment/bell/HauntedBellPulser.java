@@ -17,6 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent;
 
 public class HauntedBellPulser {
 

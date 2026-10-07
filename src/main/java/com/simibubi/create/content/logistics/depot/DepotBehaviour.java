@@ -21,7 +21,6 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
-import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 
 import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
 
@@ -246,7 +245,7 @@ public class DepotBehaviour extends BlockEntityBehaviour implements Clearable {
 
 	@Override
 	public void clearContent() {
-		((ItemStackHandlerAccessor) processingOutputBuffer).create$getStacks().clear();
+		processingOutputBuffer.clearContent();
 		incoming.clear();
 		heldItem = null;
 	}

@@ -110,6 +110,11 @@ public class FluidHelper {
 	}
 
 	public static boolean tryEmptyItemIntoBE(Level worldIn, Player player, InteractionHand handIn, ItemStack heldItem,
+		SmartBlockEntity be) {
+		return tryEmptyItemIntoBE(worldIn, player, handIn, heldItem, be, null);
+	}
+
+	public static boolean tryEmptyItemIntoBE(Level worldIn, Player player, InteractionHand handIn, ItemStack heldItem,
 		SmartBlockEntity be, Direction side) {
 		if (!GenericItemEmptying.canItemBeEmptied(worldIn, heldItem))
 			return false;
@@ -142,6 +147,11 @@ public class FluidHelper {
 			}
 			return true;
 		}
+	}
+
+	public static boolean tryFillItemFromBE(Level world, Player player, InteractionHand handIn, ItemStack heldItem,
+		SmartBlockEntity be) {
+		return tryFillItemFromBE(world, player, handIn, heldItem, be, null);
 	}
 
 	public static boolean tryFillItemFromBE(Level world, Player player, InteractionHand handIn, ItemStack heldItem,

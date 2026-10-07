@@ -1,5 +1,6 @@
 package com.simibubi.create.content.logistics.packager;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +29,7 @@ import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlock;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBlockEntity;
 import com.simibubi.create.content.logistics.packagePort.frogport.FrogportBlockEntity;
-import com.simibubi.create.content.logistics.packager.fabric.InventoryIdentifier;
+import com.simibubi.create.api.packager.InventoryIdentifier;
 import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBehaviour.RequestType;
 import com.simibubi.create.content.logistics.packagerLink.PackagerLinkBlock;
 import com.simibubi.create.content.logistics.packagerLink.PackagerLinkBlockEntity;
@@ -44,13 +45,14 @@ import com.simibubi.create.foundation.blockEntity.behaviour.inventory.InvManipul
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.VersionedInventoryTrackerBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.createmod.catnip.codecs.CatnipCodecUtils;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BlockFace;
 import net.createmod.catnip.nbt.NBTHelper;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
@@ -78,6 +80,7 @@ import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
+import com.simibubi.create.infrastructure.fabric.transfer.item.SlottedStackStorage;
 import io.github.fabricators_of_create.porting_lib.util.StorageProvider;
 
 public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity, Clearable {
@@ -125,20 +128,8 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		buttonCooldown = 0;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.PACKAGER.get(),
-			(be, context) -> be.inventory
-		);
-
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-				PeripheralCapability.get(),
-				AllBlockEntityTypes.PACKAGER.get(),
-				(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
-		}
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.inventory, AllBlockEntityTypes.PACKAGER.get());
 	}
 
 	@Override
@@ -219,6 +210,10 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 	}
 
 	public InventorySummary getAvailableItems() {
+		return getAvailableItems(false);
+	}
+
+	public InventorySummary getAvailableItems(boolean scanInputSlots) {
 		if (availableItems != null && invVersionTracker.stillWaiting(targetInventory.getInventory()))
 			return availableItems;
 
@@ -419,7 +414,7 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 
 		}
 
-		return true;
+		return unpacked;
 	}
 
 	public void attemptToSend(List<PackagingRequest> queuedRequests) {
@@ -623,7 +618,7 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 			c -> CatnipCodecUtils.decode(BigItemStack.CODEC, registries, c)
 				.orElseThrow());
 		if (compound.contains("LastSummary"))
-			availableItems = CatnipCodecUtils.decodeOrNull(InventorySummary.CODEC, registries, compound.getCompound("LastSummary"));
+			availableItems = CatnipCodecUtils.decode(InventorySummary.CODEC, registries, compound.getCompound("LastSummary")).orElse(null);
 	}
 
 	@Override
@@ -652,7 +647,7 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 
 	@Override
 	public void clearContent() {
-		inventory.setStackInSlot(0, ItemStack.EMPTY);
+		heldBox = ItemStack.EMPTY;
 		queuedExitingPackages.clear();
 	}
 
@@ -691,7 +686,7 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		if (inventory == null)
 			return false;
 
-		IItemHandler targetHandler = this.targetInventory.getInventory();
+		Storage<ItemVariant> targetHandler = this.targetInventory.getInventory();
 		if (targetHandler == null)
 			return false;
 
@@ -703,19 +698,26 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 		}
 	}
 
-	private static boolean isSameInventoryFallback(IItemHandler first, IItemHandler second) {
+	private static boolean isSameInventoryFallback(Storage<ItemVariant> first, Storage<ItemVariant> second) {
 		if (first == second)
 			return true;
+		if (!(first instanceof SlottedStorage<ItemVariant> slottedFirst)
+			|| !(second instanceof SlottedStackStorage slottedSecond))
+			return false;
 
-		// If a contained ItemStack instance is the same, we can be pretty sure these
+		// If a contained ItemStack is the same, we can be pretty sure these
 		// inventories are the same (works for compound inventories)
-		for (int i = 0; i < second.getSlots(); i++) {
-			ItemStack stackInSlot = second.getStackInSlot(i);
+		for (int i = 0; i < slottedSecond.getSlotCount(); i++) {
+			ItemStack stackInSlot = slottedSecond.getStackInSlot(i);
 			if (stackInSlot.isEmpty())
 				continue;
-			for (int j = 0; j < first.getSlots(); j++)
-				if (stackInSlot == first.getStackInSlot(j))
+			for (int j = 0; j < slottedFirst.getSlots().size(); j++) {
+				SingleSlotStorage<ItemVariant> slot = slottedFirst.getSlot(j);
+				ItemStack other = slot.getResource().isBlank() ? ItemStack.EMPTY
+					: slot.getResource().toStack((int) slot.getAmount());
+				if (ItemStack.isSameItemSameComponents(stackInSlot, other))
 					return true;
+			}
 			break;
 		}
 

@@ -1,6 +1,6 @@
 package com.simibubi.create.content.contraptions.actors.psi;
 
-import java.util.Iterator;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -23,6 +23,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
+import com.simibubi.create.infrastructure.fabric.transfer.TransactionSuccessCallback;
+import java.util.Iterator;
 
 public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements SidedStorageBlockEntity {
 
@@ -33,12 +35,8 @@ public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBl
 		capability = createEmptyHandler();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.PORTABLE_STORAGE_INTERFACE.get(),
-				(be, context) -> be.capability
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> be.capability, AllBlockEntityTypes.PORTABLE_STORAGE_INTERFACE.get());
 	}
 
 	@Override

@@ -35,7 +35,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 
-import net.neoforged.neoforge.registries.datamaps.builtin.NeoForgeDataMaps;
 
 public class AllTags {
 	@ScheduledForRemoval(inVersion = "1.21.1+ Port")
@@ -69,7 +68,7 @@ public class AllTags {
 	}
 
 	public enum NameSpace {
-		MOD(Create.ID),
+		MOD(Create.ID, false, true),
 		COMMON("c"),
 		TIC("tconstruct"),
 		QUARK("quark"),
@@ -79,9 +78,17 @@ public class AllTags {
 		TRINKETS("trinkets");
 
 		public final String id;
+		public final boolean optionalDefault;
+		public final boolean alwaysDatagenDefault;
 
 		NameSpace(String id) {
+			this(id, true, false);
+		}
+
+		NameSpace(String id, boolean optionalDefault, boolean alwaysDatagenDefault) {
 			this.id = id;
+			this.optionalDefault = optionalDefault;
+			this.alwaysDatagenDefault = alwaysDatagenDefault;
 		}
 
 		public ResourceLocation id(String path) {
@@ -120,6 +127,7 @@ public class AllTags {
 		WRENCH_PICKUP,
 		CHEST_MOUNTED_STORAGE,
 		SIMPLE_MOUNTED_STORAGE,
+		FALLBACK_MOUNTED_STORAGE_BLACKLIST,
 		ROOTS,
 		SUGAR_CANE_VARIANTS,
 		NON_HARVESTABLE,
@@ -138,6 +146,7 @@ public class AllTags {
 		;
 
 		public final TagKey<Block> tag;
+		public final boolean alwaysDatagen;
 
 		AllBlockTags() {
 			this(MOD);
@@ -185,7 +194,7 @@ public class AllTags {
 	 */
 	public enum AllItemTags {
 		/**
-		 * @deprecated <p> Use {@link NeoForgeDataMaps#FURNACE_FUELS} or {@link CreateDataMaps#REGULAR_BLAZE_BURNER_FUELS} instead.
+		 * @deprecated <p> Use the furnace fuels data map or {@link CreateDataMaps#REGULAR_BLAZE_BURNER_FUELS} instead.
 		 */
 		@ScheduledForRemoval(inVersion = "1.21.1+ Port")
 		@Deprecated(since = "6.0.7", forRemoval = true)
@@ -200,6 +209,7 @@ public class AllTags {
 		CONTRAPTION_CONTROLLED,
 		CREATE_INGOTS,
 		CRUSHED_RAW_MATERIALS,
+		DIVING_ARMOR,
 		INVALID_FOR_TRACK_PAVING,
 		DEPLOYABLE_DRINK,
 		PRESSURIZED_AIR_SOURCES,
@@ -219,6 +229,7 @@ public class AllTags {
 		NOT_POTION,
 		VALVE_HANDLES,
 		DISPENSE_BEHAVIOR_WRAP_BLACKLIST,
+		WRENCH(COMMON, "tools/wrench"),
 
 		OBSIDIAN_DUST(COMMON, "dusts/obsidian"),
 
@@ -258,6 +269,7 @@ public class AllTags {
 		TRINKETS_FACE(TRINKETS, "head/face");
 
 		public final TagKey<Item> tag;
+		public final boolean alwaysDatagen;
 
 		AllItemTags() {
 			this(MOD);
@@ -310,6 +322,7 @@ public class AllTags {
 		CREOSOTE(COMMON);
 
 		public final TagKey<Fluid> tag;
+		public final boolean alwaysDatagen;
 
 		AllFluidTags() {
 			this(MOD);
@@ -441,5 +454,16 @@ public class AllTags {
 		public boolean matches(MountedItemStorageType<?> type) {
 			return type.is(this.tag);
 		}
+	}
+
+	public static void init() {
+		// force-load each enum so all tag fields are initialized
+		AllBlockTags.values();
+		AllItemTags.values();
+		AllFluidTags.values();
+		AllEntityTags.values();
+		AllRecipeSerializerTags.values();
+		AllContraptionTypeTags.values();
+		AllMountedItemStorageTypeTags.values();
 	}
 }

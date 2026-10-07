@@ -5,13 +5,13 @@ import java.util.List;
 import java.util.Optional;
 
 import com.simibubi.create.AllBlockEntityTypes;
+import com.simibubi.create.foundation.blockEntity.RecipeWrapper;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.belt.behaviour.DirectBeltInputBehaviour;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
-import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 
@@ -20,6 +20,7 @@ import net.createmod.catnip.math.VecHelper;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.CombinedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
@@ -58,7 +59,7 @@ import io.github.fabricators_of_create.porting_lib.transfer.ViewOnlyWrappedStora
 import com.simibubi.create.infrastructure.fabric.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerContainer;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandlerSlot;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import com.simibubi.create.foundation.item.ItemHelper;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -153,8 +154,8 @@ public class MillstoneBlockEntity extends KineticBlockEntity implements SidedSto
 
 	@Override
 	public void clearContent() {
-		((ItemStackHandlerAccessor) inputInv).create$getStacks().clear();
-		((ItemStackHandlerAccessor) outputInv).create$getStacks().clear();
+		inputInv.clearContent();
+		outputInv.clearContent();
 	}
 
 	@Override
@@ -175,13 +176,13 @@ public class MillstoneBlockEntity extends KineticBlockEntity implements SidedSto
 		}
 
 		ItemStack stackInSlot = inputInv.getStackInSlot(0);
-		ItemStack craftingRemainingItem = stackInSlot.getCraftingRemainingItem();
+		ItemStack craftingRemainingItem = stackInSlot.getItem().getCraftingRemainingItem().getDefaultInstance();
 		stackInSlot.shrink(1);
 		inputInv.setStackInSlot(0, stackInSlot);
 		lastRecipe.rollResults(level.random)
-			.forEach(stack -> ItemHandlerHelper.insertItemStacked(outputInv, stack, false));
+			.forEach(stack -> ItemHelper.insertItemStacked(outputInv, stack, false));
 		if (!craftingRemainingItem.isEmpty()) {
-			ItemHandlerHelper.insertItemStacked(outputInv, craftingRemainingItem, false);
+			ItemHelper.insertItemStacked(outputInv, craftingRemainingItem, false);
 		}
 		award(AllAdvancements.MILLSTONE);
 
@@ -235,16 +236,17 @@ public class MillstoneBlockEntity extends KineticBlockEntity implements SidedSto
 		ItemStackHandlerContainer tester = new ItemStackHandlerContainer(1);
 		tester.setStackInSlot(0, stack);
 
-		if (lastRecipe != null && lastRecipe.matches(tester, level))
+		RecipeWrapper wrapper = new RecipeWrapper(tester);
+		if (lastRecipe != null && lastRecipe.matches(wrapper, level))
 			return true;
-		return AllRecipeTypes.MILLING.find(tester, level)
+		return AllRecipeTypes.MILLING.find(wrapper, level)
 			.isPresent();
 	}
 
-	private class MillstoneInventoryHandler extends CombinedStorage<ItemVariant, io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler> {
+	private class MillstoneInventoryHandler extends CombinedStorage<ItemVariant, SlottedStorage<ItemVariant>> {
 
 		public MillstoneInventoryHandler() {
-			super(List.of(inputInv, outputInv));
+			super(List.<SlottedStorage<ItemVariant>>of(inputInv, outputInv));
 		}
 
 		@Override

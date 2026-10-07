@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllBlocks;
+import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.contraptions.mounted.CartAssemblerBlock;
@@ -51,7 +52,9 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 
-import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import io.github.fabricators_of_create.porting_lib.common.util.EnvExecutor;
+import io.github.fabricators_of_create.porting_lib.level.BlockSnapshot;
+import io.github.fabricators_of_create.porting_lib.level.LevelHooks;
 
 public class SymmetryWandItem extends Item {
 
@@ -234,14 +237,14 @@ public class SymmetryWandItem extends Item {
 						continue;
 				}
 
-//				BlockSnapshot blocksnapshot = BlockSnapshot.create(world.dimension(), world, position);
+				BlockSnapshot blocksnapshot = BlockSnapshot.create(world.dimension(), world, position);
 				BlockState cachedState = world.getBlockState(position);
 				FluidState ifluidstate = world.getFluidState(position);
 				world.setBlock(position, ifluidstate.createLegacyBlock(), Block.UPDATE_KNOWN_SHAPE);
 				world.setBlockAndUpdate(position, blockState);
 
 				wand.set(AllDataComponents.SYMMETRY_WAND_SIMULATE, true);
-				boolean placeInterrupted = EventHooks.onBlockPlace(player, blocksnapshot, Direction.UP);
+				boolean placeInterrupted = LevelHooks.onBlockPlace(player, blocksnapshot, Direction.UP);
 				wand.set(AllDataComponents.SYMMETRY_WAND_SIMULATE, false);
 
 				if (placeInterrupted) {
@@ -260,7 +263,7 @@ public class SymmetryWandItem extends Item {
 		return player.isHolding(itemBlock.getItem());
 	}
 
-	public static void remove(Level world, ItemStack wand, Player player, BlockPos pos, BlockState ogBlock) {
+	public static void remove(Level world, ItemStack wand, Player player, BlockPos pos) {
 		BlockState air = Blocks.AIR.defaultBlockState();
 		BlockState ogBlock = world.getBlockState(pos);
 		checkComponents(wand);

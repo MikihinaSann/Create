@@ -1,6 +1,7 @@
 package com.simibubi.create.content.schematics.client;
 
 import java.util.ArrayList;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,13 +29,12 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
-import net.neoforged.neoforge.client.model.data.ModelData;
 
 public class SchematicRenderer {
 
 	private static final ThreadLocal<ThreadLocalObjects> THREAD_LOCAL_OBJECTS = ThreadLocal.withInitial(ThreadLocalObjects::new);
 
-	private final Map<RenderType, SuperByteBuffer> bufferCache = new LinkedHashMap<>(getLayerCount());
+	private final Map<RenderType, SuperByteBuffer> bufferCache = new LinkedHashMap<>();
 	private boolean changed;
 	protected final SchematicLevel schematic;
 	private final BlockPos anchor;

@@ -1,6 +1,7 @@
 package com.simibubi.create.content.trains.observer;
 
 import com.simibubi.create.AllBlockEntityTypes;
+import io.github.fabricators_of_create.porting_lib.block.ConnectableRedstoneBlock;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 

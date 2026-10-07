@@ -13,6 +13,7 @@ import static com.simibubi.create.foundation.data.recipe.CommonMetal.SILVER;
 import static com.simibubi.create.foundation.data.recipe.CommonMetal.TIN;
 import static com.simibubi.create.foundation.data.recipe.CommonMetal.URANIUM;
 
+import com.simibubi.create.AllTags;
 import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.api.data.datamaps.BlazeBurnerFuel;
 import com.simibubi.create.api.registry.CreateDataMaps;
@@ -94,10 +95,10 @@ import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.SwordItem;
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.common.Tags.Items;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.createmod.catnip.platform.CatnipServices;
 import net.fabricmc.fabric.api.registry.FuelRegistry;
 
 public class AllItems {
@@ -109,7 +110,7 @@ public class AllItems {
 
 	public static final ItemEntry<Item>
 		WHEAT_FLOUR = taggedIngredient("wheat_flour", AllItemTags.FLOURS.tag, AllItemTags.WHEAT_FLOURS.tag),
-		DOUGH = taggedIngredient("dough", Tags.Items.FOODS_DOUGH, AllItemTags.FOODS_DOUGH_WHEAT.tag),
+		DOUGH = taggedIngredient("dough", AllTags.commonItemTag("foods/dough"), AllItemTags.FOODS_DOUGH_WHEAT.tag),
 		CINDER_FLOUR = ingredient("cinder_flour"), ROSE_QUARTZ = ingredient("rose_quartz"),
 		POLISHED_ROSE_QUARTZ = ingredient("polished_rose_quartz"), POWDERED_OBSIDIAN = ingredient("powdered_obsidian"),
 		STURDY_SHEET = taggedIngredient("sturdy_sheet", AllItemTags.OBSIDIAN_PLATES.tag, PLATES.tag),
@@ -119,7 +120,7 @@ public class AllItems {
 
 	public static final ItemEntry<Item> CARDBOARD = REGISTRATE.item("cardboard", Item::new)
 		.tag(AllItemTags.CARDBOARD_PLATES.tag, PLATES.tag)
-		.burnTime(1000)
+		.onRegister(i -> FuelRegistry.INSTANCE.add(i, 1000)) // fabric: registrate burnTime is not deferred
 		.register();
 
 	public static final ItemEntry<SequencedAssemblyItem>
@@ -135,19 +136,18 @@ public class AllItems {
 
 	public static final ItemEntry<Item> BLAZE_CAKE = REGISTRATE.item("blaze_cake", Item::new)
 		.tag(AllItemTags.UPRIGHT_ON_BELT.tag)
-		.dataMap(CreateDataMaps.SUPERHEATED_BLAZE_BURNER_FUELS, new BlazeBurnerFuel(3200))
-		.burnTime(6400)
+		.onRegister(i -> FuelRegistry.INSTANCE.add(i, 6400)) // fabric: registrate burnTime is not deferred
 		.register();
 
 	public static final ItemEntry<Item> CREATIVE_BLAZE_CAKE =
 		REGISTRATE.item("creative_blaze_cake", Item::new)
 			.properties(p -> p.rarity(Rarity.EPIC))
 			.tag(AllItemTags.UPRIGHT_ON_BELT.tag)
-			.onRegister(i -> i.setBurnTime(Short.MAX_VALUE)) // fabric: furnaces are limited to Short values without Forge patches
+			.onRegister(i -> FuelRegistry.INSTANCE.add(i, (int) Short.MAX_VALUE)) // fabric: furnaces are limited to Short values without Forge patches
 			.register();
 
 	public static final ItemEntry<Item> BAR_OF_CHOCOLATE = REGISTRATE.item("bar_of_chocolate", Item::new)
-		.tag(Items.FOODS, AllItemTags.FOODS_CHOCOLATE.tag)
+		.tag(ConventionalItemTags.FOODS, AllItemTags.FOODS_CHOCOLATE.tag)
 		.properties(p -> p.food(new FoodProperties.Builder().nutrition(6)
 			.saturationModifier(0.3F)
 			.build()))
@@ -155,28 +155,28 @@ public class AllItems {
 		.register();
 
 	public static final ItemEntry<Item> SWEET_ROLL = REGISTRATE.item("sweet_roll", Item::new)
-		.tag(Items.FOODS)
+		.tag(ConventionalItemTags.FOODS)
 		.properties(p -> p.food(new FoodProperties.Builder().nutrition(6)
 			.saturationModifier(0.8F)
 			.build()))
 		.register();
 
 	public static final ItemEntry<Item> CHOCOLATE_BERRIES = REGISTRATE.item("chocolate_glazed_berries", Item::new)
-		.tag(Items.FOODS, Items.FOODS_BERRY)
+		.tag(ConventionalItemTags.FOODS, ConventionalItemTags.BERRY_FOODS)
 		.properties(p -> p.food(new FoodProperties.Builder().nutrition(7)
 			.saturationModifier(0.8F)
 			.build()))
 		.register();
 
 	public static final ItemEntry<Item> HONEYED_APPLE = REGISTRATE.item("honeyed_apple", Item::new)
-		.tag(Items.FOODS, Items.FOODS_FRUIT)
+		.tag(ConventionalItemTags.FOODS, ConventionalItemTags.FRUIT_FOODS)
 		.properties(p -> p.food(new FoodProperties.Builder().nutrition(8)
 			.saturationModifier(0.8F)
 			.build()))
 		.register();
 
 	public static final ItemEntry<BuildersTeaItem> BUILDERS_TEA = REGISTRATE.item("builders_tea", BuildersTeaItem::new)
-		.tag(AllItemTags.UPRIGHT_ON_BELT.tag, Items.FOODS, Items.DRINKS, AllItemTags.DRINKS_TEA.tag)
+		.tag(AllItemTags.UPRIGHT_ON_BELT.tag, ConventionalItemTags.FOODS, AllItemTags.DRINKS_TEA.tag)
 		.properties(p -> p
 			.stacksTo(16)
 			.food(new FoodProperties.Builder()
@@ -192,7 +192,6 @@ public class AllItems {
 
 	public static final ItemEntry<CardboardSwordItem> CARDBOARD_SWORD =
 		REGISTRATE.item("cardboard_sword", CardboardSwordItem::new)
-			.burnTime(1000)
 			.properties(p -> p.stacksTo(1))
 			.properties(p -> p.attributes(SwordItem.createAttributes(AllToolMaterials.CARDBOARD, 3, 1)))
 			.onRegister(i -> FuelRegistry.INSTANCE.add(i, 1000))
@@ -201,7 +200,7 @@ public class AllItems {
 			.register();
 
 	public static final ItemEntry<Item> RAW_ZINC =
-		taggedIngredient("raw_zinc", CommonMetal.ZINC.rawOres, Items.RAW_MATERIALS);
+		taggedIngredient("raw_zinc", CommonMetal.ZINC.rawOres, Tags.Items.RAW_MATERIALS);
 
 	public static final ItemEntry<Item> ANDESITE_ALLOY = taggedIngredient("andesite_alloy", CREATE_INGOTS.tag),
 		ZINC_INGOT = taggedIngredient("zinc_ingot", CommonMetal.ZINC.ingots, CREATE_INGOTS.tag),
@@ -271,12 +270,6 @@ public class AllItems {
 
 	public static final ItemEntry<GogglesItem> GOGGLES = REGISTRATE.item("goggles", GogglesItem::new)
 		.properties(p -> p.stacksTo(1))
-		.properties(p -> {
-			if (p instanceof FabricItemSettings fp) {
-				fp.equipmentSlot(GogglesItem::getEquipmentSlot);
-			}
-			return p;
-		})
 		.onRegister(CreateRegistrate.itemModel(() -> GogglesModel::new))
 		.lang("Engineer's Goggles")
 		.register();
@@ -372,7 +365,7 @@ public class AllItems {
 			.onRegister(i -> FuelRegistry.INSTANCE.add(i, 1000))
 			.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
 			.model(TrimmableArmorModelGenerator::generate)
-			.onRegister(item -> HelmetOverlay.REGISTRY.register(item, new CardboardArmorStealthOverlay()))
+			.onRegister(item -> CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> HelmetOverlay.REGISTRY.register(item, new CardboardArmorStealthOverlay())))
 			.register(),
 
 		CARDBOARD_CHESTPLATE =
@@ -399,15 +392,7 @@ public class AllItems {
 			.onRegister(i -> FuelRegistry.INSTANCE.add(i, 1000))
 			.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
 			.model(TrimmableArmorModelGenerator::generate)
-			.register(),
-
-	CARDBOARD_BOOTS = REGISTRATE.item("cardboard_boots", p -> new CardboardArmorItem(ArmorItem.Type.BOOTS, p))
-		.properties(p -> p.durability(Type.BOOTS.getDurability(4)))
-		.tag(ItemTags.FOOT_ARMOR)
-		.burnTime(1000)
-		.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
-		.model(TrimmableArmorModelGenerator::generate)
-		.register();
+			.register();
 
 	public static final ItemEntry<SandPaperItem> SAND_PAPER = REGISTRATE.item("sand_paper", SandPaperItem::new)
 		.transform(CreateRegistrate.customRenderedItem(() -> SandPaperItemRenderer::new))
@@ -424,7 +409,7 @@ public class AllItems {
 		.properties(p -> p.stacksTo(1))
 		.transform(CreateRegistrate.customRenderedItem(() -> WrenchItemRenderer::new))
 		.model(AssetLookup.itemModelWithPartials())
-		.tag(Items.TOOLS_WRENCH)
+		.tag(AllItemTags.WRENCH.tag)
 		.register();
 
 	public static final ItemEntry<MinecartContraptionItem> MINECART_CONTRAPTION =

@@ -63,7 +63,7 @@ public class InvManipulationBehaviour extends CapManipulationBehaviourBase<ItemV
 
 	@Nullable
 	public IdentifiedInventory getIdentifiedInventory() {
-		IItemHandler inventory = this.getInventory();
+		Storage<ItemVariant> inventory = this.getInventory();
 		if (inventory == null)
 			return null;
 
