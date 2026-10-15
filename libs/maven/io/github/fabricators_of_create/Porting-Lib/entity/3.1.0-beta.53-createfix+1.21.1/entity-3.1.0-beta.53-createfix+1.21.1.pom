@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.github.fabricators_of_create.Porting-Lib</groupId>
+  <artifactId>entity</artifactId>
+  <version>3.1.0-beta.53-createfix+1.21.1</version>
+  <packaging>jar</packaging>
+  <description>Local patched beta.53 entity module: EffectRenderingInventoryScreenMixin.cancelInventoryText returns true unconditionally (upstream fix 6a119667 equivalent; the @Share("custom") LocalRef is never populated so the NPE path is dead).</description>
+</project>

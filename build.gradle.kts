@@ -116,16 +116,26 @@ dependencies {
     val portingLibVersion = "3.1.0-beta.53+1.21.1"
     listOf(
         "accessors", "asm", "attributes", "base", "blocks", "brewing", "common", "conditions",
-        "config", "core", "data", "entity", "extensions", "fluids", "gametest",
+        "config", "core", "data", "extensions", "fluids", "gametest",
         "client_events", "gui_utils", "item_abilities", "lazy_registration", "level_events", "loot",
         "mixin_extensions", "model_data", "model_loader", "models", "obj_loader",
         "recipe_book_categories", "render_types", "tags", "transfer"
     ).forEach { modApi(include("io.github.fabricators_of_create.Porting-Lib:$it:$portingLibVersion")!!) }
+    // beta.53's EffectRenderingInventoryScreenMixin never populates its @Share("custom")
+    // LocalRef so cancelInventoryText NPEs on every container screen; upstream fixed it
+    // in beta.66 which isn't published for all modules. Use a locally patched artifact
+    // (libs/maven) where the condition unconditionally returns true (upstream 6a119667).
+    modApi(include("io.github.fabricators_of_create.Porting-Lib:entity:3.1.0-beta.53-createfix+1.21.1")!!)
 
     modApi(include("com.electronwill.night-config:core:$nightConfigVersion")!!)
     modApi(include("com.electronwill.night-config:toml:$nightConfigVersion")!!)
     modApi(include("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:$configApiVersion")!!)
     modApi(include("dev.engine-room.flywheel:flywheel-fabric-$minecraftVersion:$flywheelVersion")!!)
+    // flywheel-fabric is environment=client so dedicated servers skip it entirely;
+    // server-side class verification still needs the api types (e.g. ActorVisual
+    // implements Visual via MovementBehaviour.createVisual overrides). Ship the
+    // split api artifact as a nested library jar so it exists on both sides.
+    modApi(include("dev.engine-room.flywheel:flywheel-fabric-api-$minecraftVersion:$flywheelVersion")!!)
     modApi(include("io.github.tropheusj:milk-lib:$milkLibVersion")!!)
     api(include("com.google.code.findbugs:jsr305:$jsr305Version")!!)
 

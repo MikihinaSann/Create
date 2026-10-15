@@ -100,7 +100,6 @@
     "fabric.BlockElementFaceDataMixin",
     "fabric.ClientTextTooltipAccessor",
     "fabric.GuiAccessor",
-    "fabric.EffectRenderingInventoryScreenFixMixin",
     "fabric.IModelBuilderSimpleMixin",
     "fabric.LivingEntityRendererAccessor",
     "fabric.ObjModelMixin",
