@@ -38,6 +38,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Clearable;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -176,7 +177,10 @@ public class MillstoneBlockEntity extends KineticBlockEntity implements SidedSto
 		}
 
 		ItemStack stackInSlot = inputInv.getStackInSlot(0);
-		ItemStack craftingRemainingItem = stackInSlot.getItem().getCraftingRemainingItem().getDefaultInstance();
+		Item item = stackInSlot.getItem();
+		ItemStack craftingRemainingItem = item.hasCraftingRemainingItem()
+			? item.getCraftingRemainingItem().getDefaultInstance()
+			: ItemStack.EMPTY;
 		stackInSlot.shrink(1);
 		inputInv.setStackInSlot(0, stackInSlot);
 		lastRecipe.rollResults(level.random)

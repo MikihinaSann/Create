@@ -54,7 +54,6 @@
     "compat.ftbchunks.RegionMapPanelAccessor",
     "datafixer.BlockPosFormatAndRenamesFixMixin",
     "datafixer.ItemStackComponentizationFixMixin",
-    "datafixer.ItemStackDataMixin",
     "datafixer.V1460Mixin",
     "fabric.AbstractMinecartMixin",
     "fabric.BlockLootSubProviderMixin",

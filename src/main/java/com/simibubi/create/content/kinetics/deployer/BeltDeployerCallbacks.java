@@ -29,6 +29,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -153,7 +154,10 @@ public class BeltDeployerCallbacks {
 				heldItem.hurtAndBreak(1, blockEntity.player, EquipmentSlot.MAINHAND);
 			} else {
 				Player player = blockEntity.player;
-				ItemStack leftover = heldItem.getItem().getCraftingRemainingItem().getDefaultInstance();
+				Item held = heldItem.getItem();
+				ItemStack leftover = held.hasCraftingRemainingItem()
+					? held.getCraftingRemainingItem().getDefaultInstance()
+					: ItemStack.EMPTY;
 				heldItem.shrink(1);
 				if (heldItem.isEmpty()) {
 					player.setItemInHand(InteractionHand.MAIN_HAND, leftover);

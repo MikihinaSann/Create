@@ -51,8 +51,10 @@ public class PotionFluidHandler {
 	private static final Component NO_EFFECT = Component.translatable("effect.none").withStyle(ChatFormatting.GRAY);
 
 	public static boolean isPotionItem(ItemStack stack) {
-		return stack.getItem() instanceof PotionItem
-			&& !(stack.getItem().getCraftingRemainingItem().getDefaultInstance().getItem() instanceof BucketItem)
+		Item item = stack.getItem();
+		return item instanceof PotionItem
+			&& !(item.hasCraftingRemainingItem()
+				&& item.getCraftingRemainingItem().getDefaultInstance().getItem() instanceof BucketItem)
 			&& !AllItemTags.NOT_POTION.matches(stack);
 	}
 
